@@ -90,7 +90,7 @@ function toTx(t){
   return a;
 }
 async function getSeries(sym){
-  const r=await fetch(PROXY+"/?symbol="+encodeURIComponent(sym)+"&range=max&interval=1d");
+  const r=await fetch(PROXY+"/?symbol="+encodeURIComponent(sym)+"&range=10y&interval=1d");
   const j=await r.json();
   const res=j.chart&&j.chart.result&&j.chart.result[0];
   if(!res)throw new Error(sym+": no data");
@@ -99,7 +99,7 @@ async function getSeries(sym){
   const p=ac||qc,d=[],v=[];
   ts.forEach((t,i)=>{if(p[i]!=null){d.push(new Date((t+off)*1000).toISOString().slice(0,10));v.push(p[i])}});
   if(!d.length)throw new Error(sym+": empty");
-  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency};
+  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency,gran:res.meta.dataGranularity};
 }
 function align(s){
   const o=[];let j=0,last=s.v[0];
@@ -169,6 +169,16 @@ function hold(syms,bad){
   });
   return h+"</table></div></div>";
 }
+function detail(syms){
+  const L=days.length-1,i6=iStart("6M");
+  const pr=(k,i)=>i<0||!P[k]?"–":(+P[k][i].toFixed(2));
+  let h='<div class="card"><h2>Price check</h2><p class="mu">Compare these with a price chart. Prices are adjusted closes in the listing currency.</p><div class="sc"><table><tr><th>Instrument</th><th>Data</th><th>First buy</th><th>Price then</th><th>6M ago'+(i6>=0?" ("+days[i6]+")":"")+'</th><th>Latest</th></tr>';
+  syms.forEach(s=>{
+    const k=map(s),x=ser[k],f=tx.find(t=>t.s===s),ib=days.findIndex(d=>d>=f.d);
+    h+='<tr><td>'+esc(x.name)+'<br><span class="mu">'+esc(k)+'</span></td><td>'+esc(x.gran||"")+', '+x.d.length+' points from '+x.d[0]+'</td><td>'+f.d+'</td><td>'+pr(k,ib)+'</td><td>'+pr(k,i6)+'</td><td>'+pr(k,L)+'</td></tr>';
+  });
+  return h+"</table></div></div>";
+}
 function render(syms,bad,warn){
   let h="";
   if(SK.length)warn=warn.concat(["Skipped, options are not supported yet: "+SK.join(", ")]);
@@ -179,6 +189,7 @@ function render(syms,bad,warn){
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   h+=hold(syms,bad);
+  if(rows.length)h+=detail(syms);
   if(warn.length)h+='<p class="mu">'+warn.map(esc).join("<br>")+"</p>";
   h+='<p class="mu">Method: daily chain-linked returns on adjusted closing prices (dividends counted as reinvested). Each trade is valued at that day\'s close. Fees and currency effects are ignored in this version.</p>';
   $("out").innerHTML=h;

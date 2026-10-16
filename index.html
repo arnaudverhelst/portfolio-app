@@ -37,14 +37,14 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <script>
 const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
 const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct:9,okt:9,nov:10,dec:11};
-const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL"};
+const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL",xtsx:".V",xtse:".TO",xasx:".AX",xhkg:".HK"};
 const TFS=["1M","3M","6M","YTD","1Y","3Y","All"];
 const COL=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
-let tx=[],days=[],P={},rows=[],ser={},TF="All";
+let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[];
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||ysym(s);
@@ -171,6 +171,7 @@ function hold(syms,bad){
 }
 function render(syms,bad,warn){
   let h="";
+  if(SK.length)warn=warn.concat(["Skipped, options are not supported yet: "+SK.join(", ")]);
   if(rows.length){
     h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
     rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+"</tr>"});
@@ -187,6 +188,9 @@ async function run(){
   if(!text){msg("Paste or load your transactions first.");return}
   try{tx=toTx(text)}catch(e){msg(e.message);return}
   if(!tx.length){msg("No buy or sell rows found.");return}
+  SK=[...new Set(tx.filter(t=>t.s.includes("/")||ov[t.s]==="-").map(t=>t.s))];
+  tx=tx.filter(t=>!SK.includes(t.s));
+  if(!tx.length){msg("Nothing left to calculate after skipping options.");return}
   ls.set("tx",text);ls.set("bm",$("bm").value);
   const syms=[...new Set(tx.map(t=>t.s))],keys=syms.map(map);
   const bms=$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);

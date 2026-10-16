@@ -1,18 +1,229 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Portfolio</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 60px auto; padding: 0 20px; }
-  </style>
-</head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Portfolio</title>
+<style>
+:root{--bg:#fbfbf9;--fg:#14213d;--mu:#667085;--bd:#dfe3e8;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#14213d;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1220;--fg:#e6e9f0;--mu:#8b95a8;--bd:#273046;--card:#131b2e;--pos:#4ade80;--neg:#f87171;--ac:#7aa2ff;color-scheme:dark}}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:920px;margin:0 auto;padding:24px 16px}
+h1{margin:0 0 4px;font-size:1.6rem}h2{font-size:1.05rem;margin:0 0 10px}.mu{color:var(--mu);font-size:.88rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px;margin:16px 0}
+textarea,input{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px}
+textarea{height:90px;font-size:.8rem;font-family:monospace}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:6px;padding:7px 12px;margin:6px 6px 0 0}
+button.on,button.go{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85rem}
+td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
+</style></head>
 <body>
-  <h1>My Portfolio</h1>
-  <p>It works. Today is <span id="today"></span>.</p>
-  <script>
-    document.getElementById("today").textContent = new Date().toLocaleDateString();
-  </script>
-</body>
-</html>
+<h1>My Portfolio</h1>
+<p class="mu">Your transactions stay in this browser only.</p>
+<div class="card">
+<h2>Transactions (Saxo export)</h2>
+<input type="file" id="file" accept=".csv,.txt,.tsv">
+<p class="mu">Or paste the rows here, including the header line:</p>
+<textarea id="txt"></textarea>
+<h2 style="margin-top:14px">Benchmarks</h2>
+<input id="bm" value="IWDA.AS">
+<p class="mu">Yahoo symbols, separated by commas (for example IWDA.AS, VUAA.AS)</p>
+<button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button>
+<p id="msg" class="mu"></p>
+</div>
+<div id="out"></div>
+<script>
+const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
+const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct:9,okt:9,nov:10,dec:11};
+const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL"};
+const TFS=["1M","3M","6M","YTD","1Y","3Y","All"];
+const COL=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
+let tx=[],days=[],P={},rows=[],ser={},TF="All";
+const msg=t=>{$("msg").textContent=t};
+const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
+const map=s=>ov[s]||ysym(s);
+
+function pd(s){
+  s=String(s).trim();let m=s.match(/^(\d{1,2})[-\/ .]([A-Za-z]+)[-\/ .](\d{4})$/);
+  if(m){const mo=MON[m[2].slice(0,3).toLowerCase()];if(mo===undefined)return null;return new Date(Date.UTC(+m[3],mo,+m[1])).toISOString().slice(0,10)}
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+  if(m)return new Date(Date.UTC(+m[3],+m[2]-1,+m[1])).toISOString().slice(0,10);
+  return null;
+}
+function parseTable(t){
+  const first=t.split(/\r?\n/)[0];
+  const d=["\t",";",","].map(c=>[c,first.split(c).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const out=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c=='"')q=true;
+    else if(c==d){row.push(f);f=""}
+    else if(c=="\n"){row.push(f);out.push(row);row=[];f=""}
+    else if(c!="\r")f+=c;
+  }
+  if(f||row.length){row.push(f);out.push(row)}
+  return out;
+}
+function toTx(t){
+  const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>3);
+  if(!r.length)throw new Error("No table found in the text.");
+  const h=r[0].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
+  const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument");
+  if(iD<0||iS<0||iA<0)throw new Error("Columns not found. The first line must contain Transactiedatum, Instrumentsymbool and Acties.");
+  const a=[];
+  for(const x of r.slice(1)){
+    const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
+    if(!m||!d||!x[iS])continue;
+    const sell=/^(verkoop|sell)/i.test(m[1]);
+    a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2]))});
+  }
+  a.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
+  return a;
+}
+async function getSeries(sym){
+  const r=await fetch(PROXY+"/?symbol="+encodeURIComponent(sym)+"&range=max&interval=1d");
+  const j=await r.json();
+  const res=j.chart&&j.chart.result&&j.chart.result[0];
+  if(!res)throw new Error(sym+": no data");
+  const ts=res.timestamp||[],off=res.meta.gmtoffset||0;
+  const qc=res.indicators.quote[0].close,ac=res.indicators.adjclose&&res.indicators.adjclose[0].adjclose;
+  const p=ac||qc,d=[],v=[];
+  ts.forEach((t,i)=>{if(p[i]!=null){d.push(new Date((t+off)*1000).toISOString().slice(0,10));v.push(p[i])}});
+  if(!d.length)throw new Error(sym+": empty");
+  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency};
+}
+function align(s){
+  const o=[];let j=0,last=s.v[0];
+  for(const d of days){while(j<s.d.length&&s.d[j]<=d){last=s.v[j];j++}o.push(last)}
+  return o;
+}
+function twrr(keys){
+  let pos={},k=0,idx=100,pv=0,st=-1;const out=[];
+  for(let i=0;i<days.length;i++){
+    let vb=0;for(const s in pos)vb+=pos[s]*P[s][i];
+    if(pv>0)idx*=vb/pv;
+    while(k<tx.length&&tx[k].d<=days[i]){
+      const s=map(tx[k].s);
+      if(keys.has(s)){pos[s]=(pos[s]||0)+tx[k].q;if(Math.abs(pos[s])<1e-9)pos[s]=0}
+      k++;
+    }
+    let v=0;for(const s in pos)v+=pos[s]*P[s][i];
+    if(st<0&&v>0)st=i;
+    pv=v;out.push(idx);
+  }
+  return {idx:out,st:st};
+}
+function iStart(tf){
+  if(tf==="All")return 0;
+  const e=new Date(days[days.length-1]+"T00:00:00Z");let s;
+  if(tf==="YTD")s=(e.getUTCFullYear()-1)+"-12-31";
+  else{e.setUTCMonth(e.getUTCMonth()-{"1M":1,"3M":3,"6M":6,"1Y":12,"3Y":36}[tf]);s=e.toISOString().slice(0,10)}
+  let i=-1;for(let j=0;j<days.length&&days[j]<=s;j++)i=j;
+  return i;
+}
+function ret(r,tf){
+  const L=days.length-1;
+  const i0=tf==="All"?r.st:iStart(tf);
+  if(i0<0||r.st<0||i0<r.st||i0>=L)return null;
+  return r.idx[L]/r.idx[i0]-1;
+}
+const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>";
+
+function chart(){
+  const L=days.length-1,i0=Math.max(iStart(TF),0);
+  const S=rows.filter(r=>r.chart&&r.st>=0).map(r=>{
+    const a=Math.max(i0,r.st);return {r:r,a:a};
+  }).filter(s=>s.a<L);
+  if(!S.length)return '<p class="mu">Not enough data for this period.</p>';
+  const x0=Math.min(...S.map(s=>s.a)),W=700,H=260,pl=44,pr=10,pt=10,pb=24;
+  let mn=1e9,mx=-1e9;
+  const vals=S.map(s=>{const o=[];for(let i=s.a;i<=L;i++){const v=s.r.idx[i]/s.r.idx[s.a]*100;o.push(v);if(v<mn)mn=v;if(v>mx)mx=v}return o});
+  const xs=i=>pl+(i-x0)*(W-pl-pr)/(L-x0),ys=v=>H-pb-(v-mn)*(H-pt-pb)/((mx-mn)||1);
+  let g="";
+  S.forEach((s,k)=>{
+    const pts=vals[k].map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ");
+    g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2" points="'+pts+'"/>';
+  });
+  g+='<text x="2" y="'+(pt+8)+'" font-size="11" fill="currentColor">'+mx.toFixed(0)+'</text>';
+  g+='<text x="2" y="'+(H-pb)+'" font-size="11" fill="currentColor">'+mn.toFixed(0)+'</text>';
+  g+='<text x="'+pl+'" y="'+(H-6)+'" font-size="11" fill="currentColor">'+days[x0]+'</text>';
+  g+='<text x="'+(W-pr)+'" y="'+(H-6)+'" font-size="11" text-anchor="end" fill="currentColor">'+days[L]+'</text>';
+  const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.r.name)+'</span>').join("");
+  return '<svg viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>';
+}
+function hold(syms,bad){
+  const q={},nm={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n});
+  let h='<div class="card"><h2>Holdings found</h2><p class="mu">If a symbol shows ✗, correct the Yahoo symbol and it recalculates.</p><div class="sc"><table><tr><th>Instrument</th><th>Yahoo symbol</th><th>Type</th><th>Shares</th><th></th></tr>';
+  syms.forEach(s=>{
+    const k=map(s),x=ser[k];
+    h+='<tr><td>'+esc(nm[s])+'<br><span class="mu">'+esc(s)+'</span></td><td><input data-s="'+esc(s)+'" value="'+esc(k)+'"></td><td>'+(x?esc(x.type||""):"")+'</td><td>'+(+q[s].toFixed(4))+'</td><td>'+(bad.includes(k)?"✗":x?"✓":"")+'</td></tr>';
+  });
+  return h+"</table></div></div>";
+}
+function render(syms,bad,warn){
+  let h="";
+  if(rows.length){
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
+    rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+"</tr>"});
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p></div>';
+    h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
+  }
+  h+=hold(syms,bad);
+  if(warn.length)h+='<p class="mu">'+warn.map(esc).join("<br>")+"</p>";
+  h+='<p class="mu">Method: daily chain-linked returns on adjusted closing prices (dividends counted as reinvested). Each trade is valued at that day\'s close. Fees and currency effects are ignored in this version.</p>';
+  $("out").innerHTML=h;
+}
+async function run(){
+  const text=$("txt").value.trim();
+  if(!text){msg("Paste or load your transactions first.");return}
+  try{tx=toTx(text)}catch(e){msg(e.message);return}
+  if(!tx.length){msg("No buy or sell rows found.");return}
+  ls.set("tx",text);ls.set("bm",$("bm").value);
+  const syms=[...new Set(tx.map(t=>t.s))],keys=syms.map(map);
+  const bms=$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
+  const all=[...new Set([...keys,...bms])];
+  msg("Loading prices for "+all.length+" symbols...");rows=[];ser={};
+  const res=await Promise.allSettled(all.map(getSeries));
+  const bad=[];
+  all.forEach((k,i)=>{if(res[i].status==="fulfilled")ser[k]=res[i].value;else bad.push(k)});
+  if(bad.length){msg("Could not load: "+bad.join(", "));render(syms,bad,[]);return}
+  const warn=[],first=tx[0].d,set=new Set();
+  all.forEach(k=>ser[k].d.forEach(d=>{if(d>=first)set.add(d)}));
+  days=[...set].sort();
+  if(days.length<2){msg("Not enough price data after your first transaction.");return}
+  P={};all.forEach(k=>{P[k]=align(ser[k])});
+  rows=[];
+  const t=twrr(new Set(keys));rows.push({name:"Total portfolio",idx:t.idx,st:t.st,chart:true});
+  const et=new Set(keys.filter(k=>ser[k].type==="ETF")),sk=new Set(keys.filter(k=>ser[k].type!=="ETF"));
+  if(et.size&&sk.size){
+    const a=twrr(et),b=twrr(sk);
+    rows.push({name:"ETFs",idx:a.idx,st:a.st,chart:true},{name:"Stocks",idx:b.idx,st:b.st,chart:true});
+  }
+  bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
+  syms.forEach(s=>{const k=map(s),r=twrr(new Set([k]));rows.push({name:ser[k].name,idx:r.idx,st:r.st,chart:false})});
+  keys.forEach(k=>{if(ser[k].cur&&ser[k].cur!=="EUR")warn.push(k+" is priced in "+ser[k].cur+"; currency effects are not included yet.")});
+  const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
+  if(Object.values(q).some(v=>v<-1e-9))warn.push("Some sells exceed the shares bought in this file. Your export may not go back to your first trade.");
+  msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
+  render(syms,bad,warn);
+}
+$("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
+$("clr").onclick=()=>{ls.del("tx");ls.del("ov");ls.del("bm");ov={};$("txt").value="";$("out").innerHTML="";msg("Saved data cleared.")};
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=()=>{$("txt").value=r.result;run().catch(x=>msg("Error: "+x.message))};r.readAsText(f);
+};
+$("out").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-tf");if(t){TF=t;render(Object.keys(tx.reduce((o,x)=>(o[x.s]=1,o),{})),[],[])}});
+$("out").addEventListener("change",e=>{
+  const s=e.target.getAttribute&&e.target.getAttribute("data-s");
+  if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}
+});
+if(ls.get("tx")){$("txt").value=ls.get("tx");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
+</script>
+</body></html>

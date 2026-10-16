@@ -44,7 +44,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
-let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[];
+let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||ysym(s);
@@ -75,14 +75,15 @@ function parseTable(t){
 function toTx(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>3);
   if(!r.length)throw new Error("No table found in the text.");
+  IG={};
   let hi=r.findIndex(x=>x.some(c=>c.trim().toLowerCase()==="transactiedatum"));if(hi<0)hi=0;
   const h=r[hi].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
-  const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument");
+  const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument"),iT=ix("type");
   if(iD<0||iS<0||iA<0)throw new Error("Columns not found. The first line must contain Transactiedatum, Instrumentsymbool and Acties.");
   const a=[];
   for(const x of r.slice(hi+1)){
     const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
-    if(!m||!d||!x[iS])continue;
+    if(!m||!d||!x[iS]){const kk=((iT>=0?x[iT]:"")+" | "+(x[iA]||"").replace(/[-\d.,@]+/g,"").trim()).slice(0,60);IG[kk]=(IG[kk]||0)+1;continue}
     const sell=/^(verkoop|sell)/i.test(m[1]);
     a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2]))});
   }
@@ -99,7 +100,9 @@ async function getSeries(sym){
   const p=ac||qc,d=[],v=[];
   ts.forEach((t,i)=>{if(p[i]!=null){d.push(new Date((t+off)*1000).toISOString().slice(0,10));v.push(p[i])}});
   if(!d.length)throw new Error(sym+": empty");
-  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency,gran:res.meta.dataGranularity};
+  const sp=[],evs=res.events&&res.events.splits;
+  if(evs)for(const k in evs){const e=evs[k];sp.push({d:new Date(((e.date||+k)+off)*1000).toISOString().slice(0,10),f:e.numerator/e.denominator,r:e.numerator+":"+e.denominator})}
+  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency,gran:res.meta.dataGranularity,sp:sp};
 }
 function align(s){
   const o=[];let j=0,last=s.v[0];
@@ -113,7 +116,7 @@ function twrr(keys){
     if(pv>0)idx*=vb/pv;
     while(k<tx.length&&tx[k].d<=days[i]){
       const s=map(tx[k].s);
-      if(keys.has(s)){pos[s]=(pos[s]||0)+tx[k].q;if(Math.abs(pos[s])<1e-9)pos[s]=0}
+      if(keys.has(s)){pos[s]=(pos[s]||0)+tx[k].qa;if(Math.abs(pos[s])<1e-9)pos[s]=0}
       k++;
     }
     let v=0;for(const s in pos)v+=pos[s]*P[s][i];
@@ -161,21 +164,21 @@ function chart(){
   return '<svg viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>';
 }
 function hold(syms,bad){
-  const q={},nm={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n});
-  let h='<div class="card"><h2>Holdings found</h2><p class="mu">If a symbol shows ✗, correct the Yahoo symbol and it recalculates.</p><div class="sc"><table><tr><th>Instrument</th><th>Yahoo symbol</th><th>Type</th><th>Shares</th><th></th></tr>';
+  const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
+  let h='<div class="card"><h2>Holdings found</h2><p class="mu">If a symbol shows ✗, correct the Yahoo symbol and it recalculates.</p><div class="sc"><table><tr><th>Instrument</th><th>Yahoo symbol</th><th>Type</th><th>Bought</th><th>Sold</th><th>Net</th><th></th></tr>';
   syms.forEach(s=>{
     const k=map(s),x=ser[k];
-    h+='<tr><td>'+esc(nm[s])+'<br><span class="mu">'+esc(s)+'</span></td><td><input data-s="'+esc(s)+'" value="'+esc(k)+'"></td><td>'+(x?esc(x.type||""):"")+'</td><td>'+(+q[s].toFixed(4))+'</td><td>'+(bad.includes(k)?"✗":x?"✓":"")+'</td></tr>';
+    h+='<tr><td>'+esc(nm[s])+'<br><span class="mu">'+esc(s)+'</span></td><td><input data-s="'+esc(s)+'" value="'+esc(k)+'"></td><td>'+(x?esc(x.type||""):"")+'</td><td>'+(+(bu[s]||0).toFixed(4))+'</td><td>'+(+(se[s]||0).toFixed(4))+'</td><td>'+(+q[s].toFixed(4))+'</td><td>'+(bad.includes(k)?"✗":x?"✓":"")+'</td></tr>';
   });
   return h+"</table></div></div>";
 }
 function detail(syms){
   const L=days.length-1,i6=iStart("6M");
   const pr=(k,i)=>i<0||!P[k]?"–":(+P[k][i].toFixed(2));
-  let h='<div class="card"><h2>Price check</h2><p class="mu">Compare these with a price chart. Prices are adjusted closes in the listing currency.</p><div class="sc"><table><tr><th>Instrument</th><th>Data</th><th>First buy</th><th>Price then</th><th>6M ago'+(i6>=0?" ("+days[i6]+")":"")+'</th><th>Latest</th></tr>';
+  let h='<div class="card"><h2>Price check</h2><p class="mu">Compare these with a price chart. Prices are adjusted closes in the listing currency.</p><div class="sc"><table><tr><th>Instrument</th><th>Data</th><th>First buy</th><th>Price then</th><th>6M ago'+(i6>=0?" ("+days[i6]+")":"")+'</th><th>Latest</th><th>Splits</th></tr>';
   syms.forEach(s=>{
     const k=map(s),x=ser[k],f=tx.find(t=>t.s===s),ib=days.findIndex(d=>d>=f.d);
-    h+='<tr><td>'+esc(x.name)+'<br><span class="mu">'+esc(k)+'</span></td><td>'+esc(x.gran||"")+', '+x.d.length+' points from '+x.d[0]+'</td><td>'+f.d+'</td><td>'+pr(k,ib)+'</td><td>'+pr(k,i6)+'</td><td>'+pr(k,L)+'</td></tr>';
+    h+='<tr><td>'+esc(x.name)+'<br><span class="mu">'+esc(k)+'</span></td><td>'+esc(x.gran||"")+', '+x.d.length+' points from '+x.d[0]+'</td><td>'+f.d+'</td><td>'+pr(k,ib)+'</td><td>'+pr(k,i6)+'</td><td>'+pr(k,L)+'</td><td>'+(x.sp&&x.sp.length?x.sp.map(e=>e.d+" "+e.r).join(", "):"–")+'</td></tr>';
   });
   return h+"</table></div></div>";
 }
@@ -190,6 +193,7 @@ function render(syms,bad,warn){
   }
   h+=hold(syms,bad);
   if(rows.length)h+=detail(syms);
+  if(Object.keys(IG).length)h+='<div class="card"><h2>Rows not used</h2><p class="mu">These rows are not buys or sells, so the calculation ignores them. Anything that changes share counts (transfers, splits, exercises) matters here.</p><div class="sc"><table>'+Object.keys(IG).map(k=>'<tr><td>'+esc(k)+'</td><td>'+IG[k]+'</td></tr>').join("")+'</table></div></div>';
   if(warn.length)h+='<p class="mu">'+warn.map(esc).join("<br>")+"</p>";
   h+='<p class="mu">Method: daily chain-linked returns on adjusted closing prices (dividends counted as reinvested). Each trade is valued at that day\'s close. Fees and currency effects are ignored in this version.</p>';
   $("out").innerHTML=h;
@@ -216,6 +220,7 @@ async function run(){
   days=[...set].sort();
   if(days.length<2){msg("Not enough price data after your first transaction.");return}
   P={};all.forEach(k=>{P[k]=align(ser[k])});
+  tx.forEach(t=>{const k=map(t.s);t.qa=t.q*(ser[k].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1)});
   rows=[];
   const t=twrr(new Set(keys));rows.push({name:"Total portfolio",idx:t.idx,st:t.st,chart:true});
   const et=new Set(keys.filter(k=>ser[k].type==="ETF")),sk=new Set(keys.filter(k=>ser[k].type!=="ETF"));
@@ -227,7 +232,7 @@ async function run(){
   syms.forEach(s=>{const k=map(s),r=twrr(new Set([k]));rows.push({name:ser[k].name,idx:r.idx,st:r.st,chart:false})});
   keys.forEach(k=>{if(ser[k].cur&&ser[k].cur!=="EUR")warn.push(k+" is priced in "+ser[k].cur+"; currency effects are not included yet.")});
   const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
-  if(Object.values(q).some(v=>v<-1e-9))warn.push("Some sells exceed the shares bought in this file. Your export may not go back to your first trade.");
+  const neg=Object.keys(q).filter(k=>q[k]<-1e-9);if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
   msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
   render(syms,bad,warn);
 }

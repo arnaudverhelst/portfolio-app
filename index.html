@@ -23,7 +23,7 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <p class="mu">Your transactions stay in this browser only.</p>
 <div class="card">
 <h2>Transactions (Saxo export)</h2>
-<input type="file" id="file" accept=".csv,.txt,.tsv">
+<input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
 <p class="mu">Or paste the rows here, including the header line:</p>
 <textarea id="txt"></textarea>
 <h2 style="margin-top:14px">Benchmarks</h2>
@@ -33,6 +33,7 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <p id="msg" class="mu"></p>
 </div>
 <div id="out"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
 const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct:9,okt:9,nov:10,dec:11};
@@ -49,7 +50,8 @@ const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||
 const map=s=>ov[s]||ysym(s);
 
 function pd(s){
-  s=String(s).trim();let m=s.match(/^(\d{1,2})[-\/ .]([A-Za-z]+)[-\/ .](\d{4})$/);
+  s=String(s).trim();
+  if(/^\d{5}$/.test(s))return new Date(Date.UTC(1899,11,30)+(+s)*864e5).toISOString().slice(0,10);let m=s.match(/^(\d{1,2})[-\/ .]([A-Za-z]+)[-\/ .](\d{4})$/);
   if(m){const mo=MON[m[2].slice(0,3).toLowerCase()];if(mo===undefined)return null;return new Date(Date.UTC(+m[3],mo,+m[1])).toISOString().slice(0,10)}
   m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
   if(m)return new Date(Date.UTC(+m[3],+m[2]-1,+m[1])).toISOString().slice(0,10);
@@ -73,11 +75,12 @@ function parseTable(t){
 function toTx(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>3);
   if(!r.length)throw new Error("No table found in the text.");
-  const h=r[0].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
+  let hi=r.findIndex(x=>x.some(c=>c.trim().toLowerCase()==="transactiedatum"));if(hi<0)hi=0;
+  const h=r[hi].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
   const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument");
   if(iD<0||iS<0||iA<0)throw new Error("Columns not found. The first line must contain Transactiedatum, Instrumentsymbool and Acties.");
   const a=[];
-  for(const x of r.slice(1)){
+  for(const x of r.slice(hi+1)){
     const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
     if(!m||!d||!x[iS])continue;
     const sell=/^(verkoop|sell)/i.test(m[1]);
@@ -217,7 +220,22 @@ $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
 $("clr").onclick=()=>{ls.del("tx");ls.del("ov");ls.del("bm");ov={};$("txt").value="";$("out").innerHTML="";msg("Saved data cleared.")};
 $("file").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=()=>{$("txt").value=r.result;run().catch(x=>msg("Error: "+x.message))};r.readAsText(f);
+  const r=new FileReader();
+  if(/\.xls[xm]?$/i.test(f.name)){
+    if(typeof XLSX==="undefined"){msg("Excel reader failed to load. Refresh the page, or paste the rows instead.");return}
+    r.onload=()=>{
+      try{
+        const wb=XLSX.read(r.result,{type:"array"});
+        const a=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""});
+        $("txt").value=a.map(row=>row.map(c=>String(c).replace(/[\t\r\n]+/g," ")).join("\t")).join("\n");
+        run().catch(x=>msg("Error: "+x.message));
+      }catch(x){msg("Could not read the Excel file: "+x.message)}
+    };
+    r.readAsArrayBuffer(f);
+  }else{
+    r.onload=()=>{$("txt").value=r.result;run().catch(x=>msg("Error: "+x.message))};
+    r.readAsText(f);
+  }
 };
 $("out").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-tf");if(t){TF=t;render(Object.keys(tx.reduce((o,x)=>(o[x.s]=1,o),{})),[],[])}});
 $("out").addEventListener("change",e=>{

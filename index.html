@@ -44,7 +44,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
-let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={};
+let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||ysym(s);
@@ -72,20 +72,27 @@ function parseTable(t){
   if(f||row.length){row.push(f);out.push(row)}
   return out;
 }
+function num(v){
+  let s=String(v==null?"":v).trim().replace(/\s/g,"");if(!s)return NaN;
+  const c=s.lastIndexOf(","),d=s.lastIndexOf(".");
+  if(c>=0&&d>=0)s=c>d?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"");
+  else if(c>=0)s=s.replace(",",".");
+  return parseFloat(s);
+}
 function toTx(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>3);
   if(!r.length)throw new Error("No table found in the text.");
   IG={};
   let hi=r.findIndex(x=>x.some(c=>c.trim().toLowerCase()==="transactiedatum"));if(hi<0)hi=0;
   const h=r[hi].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
-  const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument"),iT=ix("type");
+  const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument"),iT=ix("type"),iC=ix("aantal"),iR=ix("omrekeningskoers"),iV=ix("instrumentvaluta");
   if(iD<0||iS<0||iA<0)throw new Error("Columns not found. The first line must contain Transactiedatum, Instrumentsymbool and Acties.");
   const a=[];
   for(const x of r.slice(hi+1)){
     const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
     if(!m||!d||!x[iS]){const kk=((iT>=0?x[iT]:"")+" | "+(x[iA]||"").replace(/[-\d.,@]+/g,"").trim()).slice(0,60);IG[kk]=(IG[kk]||0)+1;continue}
     const sell=/^(verkoop|sell)/i.test(m[1]);
-    a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2]))});
+    a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2])),px:parseFloat(m[3]),c:iC>=0?num(x[iC]):NaN,rt:iR>=0?num(x[iR]):NaN,cur:iV>=0?(x[iV]||"").trim():""});
   }
   a.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
   return a;
@@ -97,30 +104,41 @@ async function getSeries(sym){
   if(!res)throw new Error(sym+": no data");
   const ts=res.timestamp||[],off=res.meta.gmtoffset||0;
   const qc=res.indicators.quote[0].close,ac=res.indicators.adjclose&&res.indicators.adjclose[0].adjclose;
-  const p=ac||qc,d=[],v=[];
-  ts.forEach((t,i)=>{if(p[i]!=null){d.push(new Date((t+off)*1000).toISOString().slice(0,10));v.push(p[i])}});
+  const p=ac||qc,d=[],v=[],cv=[];
+  ts.forEach((t,i)=>{if(p[i]!=null){d.push(new Date((t+off)*1000).toISOString().slice(0,10));v.push(p[i]);cv.push(qc[i]!=null?qc[i]:p[i])}});
   if(!d.length)throw new Error(sym+": empty");
   const sp=[],evs=res.events&&res.events.splits;
   if(evs)for(const k in evs){const e=evs[k];sp.push({d:new Date(((e.date||+k)+off)*1000).toISOString().slice(0,10),f:e.numerator/e.denominator,r:e.numerator+":"+e.denominator})}
-  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency,gran:res.meta.dataGranularity,sp:sp};
+  return {d:d,v:v,type:res.meta.instrumentType,name:res.meta.longName||res.meta.shortName||sym,cur:res.meta.currency,gran:res.meta.dataGranularity,sp:sp,cv:cv};
 }
-function align(s){
-  const o=[];let j=0,last=s.v[0];
-  for(const d of days){while(j<s.d.length&&s.d[j]<=d){last=s.v[j];j++}o.push(last)}
+function align(s,vv){vv=vv||s.v;
+  const o=[];let j=0,last=vv[0];
+  for(const d of days){while(j<s.d.length&&s.d[j]<=d){last=vv[j];j++}o.push(last)}
   return o;
 }
-function twrr(keys){
-  let pos={},k=0,idx=100,pv=0,st=-1;const out=[];
+function twrr(ks,mode){
+  const pos={},bas={};let k=0,idx=100,pv=0,st=-1;const out=[];
   for(let i=0;i<days.length;i++){
-    let vb=0;for(const s in pos)vb+=pos[s]*P[s][i];
-    if(pv>0)idx*=vb/pv;
-    while(k<tx.length&&tx[k].d<=days[i]){
-      const s=map(tx[k].s);
-      if(keys.has(s)){pos[s]=(pos[s]||0)+tx[k].qa;if(Math.abs(pos[s])<1e-9)pos[s]=0}
-      k++;
+    let B=0,S=0;
+    while(k<tx.length&&tx[k].di<=i){
+      const t=tx[k],s=t.key;k++;
+      if(!ks.has(s))continue;
+      const f=mode?t.fc:t.fg,buy=t.q>0;
+      if(!isFinite(f))continue;
+      if(buy)B+=f;else S+=f;
+      const q0=pos[s]||0;
+      if(t.opt){
+        const q1=q0+t.q;
+        if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);
+        else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);
+        pos[s]=q1;
+      }else pos[s]=q0+t.qa;
+      if(Math.abs(pos[s])<1e-9){pos[s]=0;bas[s]=0}
     }
-    let v=0;for(const s in pos)v+=pos[s]*P[s][i];
-    if(st<0&&v>0)st=i;
+    for(const s in G.ex)if(G.ex[s]===i&&ks.has(s)){pos[s]=0;bas[s]=0}
+    let v=0;for(const s in pos)v+=P[s]?pos[s]*P[s][i]:(bas[s]||0);
+    if(B>0&&st<0)st=i;
+    if(pv+B>0)idx*=1+Math.max(-0.9999,(v+S-B-pv)/(pv+B));
     pv=v;out.push(idx);
   }
   return {idx:out,st:st};
@@ -135,6 +153,7 @@ function iStart(tf){
 }
 function ret(r,tf){
   const L=days.length-1;
+  if(tf==="All"&&r.kind!=="b")return r.st<0?null:r.idx[L]/100-1;
   const i0=tf==="All"?r.st:iStart(tf);
   if(i0<0||r.st<0||i0<r.st||i0>=L)return null;
   return r.idx[L]/r.idx[i0]-1;
@@ -167,15 +186,17 @@ function hold(syms,bad){
   const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
   let h='<div class="card"><h2>Holdings found</h2><p class="mu">If a symbol shows ✗, correct the Yahoo symbol and it recalculates.</p><div class="sc"><table><tr><th>Instrument</th><th>Yahoo symbol</th><th>Type</th><th>Bought</th><th>Sold</th><th>Net</th><th></th></tr>';
   syms.forEach(s=>{
-    const k=map(s),x=ser[k];
-    h+='<tr><td>'+esc(nm[s])+'<br><span class="mu">'+esc(s)+'</span></td><td><input data-s="'+esc(s)+'" value="'+esc(k)+'"></td><td>'+(x?esc(x.type||""):"")+'</td><td>'+(+(bu[s]||0).toFixed(4))+'</td><td>'+(+(se[s]||0).toFixed(4))+'</td><td>'+(+q[s].toFixed(4))+'</td><td>'+(bad.includes(k)?"✗":x?"✓":"")+'</td></tr>';
+    const k=kof(s),x=ser[k];
+    h+='<tr><td>'+esc(nm[s])+'<br><span class="mu">'+esc(s)+'</span></td><td>'+(isOpt(s)?"option":'<input data-s="'+esc(s)+'" value="'+esc(k)+'">')+'</td><td>'+(x?esc(x.type||""):"")+'</td><td>'+(+(bu[s]||0).toFixed(4))+'</td><td>'+(+(se[s]||0).toFixed(4))+'</td><td>'+(+q[s].toFixed(4))+'</td><td>'+(bad.includes(k)?"✗":x?"✓":"")+'</td></tr>';
   });
   return h+"</table></div></div>";
 }
+function costs(list){let tot=0,n=0;for(const t of list){if(t.opt||!isFinite(t.cs)||!isFinite(t.g))continue;tot+=t.q>0?t.cs-t.g:t.g-t.cs;n++}return {tot:tot,n:n}}
+const eur=x=>(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{maximumFractionDigits:0});
 function detail(syms){
   const L=days.length-1,i6=iStart("6M");
   const pr=(k,i)=>i<0||!P[k]?"–":(+P[k][i].toFixed(2));
-  let h='<div class="card"><h2>Price check</h2><p class="mu">Compare these with a price chart. Prices are adjusted closes in the listing currency.</p><div class="sc"><table><tr><th>Instrument</th><th>Data</th><th>First buy</th><th>Price then</th><th>6M ago'+(i6>=0?" ("+days[i6]+")":"")+'</th><th>Latest</th><th>Splits</th></tr>';
+  let h='<div class="card"><h2>Price check</h2><p class="mu">Compare these with a price chart. Prices are adjusted closes, converted to euro.</p><div class="sc"><table><tr><th>Instrument</th><th>Data</th><th>First buy</th><th>Price then</th><th>6M ago'+(i6>=0?" ("+days[i6]+")":"")+'</th><th>Latest</th><th>Splits</th></tr>';
   syms.forEach(s=>{
     const k=map(s),x=ser[k],f=tx.find(t=>t.s===s),ib=days.findIndex(d=>d>=f.d);
     h+='<tr><td>'+esc(x.name)+'<br><span class="mu">'+esc(k)+'</span></td><td>'+esc(x.gran||"")+', '+x.d.length+' points from '+x.d[0]+'</td><td>'+f.d+'</td><td>'+pr(k,ib)+'</td><td>'+pr(k,i6)+'</td><td>'+pr(k,L)+'</td><td>'+(x.sp&&x.sp.length?x.sp.map(e=>e.d+" "+e.r).join(", "):"–")+'</td></tr>';
@@ -184,58 +205,97 @@ function detail(syms){
 }
 function render(syms,bad,warn){
   let h="";
-  if(SK.length)warn=warn.concat(["Skipped, options are not supported yet: "+SK.join(", ")]);
+  if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0'+(MODE?"":" selected")+'>excluded</option></select></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
     rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+"</tr>"});
     h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p></div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   h+=hold(syms,bad);
-  if(rows.length)h+=detail(syms);
+  if(rows.length)h+=detail(syms.filter(s=>!isOpt(s)));
+  if(rows.length){
+    const c=costs(tx),oo=tx.filter(t=>t.opt),o=oo.reduce((a,t)=>a+(isFinite(t.c)?t.c:0),0);
+    h+='<div class="card"><h2>Not in the returns above</h2><div class="sc"><table><tr><td>Trading costs on stock and ETF trades, including currency conversion (estimate from '+c.n+' trades)</td><td>'+eur(c.tot)+'</td></tr><tr><td>Net cash result of option trades ('+oo.length+' trades)</td><td>'+eur(o)+'</td></tr></table></div><p class="mu">Also left out: idle cash, currency effects on non-euro holdings, and tax withheld on dividends. Saxo includes all of these.</p></div>';
+  }
   if(Object.keys(IG).length)h+='<div class="card"><h2>Rows not used</h2><p class="mu">These rows are not buys or sells, so the calculation ignores them. Anything that changes share counts (transfers, splits, exercises) matters here.</p><div class="sc"><table>'+Object.keys(IG).map(k=>'<tr><td>'+esc(k)+'</td><td>'+IG[k]+'</td></tr>').join("")+'</table></div></div>';
   if(warn.length)h+='<p class="mu">'+warn.map(esc).join("<br>")+"</p>";
   h+='<p class="mu">Method: daily chain-linked returns on adjusted closing prices (dividends counted as reinvested). Each trade is valued at that day\'s close. Fees and currency effects are ignored in this version.</p>';
   $("out").innerHTML=h;
+}
+const isOpt=s=>s.includes("/");
+const kof=s=>isOpt(s)?s:map(s);
+const MC={F:0,G:1,H:2,J:3,K:4,M:5,N:6,Q:7,U:8,V:9,X:10,Z:11};
+function optExp(s){
+  const m=s.match(/\/(\d{1,2})([FGHJKMNQUVXZ])(\d{2})/);
+  return m?new Date(Date.UTC(2000+ +m[3],MC[m[2]],+m[1])).toISOString().slice(0,10):null;
 }
 async function run(){
   const text=$("txt").value.trim();
   if(!text){msg("Paste or load your transactions first.");return}
   try{tx=toTx(text)}catch(e){msg(e.message);return}
   if(!tx.length){msg("No buy or sell rows found.");return}
-  SK=[...new Set(tx.filter(t=>t.s.includes("/")||ov[t.s]==="-").map(t=>t.s))];
-  tx=tx.filter(t=>!SK.includes(t.s));
-  if(!tx.length){msg("Nothing left to calculate after skipping options.");return}
   ls.set("tx",text);ls.set("bm",$("bm").value);
-  const syms=[...new Set(tx.map(t=>t.s))],keys=syms.map(map);
+  SK=[...new Set(tx.filter(t=>ov[t.s]==="-").map(t=>t.s))];
+  tx=tx.filter(t=>!SK.includes(t.s));
+  if(!tx.length){msg("Nothing left to calculate.");return}
+  const syms=[...new Set(tx.map(t=>t.s))],eq=syms.filter(s=>!isOpt(s)),keys=syms.map(kof);
   const bms=$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const all=[...new Set([...keys,...bms])];
-  msg("Loading prices for "+all.length+" symbols...");rows=[];ser={};
-  const res=await Promise.allSettled(all.map(getSeries));
-  const bad=[];
-  all.forEach((k,i)=>{if(res[i].status==="fulfilled")ser[k]=res[i].value;else bad.push(k)});
-  if(bad.length){msg("Could not load: "+bad.join(", "));render(syms,bad,[]);return}
-  const warn=[],first=tx[0].d,set=new Set();
-  all.forEach(k=>ser[k].d.forEach(d=>{if(d>=first)set.add(d)}));
+  const warn=[];
+  msg("Loading prices...");rows=[];ser={};
+  const need=[...new Set([...eq.map(map),...bms])];
+  const res=await Promise.allSettled(need.map(getSeries)),bad=[];
+  need.forEach((k,i)=>{if(res[i].status==="fulfilled")ser[k]=res[i].value;else bad.push(k)});
+  if(bad.length){msg("Could not load: "+bad.join(", "));G={syms,keys,bms,warn};render(syms,bad,[]);return}
+  const cur=[...new Set([...need.map(k=>ser[k].cur),...tx.map(t=>t.cur)].filter(c=>c&&c!=="EUR"))];
+  const fxr=await Promise.allSettled(cur.map(c=>getSeries("EUR"+c+"=X")));
+  FX={};cur.forEach((c,i)=>{if(fxr[i].status==="fulfilled")FX[c]=fxr[i].value;else warn.push("No exchange rate for "+c+"; those holdings are not converted to euro.")});
+  const first=tx[0].d,set=new Set();
+  need.forEach(k=>ser[k].d.forEach(d=>{if(d>=first)set.add(d)}));
   days=[...set].sort();
   if(days.length<2){msg("Not enough price data after your first transaction.");return}
-  P={};all.forEach(k=>{P[k]=align(ser[k])});
-  tx.forEach(t=>{const k=map(t.s);t.qa=t.q*(ser[k].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1)});
-  rows=[];
-  const t=twrr(new Set(keys));rows.push({name:"Total portfolio",idx:t.idx,st:t.st,chart:true});
-  const et=new Set(keys.filter(k=>ser[k].type==="ETF")),sk=new Set(keys.filter(k=>ser[k].type!=="ETF"));
-  if(et.size&&sk.size){
-    const a=twrr(et),b=twrr(sk);
-    rows.push({name:"ETFs",idx:a.idx,st:a.st,chart:true},{name:"Stocks",idx:b.idx,st:b.st,chart:true});
-  }
-  bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
-  syms.forEach(s=>{const k=map(s),r=twrr(new Set([k]));rows.push({name:ser[k].name,idx:r.idx,st:r.st,chart:false})});
-  keys.forEach(k=>{if(ser[k].cur&&ser[k].cur!=="EUR")warn.push(k+" is priced in "+ser[k].cur+"; currency effects are not included yet.")});
+  const F={},DR={};P={};
+  cur.forEach(c=>{if(FX[c])F[c]=align(FX[c])});
+  need.forEach(k=>{
+    const x=ser[k],a=align(x),cl=align(x,x.cv),c=x.cur;
+    DR[k]=a.map((v,i)=>cl[i]>0?v/cl[i]:1);
+    P[k]=(c&&c!=="EUR"&&F[c])?a.map((v,i)=>v/F[c][i]):a;
+  });
+  const rate=(t,m,di)=>{
+    if(!t.cur||t.cur==="EUR")return 1;
+    const g=Math.abs(t.q)*t.px*m,c=Math.abs(t.c);
+    if(t.rt>0&&isFinite(c)){const a=t.rt,b=1/t.rt;return Math.abs(g*a-c)<=Math.abs(g*b-c)?a:b}
+    return F[t.cur]?1/F[t.cur][di]:1;
+  };
+  tx.forEach(t=>{
+    t.key=kof(t.s);t.opt=isOpt(t.s);
+    let di=days.findIndex(d=>d>=t.d);if(di<0)di=days.length-1;t.di=di;
+    const m=t.opt?100:1,g=Math.abs(t.q)*t.px*m*rate(t,m,di),cs=Math.abs(t.c),dr=t.opt?1:DR[t.key][di];
+    t.g=g;t.cs=cs;t.fg=g*dr;t.fc=(isFinite(cs)?cs:g)*dr;
+    t.qa=t.opt?t.q:t.q*(ser[t.key].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1);
+  });
+  const ex={},last=days[days.length-1];
+  syms.filter(isOpt).forEach(s=>{const e=optExp(s);if(e&&e<=last){const i=days.findIndex(d=>d>=e);if(i>=0)ex[s]=i}});
   const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
-  const neg=Object.keys(q).filter(k=>q[k]<-1e-9);if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
-  msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
-  render(syms,bad,warn);
+  const neg=Object.keys(q).filter(s=>!isOpt(s)&&q[s]<-1e-9);
+  if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
+  G={syms,keys,bms,ex,warn};
+  calc();
 }
+function calc(){
+  const syms=G.syms,keys=G.keys,bms=G.bms,nm={};
+  tx.forEach(t=>{nm[t.s]=t.n});rows=[];
+  const all=twrr(new Set(keys),MODE);
+  rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true});
+  const grp=f=>new Set(keys.filter(f));
+  const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Options",grp(k=>!ser[k])]].filter(g=>g[1].size);
+  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:true})});
+  bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
+  syms.forEach(s=>{const k=kof(s),r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
+  msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
+  render(syms,[],G.warn);
+}
+$("out").addEventListener("change",e=>{if(e.target.id==="mode"){MODE=+e.target.value;calc()}});
 $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
 $("clr").onclick=()=>{ls.del("tx");ls.del("ov");ls.del("bm");ov={};$("txt").value="";$("out").innerHTML="";msg("Saved data cleared.")};
 $("file").onchange=e=>{
@@ -257,7 +317,7 @@ $("file").onchange=e=>{
     r.readAsText(f);
   }
 };
-$("out").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-tf");if(t){TF=t;render(Object.keys(tx.reduce((o,x)=>(o[x.s]=1,o),{})),[],[])}});
+$("out").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-tf");if(t){TF=t;render(G.syms,[],G.warn)}});
 $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}

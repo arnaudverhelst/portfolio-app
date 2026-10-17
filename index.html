@@ -16,7 +16,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
 .pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85rem}
-td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
+td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}
 </style></head>
 <body>
 <h1>My Portfolio</h1>
@@ -44,7 +44,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
-let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||ysym(s);
@@ -177,6 +177,11 @@ function periodInfo(){
   const profit=Y-X-net,den=X+w;
   return '<p class="mu">Holdings only (no cash). Value on '+days[a]+': <b>'+eur(X)+'</b>. Value on '+days[b]+': <b>'+eur(Y)+'</b>. Bought minus sold in between: <b>'+eur(net)+'</b>. Profit: <b>'+eur(profit)+'</b>'+(den>0?'. Simple money-weighted return: <b>'+(profit/den*100).toFixed(1)+'%</b>':'')+'.</p>';
 }
+function cagr(r){
+  const v=ret(r,"All");if(v==null)return null;
+  const y=(new Date(days[days.length-1])-new Date(days[Math.max(0,r.st)]))/864e5/365.25;
+  return y<1?null:Math.pow(1+v,1/y)-1;
+}
 function ret(r,tf){
   if(tf==="C"){const ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i},a=ia(CF),b=ia(CT);return(a<0||b<=a||r.st<0||a<r.st)?null:r.idx[b]/r.idx[a]-1}
   const L=days.length-1;
@@ -187,27 +192,56 @@ function ret(r,tf){
 }
 const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>";
 
+let CH=[];
+const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
+function lineChart(S,x0,L,fmt){
+  const id=CH.length,W=700,H=280,pl=58,pr=10,pt=10,pb=24;
+  let mn=1e18,mx=-1e18;
+  S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
+  if(mx===mn){mx+=1;mn-=1}
+  const xs=i=>pl+(i-x0)*(W-pl-pr)/(L-x0),ys=v=>H-pb-(v-mn)*(H-pt-pb)/(mx-mn);
+  let g="";
+  for(let k=0;k<=4;k++){
+    const v=mn+(mx-mn)*k/4,y=ys(v).toFixed(1);
+    g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity=".18"/><text x="'+(pl-6)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+fmt(v)+'</text>';
+  }
+  S.forEach((s,k)=>{g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/>'});
+  [x0,Math.round((x0+L)/2),L].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-6)+'" font-size="11" text-anchor="'+(k==0?"start":k==2?"end":"middle")+'" fill="currentColor">'+days[i]+'</text>'});
+  g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".6" visibility="hidden"/>';
+  CH.push({S:S,x0:x0,L:L,fmt:fmt,pl:pl,pr:pr,W:W});
+  const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
+  return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div><div class="mu" id="tip'+id+'">Move over the chart to see the values.</div>';
+}
 function chart(){
   const L=days.length-1,i0=Math.max(iStart(TF),0);
   const S=rows.filter(r=>r.chart&&r.st>=0).map(r=>{
-    const a=Math.max(i0,r.st);return {r:r,a:a};
+    const a=Math.max(i0,r.st),v=[];
+    for(let i=a;i<=L;i++)v.push((r.idx[i]/r.idx[a]-1)*100);
+    return {name:r.name,a:a,v:v};
   }).filter(s=>s.a<L);
   if(!S.length)return '<p class="mu">Not enough data for this period.</p>';
-  const x0=Math.min(...S.map(s=>s.a)),W=700,H=260,pl=44,pr=10,pt=10,pb=24;
-  let mn=1e9,mx=-1e9;
-  const vals=S.map(s=>{const o=[];for(let i=s.a;i<=L;i++){const v=s.r.idx[i]/s.r.idx[s.a]*100;o.push(v);if(v<mn)mn=v;if(v>mx)mx=v}return o});
-  const xs=i=>pl+(i-x0)*(W-pl-pr)/(L-x0),ys=v=>H-pb-(v-mn)*(H-pt-pb)/((mx-mn)||1);
-  let g="";
-  S.forEach((s,k)=>{
-    const pts=vals[k].map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ");
-    g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2" points="'+pts+'"/>';
-  });
-  g+='<text x="2" y="'+(pt+8)+'" font-size="11" fill="currentColor">'+mx.toFixed(0)+'</text>';
-  g+='<text x="2" y="'+(H-pb)+'" font-size="11" fill="currentColor">'+mn.toFixed(0)+'</text>';
-  g+='<text x="'+pl+'" y="'+(H-6)+'" font-size="11" fill="currentColor">'+days[x0]+'</text>';
-  g+='<text x="'+(W-pr)+'" y="'+(H-6)+'" font-size="11" text-anchor="end" fill="currentColor">'+days[L]+'</text>';
-  const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.r.name)+'</span>').join("");
-  return '<svg viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>';
+  return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf);
+}
+function valueCard(){
+  const L=days.length-1,x0=rows[0].st;
+  if(x0<0||x0>=L)return "";
+  let S,f;
+  if(VM==="v"){
+    const val=[],net=[];let cum=0,k=0;
+    for(let i=0;i<=L;i++){
+      while(k<tx.length&&tx[k].di<=i){cum+=(tx[k].q>0?1:-1)*(isFinite(tx[k].cs)?tx[k].cs:tx[k].g);k++}
+      if(i>=x0){val.push(valueAt(i));net.push(cum)}
+    }
+    S=[{name:"Value of holdings",a:x0,v:val},{name:"Net invested",a:x0,v:net}];f=eur;
+  }else{
+    S=rows.filter(r=>r.name==="Total portfolio"||r.kind==="b").map(r=>{
+      const b=r.kind==="b"?r.idx[x0]:r.idx[Math.max(0,x0-1)],v=[];
+      for(let i=x0;i<=L;i++)v.push((r.idx[i]/b-1)*100);
+      return {name:r.name,a:x0,v:v};
+    });
+    f=pctf;
+  }
+  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button>'+lineChart(S,x0,L,f)+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. The gap between the two lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
 }
 function hold(syms,bad){
   const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
@@ -264,15 +298,16 @@ function detail(syms){
   return h+"</table></div></div>";
 }
 function render(syms,bad,warn){
+  CH=[];
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Custom period: <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'"></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th></tr>";
-    rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+"</tr>"});
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p>'+periodInfo()+'</div>';
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Custom period: <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'"></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th><th>CAGR (all)</th></tr>";
+    rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+cell(cagr(r))+"</tr>"});
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does. CAGR is the yearly growth rate behind the "All" figure and only appears once the period is at least a year.</p>'+periodInfo()+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
-  if(rows.length)h+=positions();
+  if(rows.length)h+=valueCard()+positions();
   h+=hold(syms,bad);
   if(rows.length)h+=detail(syms.filter(s=>!isOpt(s)));
   if(rows.length){
@@ -355,7 +390,7 @@ function calc(){
   rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true});
   const grp=f=>new Set(keys.filter(f));
   const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Options",grp(k=>!ser[k])]].filter(g=>g[1].size);
-  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:true})});
+  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Options"})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   syms.forEach(s=>{const k=kof(s),r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
   msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
@@ -383,7 +418,21 @@ $("file").onchange=e=>{
     r.readAsText(f);
   }
 };
-$("out").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-tf");if(t){TF=t;render(G.syms,[],G.warn)}});
+$("out").addEventListener("click",e=>{
+  const t=e.target.getAttribute&&e.target.getAttribute("data-tf"),m=e.target.getAttribute&&e.target.getAttribute("data-vm");
+  if(t){TF=t;render(G.syms,[],G.warn)}
+  if(m){VM=m;render(G.syms,[],G.warn)}
+});
+const hov=e=>{
+  const sv=e.target.closest&&e.target.closest("svg.ch");if(!sv)return;
+  const n=sv.getAttribute("data-c"),c=CH[+n];if(!c)return;
+  const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*c.W;
+  const i=Math.max(c.x0,Math.min(c.L,Math.round(c.x0+(x-c.pl)*(c.L-c.x0)/(c.W-c.pl-c.pr))));
+  const px=c.pl+(i-c.x0)*(c.W-c.pl-c.pr)/(c.L-c.x0),ln=$("cur"+n);
+  ln.setAttribute("x1",px);ln.setAttribute("x2",px);ln.setAttribute("visibility","visible");
+  $("tip"+n).textContent=days[i]+":  "+c.S.map(s=>s.name+" "+(i>=s.a?c.fmt(s.v[i-s.a]):"–")).join("   ·   ");
+};
+$("out").addEventListener("pointermove",hov);$("out").addEventListener("pointerdown",hov);
 $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}

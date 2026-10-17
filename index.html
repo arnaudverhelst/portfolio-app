@@ -26,6 +26,12 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
 <p class="mu">Or paste the rows here, including the header line:</p>
 <textarea id="txt"></textarea>
+<h2 style="margin-top:14px">Transactions (Degiro export, optional)</h2>
+<input type="file" id="fileD" accept=".csv,.txt">
+<p class="mu">Or paste the rows here, including the header line:</p>
+<textarea id="txtD"></textarea>
+<h2 style="margin-top:14px">View</h2>
+<select id="bv"><option value="all">Saxo and Degiro combined</option><option value="Saxo">Saxo only</option><option value="Degiro">Degiro only</option></select>
 <h2 style="margin-top:14px">Benchmarks</h2>
 <input id="bm" value="IWDA.AS">
 <p class="mu">Yahoo symbols, separated by commas (for example IWDA.AS, VUAA.AS)</p>
@@ -43,11 +49,11 @@ const COL=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
-let ov={};try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}
+let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
 let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
-const map=s=>ov[s]||ysym(s);
+const map=s=>ov[s]||IS[s]||ysym(s);
 
 function pd(s){
   s=String(s).trim();
@@ -92,7 +98,7 @@ function toTx(t){
     const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
     if(!m||!d||!x[iS]){const kk=((iT>=0?x[iT]:"")+" | "+(x[iA]||"").replace(/[-\d.,@]+/g,"").trim()).slice(0,60);IG[kk]=(IG[kk]||0)+1;continue}
     const sell=/^(verkoop|sell)/i.test(m[1]);
-    a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2])),px:parseFloat(m[3]),c:iC>=0?num(x[iC]):NaN,rt:iR>=0?num(x[iR]):NaN,cur:iV>=0?(x[iV]||"").trim():""});
+    a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2])),px:parseFloat(m[3]),c:iC>=0?num(x[iC]):NaN,rt:iR>=0?num(x[iR]):NaN,cur:iV>=0?(x[iV]||"").trim():"",b:"Saxo"});
   }
   a.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
   return a;
@@ -261,7 +267,7 @@ const f2=x=>x.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDig
 const pc=v=>'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+"</td>";
 function positions(){
   const L=days.length-1,by={},out=[];
-  tx.forEach(t=>{(by[t.s]=by[t.s]||[]).push(t)});
+  tx.forEach(t=>{(by[t.key]=by[t.key]||[]).push(t)});
   for(const s in by){
     const o=isOpt(s);let q=0,cost=0,real=0;
     by[s].forEach(t=>{
@@ -272,7 +278,7 @@ function positions(){
     });
     if(Math.abs(q)<1e-9){q=0;cost=0}
     if(o&&G.ex[s]!==undefined&&q>0){real-=cost;cost=0;q=0}
-    const k=kof(s),px=o?0:P[k][L],val=o?cost:q*px;
+    const k=s,px=o?0:P[k][L],val=o?cost:q*px;
     out.push({n:(o?by[s][0].n+" (option)":ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un:q>0?val-cost:0,real:real,o:o});
   }
   const tv=out.reduce((a,r)=>a+r.val,0);
@@ -329,26 +335,82 @@ function optExp(s){
   const m=s.match(/\/(\d{1,2})([FGHJKMNQUVXZ])(\d{2})/);
   return m?new Date(Date.UTC(2000+ +m[3],MC[m[2]],+m[1])).toISOString().slice(0,10):null;
 }
+function toTxD(t){
+  const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>5);
+  if(!r.length)throw new Error("No table found in the Degiro text.");
+  const h=r[0].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
+  const iD=ix("datum"),iP=ix("product"),iI=ix("isin"),iM=ix("uitvoeringsplaats"),iQ=ix("aantal"),iK=ix("koers"),iE=ix("waarde eur"),iW=ix("wisselkoers"),iT=ix("totaal eur");
+  if(iD<0||iI<0||iQ<0||iK<0)throw new Error("Degiro columns not found. The first line must contain Datum, ISIN, Aantal and Koers.");
+  const a=[];
+  for(const x of r.slice(1)){
+    const d=pd(x[iD]),q=num(x[iQ]);
+    if(!d||!x[iI]||!isFinite(q)||q===0)continue;
+    a.push({d:d,s:"D:"+x[iI].trim(),n:(x[iP]||x[iI]).trim(),q:q,px:num(x[iK]),c:iT>=0?num(x[iT]):NaN,rt:iW>=0?num(x[iW]):NaN,cur:(x[iK+1]||"").trim(),ge:iE>=0?Math.abs(num(x[iE])):NaN,eurc:true,mic:iM>=0?(x[iM]||"").trim():"",b:"Degiro"});
+  }
+  return a;
+}
+const MICSUF={XBRU:".BR",XPAR:".PA",XAMS:".AS",XETR:".DE",XMIL:".MI",XNAS:"",XNYS:"",ARCX:"",XLON:".L",XSWX:".SW",XMAD:".MC",XHEL:".HE",XSTO:".ST",XCSE:".CO",XOSL:".OL",XASX:".AX",XTSE:".TO"};
+function pickQuote(qs,mic,isin){
+  const q=qs.filter(x=>x.symbol&&(x.quoteType==="EQUITY"||x.quoteType==="ETF"));
+  if(!q.length)return null;
+  const suf=MICSUF[mic];
+  let m=suf!==undefined?q.find(x=>suf===""?!x.symbol.includes("."):x.symbol.endsWith(suf)):null;
+  if(!m&&/^(US|CA)/.test(isin))m=q.find(x=>!x.symbol.includes("."));
+  if(!m)m=q.find(x=>!x.symbol.endsWith(".L"));
+  return (m||q[0]).symbol;
+}
+async function resolveIsins(list){
+  const todo=list.filter(s=>!ov[s]&&!IS[s]);
+  for(let i=0;i<todo.length;i+=6){
+    msg("Looking up symbols "+Math.min(i+6,todo.length)+" of "+todo.length+"...");
+    await Promise.allSettled(todo.slice(i,i+6).map(async s=>{
+      const r=await fetch(PROXY+"/?q="+encodeURIComponent(s.slice(2))),j=await r.json();
+      const t=tx.find(x=>x.s===s),sym=pickQuote(j.quotes||[],t&&t.mic,s.slice(2));
+      if(sym)IS[s]=sym;
+    }));
+  }
+  ls.set("isin",JSON.stringify(IS));
+}
+async function fetchAll(keys){
+  const todo=[...new Set(keys)].filter(k=>!SC[k]);
+  for(let i=0;i<todo.length;i+=6){
+    const part=todo.slice(i,i+6);
+    msg("Loading prices "+Math.min(i+6,todo.length)+" of "+todo.length+"...");
+    const r=await Promise.allSettled(part.map(getSeries));
+    part.forEach((k,j)=>{if(r[j].status==="fulfilled")SC[k]=r[j].value});
+  }
+}
 async function run(){
-  const text=$("txt").value.trim();
-  if(!text){msg("Paste or load your transactions first.");return}
-  try{tx=toTx(text)}catch(e){msg(e.message);return}
-  if(!tx.length){msg("No buy or sell rows found.");return}
-  ls.set("tx",text);ls.set("bm",$("bm").value);
+  IG={};
+  const text=$("txt").value.trim(),textD=$("txtD").value.trim();
+  if(!text&&!textD){msg("Paste or load your transactions first.");return}
+  try{tx=[...(text?toTx(text):[]),...(textD?toTxD(textD):[])]}catch(e){msg(e.message);return}
+  tx.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
+  ls.set("tx",text);ls.set("txd",textD);ls.set("bm",$("bm").value);
+  BV=$("bv").value;ls.set("bv",BV);
+  if(BV!=="all")tx=tx.filter(t=>t.b===BV);
+  if(!tx.length){msg("No buy or sell rows found for this view.");return}
   SK=[...new Set(tx.filter(t=>ov[t.s]==="-").map(t=>t.s))];
   tx=tx.filter(t=>!SK.includes(t.s));
+  await resolveIsins([...new Set(tx.filter(t=>t.s.startsWith("D:")).map(t=>t.s))]);
+  const unres=[...new Set(tx.filter(t=>t.s.startsWith("D:")&&!ov[t.s]&&!IS[t.s]).map(t=>t.s))],pre=[];
+  if(unres.length){
+    pre.push(unres.length+" Degiro product(s) have no Yahoo price data and are left out (often warrants, turbos, options or delisted shares): "+[...new Set(tx.filter(t=>unres.includes(t.s)).map(t=>t.n))].join(", ")+".");
+    tx=tx.filter(t=>!unres.includes(t.s));
+  }
   if(!tx.length){msg("Nothing left to calculate.");return}
   const syms=[...new Set(tx.map(t=>t.s))],eq=syms.filter(s=>!isOpt(s)),keys=syms.map(kof);
   const bms=$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
-  const warn=[];
+  const warn=[...pre];
   msg("Loading prices...");rows=[];ser={};
   const need=[...new Set([...eq.map(map),...bms])];
-  const res=await Promise.allSettled(need.map(getSeries)),bad=[];
-  need.forEach((k,i)=>{if(res[i].status==="fulfilled")ser[k]=res[i].value;else bad.push(k)});
+  const bad=[];
+  await fetchAll(need);
+  need.forEach(k=>{if(SC[k])ser[k]=SC[k];else bad.push(k)});
   if(bad.length){msg("Could not load: "+bad.join(", "));G={syms,keys,bms,warn};render(syms,bad,[]);return}
-  const cur=[...new Set([...need.map(k=>ser[k].cur),...tx.map(t=>t.cur)].filter(c=>c&&c!=="EUR"))];
-  const fxr=await Promise.allSettled(cur.map(c=>getSeries("EUR"+c+"=X")));
-  FX={};cur.forEach((c,i)=>{if(fxr[i].status==="fulfilled")FX[c]=fxr[i].value;else warn.push("No exchange rate for "+c+"; those holdings are not converted to euro.")});
+  const cur=[...new Set([...need.map(k=>ser[k].cur),...tx.map(t=>t.cur)].map(c=>c==="GBp"||c==="GBX"?"GBP":c).filter(c=>c&&c!=="EUR"))];
+  await fetchAll(cur.map(c=>"EUR"+c+"=X"));
+  FX={};cur.forEach(c=>{const fx=SC["EUR"+c+"=X"];if(fx)FX[c]=fx;else warn.push("No exchange rate for "+c+"; those holdings are not converted to euro.")});
   const first=tx[0].d,set=new Set();
   need.forEach(k=>ser[k].d.forEach(d=>{if(d>=first)set.add(d)}));
   days=[...set].sort();
@@ -356,9 +418,9 @@ async function run(){
   const F={},DR={};P={};
   cur.forEach(c=>{if(FX[c])F[c]=align(FX[c])});
   need.forEach(k=>{
-    const x=ser[k],a=align(x),cl=align(x,x.cv),c=x.cur;
+    const x=ser[k],a=align(x),cl=align(x,x.cv),pen=x.cur==="GBp"||x.cur==="GBX",c=pen?"GBP":x.cur;
     DR[k]=a.map((v,i)=>cl[i]>0?v/cl[i]:1);
-    P[k]=(c&&c!=="EUR"&&F[c])?a.map((v,i)=>v/F[c][i]):a;
+    P[k]=(c&&c!=="EUR"&&F[c])?a.map((v,i)=>v*(pen?0.01:1)/F[c][i]):a;
   });
   const fxE=(c,di)=>F[c]?1/F[c][di]:NaN;
   tx.forEach(t=>{
@@ -369,9 +431,9 @@ async function run(){
     if(t.cur&&t.cur!=="EUR"){
       const e=fxE(t.cur,di);
       if(t.rt>0){const a=t.rt,b=1/t.rt;r=isFinite(e)?(Math.abs(a-e)<=Math.abs(b-e)?a:b):a}else r=isFinite(e)?e:1;
-      if(isFinite(ci)&&Math.abs(ci-gi)<=Math.abs(ci-gi*r))cs=ci*r;
+      if(!t.eurc&&isFinite(ci)&&Math.abs(ci-gi)<=Math.abs(ci-gi*r))cs=ci*r;
     }
-    const g=gi*r,dr=t.opt?1:DR[t.key][di];
+    const g=isFinite(t.ge)?t.ge:gi*r,dr=t.opt?1:DR[t.key][di];
     t.g=g;t.cs=cs;t.fg=g*dr;t.fc=(isFinite(cs)?cs:g)*dr;
     t.qa=t.opt?t.q:t.q*(ser[t.key].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1);
     if(!t.opt&&t.q>0){const mv=t.qa*P[t.key][di];if(mv>0&&t.fc<0.3*mv){t.fg=mv;t.fc=mv;t.g=mv/dr;t.cs=mv/dr;t.free=1}}
@@ -395,13 +457,19 @@ function calc(){
   const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Options",grp(k=>!ser[k])]].filter(g=>g[1].size);
   if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Options"})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
-  syms.forEach(s=>{const k=kof(s),r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
+  const seen=new Set();
+  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
   msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
   render(syms,[],G.warn);
 }
 $("out").addEventListener("change",e=>{if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});
 $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
-$("clr").onclick=()=>{ls.del("tx");ls.del("ov");ls.del("bm");ov={};$("txt").value="";$("out").innerHTML="";msg("Saved data cleared.")};
+$("clr").onclick=()=>{ls.del("tx");ls.del("txd");ls.del("ov");ls.del("isin");ls.del("bm");ov={};IS={};SC={};$("txt").value="";$("txtD").value="";$("out").innerHTML="";msg("Saved data cleared.")};
+$("fileD").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=()=>{$("txtD").value=r.result;run().catch(x=>msg("Error: "+x.message))};r.readAsText(f);
+};
+$("bv").onchange=()=>run().catch(x=>msg("Error: "+x.message));
 $("file").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();
@@ -440,6 +508,6 @@ $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}
 });
-if(ls.get("tx")){$("txt").value=ls.get("tx");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
+if(ls.get("tx")||ls.get("txd")){$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
 </script>
 </body></html>

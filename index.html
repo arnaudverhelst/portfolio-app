@@ -194,16 +194,19 @@ const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")
 
 let CH=[];
 const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
-function lineChart(S,x0,L,fmt){
+function lineChart(S,x0,L,fmt,zero){
   const id=CH.length,W=700,H=280,pl=58,pr=10,pt=10,pb=24;
-  let mn=1e18,mx=-1e18;
+  let mn=zero?0:1e18,mx=zero?0:-1e18;
   S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
   if(mx===mn){mx+=1;mn-=1}
+  const raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+  mn=Math.floor(mn/step+1e-9)*step;mx=Math.ceil(mx/step-1e-9)*step;
   const xs=i=>pl+(i-x0)*(W-pl-pr)/(L-x0),ys=v=>H-pb-(v-mn)*(H-pt-pb)/(mx-mn);
   let g="";
-  for(let k=0;k<=4;k++){
-    const v=mn+(mx-mn)*k/4,y=ys(v).toFixed(1);
-    g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity=".18"/><text x="'+(pl-6)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+fmt(v)+'</text>';
+  const n=Math.round((mx-mn)/step);
+  for(let k=0;k<=n;k++){
+    const v=mn+k*step,z=Math.abs(v)<step/1000,y=ys(v).toFixed(1);
+    g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(z?".6":".15")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-6)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+fmt(z?0:v)+'</text>';
   }
   S.forEach((s,k)=>{g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/>'});
   [x0,Math.round((x0+L)/2),L].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-6)+'" font-size="11" text-anchor="'+(k==0?"start":k==2?"end":"middle")+'" fill="currentColor">'+days[i]+'</text>'});
@@ -215,12 +218,12 @@ function lineChart(S,x0,L,fmt){
 function chart(){
   const L=days.length-1,i0=Math.max(iStart(TF),0);
   const S=rows.filter(r=>r.chart&&r.st>=0).map(r=>{
-    const a=Math.max(i0,r.st),v=[];
-    for(let i=a;i<=L;i++)v.push((r.idx[i]/r.idx[a]-1)*100);
+    const a=Math.max(i0,r.st),bs=(TF==="All"&&r.kind!=="b")?100:r.idx[a],v=[];
+    for(let i=a;i<=L;i++)v.push((r.idx[i]/bs-1)*100);
     return {name:r.name,a:a,v:v};
   }).filter(s=>s.a<L);
   if(!S.length)return '<p class="mu">Not enough data for this period.</p>';
-  return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf);
+  return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf,true);
 }
 function valueCard(){
   const L=days.length-1,x0=rows[0].st;
@@ -235,13 +238,13 @@ function valueCard(){
     S=[{name:"Value of holdings",a:x0,v:val},{name:"Net invested",a:x0,v:net}];f=eur;
   }else{
     S=rows.filter(r=>r.name==="Total portfolio"||r.kind==="b").map(r=>{
-      const b=r.kind==="b"?r.idx[x0]:r.idx[Math.max(0,x0-1)],v=[];
+      const b=r.kind==="b"?r.idx[x0]:100,v=[];
       for(let i=x0;i<=L;i++)v.push((r.idx[i]/b-1)*100);
       return {name:r.name,a:x0,v:v};
     });
     f=pctf;
   }
-  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button>'+lineChart(S,x0,L,f)+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. The gap between the two lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
+  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button>'+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. The gap between the two lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
 }
 function hold(syms,bad){
   const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});

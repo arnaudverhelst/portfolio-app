@@ -207,7 +207,7 @@ function render(syms,bad,warn){
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0'+(MODE?"":" selected")+'>excluded</option></select></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"</tr>";
     rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+"</tr>"});
     h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p></div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";

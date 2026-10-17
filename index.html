@@ -261,16 +261,18 @@ async function run(){
     DR[k]=a.map((v,i)=>cl[i]>0?v/cl[i]:1);
     P[k]=(c&&c!=="EUR"&&F[c])?a.map((v,i)=>v/F[c][i]):a;
   });
-  const rate=(t,m,di)=>{
-    if(!t.cur||t.cur==="EUR")return 1;
-    const g=Math.abs(t.q)*t.px*m,c=Math.abs(t.c);
-    if(t.rt>0&&isFinite(c)){const a=t.rt,b=1/t.rt;return Math.abs(g*a-c)<=Math.abs(g*b-c)?a:b}
-    return F[t.cur]?1/F[t.cur][di]:1;
-  };
+  const fxE=(c,di)=>F[c]?1/F[c][di]:NaN;
   tx.forEach(t=>{
     t.key=kof(t.s);t.opt=isOpt(t.s);
     let di=days.findIndex(d=>d>=t.d);if(di<0)di=days.length-1;t.di=di;
-    const m=t.opt?100:1,g=Math.abs(t.q)*t.px*m*rate(t,m,di),cs=Math.abs(t.c),dr=t.opt?1:DR[t.key][di];
+    const m=t.opt?100:1,gi=Math.abs(t.q)*t.px*m,ci=Math.abs(t.c);
+    let r=1,cs=ci;
+    if(t.cur&&t.cur!=="EUR"){
+      const e=fxE(t.cur,di);
+      if(t.rt>0){const a=t.rt,b=1/t.rt;r=isFinite(e)?(Math.abs(a-e)<=Math.abs(b-e)?a:b):a}else r=isFinite(e)?e:1;
+      if(isFinite(ci)&&Math.abs(ci-gi)<=Math.abs(ci-gi*r))cs=ci*r;
+    }
+    const g=gi*r,dr=t.opt?1:DR[t.key][di];
     t.g=g;t.cs=cs;t.fg=g*dr;t.fc=(isFinite(cs)?cs:g)*dr;
     t.qa=t.opt?t.q:t.q*(ser[t.key].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1);
   });

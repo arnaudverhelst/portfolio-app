@@ -151,6 +151,32 @@ function iStart(tf){
   let i=-1;for(let j=0;j<days.length&&days[j]<=s;j++)i=j;
   return i;
 }
+const dayIdx=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i};
+function valueAt(i){
+  const pos={},bas={};let v=0;
+  tx.forEach(t=>{
+    if(t.di>i)return;const s=t.key;
+    if(t.opt){
+      const q0=pos[s]||0,q1=q0+t.q,f=t.fc,buy=t.q>0;
+      if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);
+      pos[s]=q1;
+    }else pos[s]=(pos[s]||0)+t.qa;
+  });
+  for(const s in pos){
+    if(Math.abs(pos[s])<1e-9)continue;
+    if(P[s])v+=pos[s]*P[s][i]/(G.DR[s]?G.DR[s][i]:1);
+    else if(!(G.ex[s]!==undefined&&G.ex[s]<=i))v+=bas[s]||0;
+  }
+  return v;
+}
+function periodInfo(){
+  const a=dayIdx(CF),b=dayIdx(CT);
+  if(a<0||b<=a)return "";
+  const X=valueAt(a),Y=valueAt(b);let net=0,w=0;
+  tx.forEach(t=>{if(t.di>a&&t.di<=b){const f=(t.q>0?1:-1)*t.fc;net+=f;w+=f*(b-t.di)/(b-a)}});
+  const profit=Y-X-net,den=X+w;
+  return '<p class="mu">Holdings only (no cash). Value on '+days[a]+': <b>'+eur(X)+'</b>. Value on '+days[b]+': <b>'+eur(Y)+'</b>. Bought minus sold in between: <b>'+eur(net)+'</b>. Profit: <b>'+eur(profit)+'</b>'+(den>0?'. Simple money-weighted return: <b>'+(profit/den*100).toFixed(1)+'%</b>':'')+'.</p>';
+}
 function ret(r,tf){
   if(tf==="C"){const ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i},a=ia(CF),b=ia(CT);return(a<0||b<=a||r.st<0||a<r.st)?null:r.idx[b]/r.idx[a]-1}
   const L=days.length-1;
@@ -243,7 +269,7 @@ function render(syms,bad,warn){
   if(rows.length){
     h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Custom period: <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'"></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th></tr>";
     rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+"</tr>"});
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p></div>';
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does.</p>'+periodInfo()+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=positions();
@@ -319,7 +345,7 @@ async function run(){
   const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
   const neg=Object.keys(q).filter(s=>!isOpt(s)&&q[s]<-1e-9);
   if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
-  G={syms,keys,bms,ex,warn};
+  G={syms,keys,bms,ex,warn,DR};
   calc();
 }
 function calc(){

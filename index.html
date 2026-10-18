@@ -339,13 +339,13 @@ function toTxD(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>5);
   if(!r.length)throw new Error("No table found in the Degiro text.");
   const h=r[0].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
-  const iD=ix("datum"),iP=ix("product"),iI=ix("isin"),iM=ix("uitvoeringsplaats"),iQ=ix("aantal"),iK=ix("koers"),iE=ix("waarde eur"),iW=ix("wisselkoers"),iT=ix("totaal eur");
+  const iD=ix("datum"),iTm=ix("tijd"),iP=ix("product"),iI=ix("isin"),iM=ix("uitvoeringsplaats"),iQ=ix("aantal"),iK=ix("koers"),iE=ix("waarde eur"),iW=ix("wisselkoers"),iT=ix("totaal eur");
   if(iD<0||iI<0||iQ<0||iK<0)throw new Error("Degiro columns not found. The first line must contain Datum, ISIN, Aantal and Koers.");
   const a=[];
   for(const x of r.slice(1)){
     const d=pd(x[iD]),q=num(x[iQ]);
     if(!d||!x[iI]||!isFinite(q)||q===0)continue;
-    a.push({d:d,s:"D:"+x[iI].trim(),n:(x[iP]||x[iI]).trim(),q:q,px:num(x[iK]),c:iT>=0?num(x[iT]):NaN,rt:iW>=0?num(x[iW]):NaN,cur:(x[iK+1]||"").trim(),ge:iE>=0?Math.abs(num(x[iE])):NaN,eurc:true,mic:iM>=0?(x[iM]||"").trim():"",b:"Degiro"});
+    a.push({d:d,tm:iTm>=0?(x[iTm]||"").trim():"",s:"D:"+x[iI].trim(),n:(x[iP]||x[iI]).trim(),q:q,px:num(x[iK]),c:iT>=0?num(x[iT]):NaN,rt:iW>=0?num(x[iW]):NaN,cur:(x[iK+1]||"").trim(),ge:iE>=0?Math.abs(num(x[iE])):NaN,eurc:true,mic:iM>=0?(x[iM]||"").trim():"",b:"Degiro"});
   }
   return a;
 }
@@ -385,7 +385,7 @@ async function run(){
   const text=$("txt").value.trim(),textD=$("txtD").value.trim();
   if(!text&&!textD){msg("Paste or load your transactions first.");return}
   try{tx=[...(text?toTx(text):[]),...(textD?toTxD(textD):[])]}catch(e){msg(e.message);return}
-  tx.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
+  tx.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:(p.tm||"")<(q.tm||"")?-1:(p.tm||"")>(q.tm||"")?1:(p.q>0?0:1)-(q.q>0?0:1));
   ls.set("tx",text);ls.set("txd",textD);ls.set("bm",$("bm").value);
   BV=$("bv").value;ls.set("bv",BV);
   if(BV!=="all")tx=tx.filter(t=>t.b===BV);

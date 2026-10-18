@@ -4,7 +4,7 @@
 :root{--bg:#fbfbf9;--fg:#14213d;--mu:#667085;--bd:#dfe3e8;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#14213d;color-scheme:light}
 @media(prefers-color-scheme:dark){:root{--bg:#0c1220;--fg:#e6e9f0;--mu:#8b95a8;--bd:#273046;--card:#131b2e;--pos:#4ade80;--neg:#f87171;--ac:#7aa2ff;color-scheme:dark}}
 *{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:1500px;margin:0 auto;padding:24px 16px}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:1200px;margin:0 auto;padding:24px 16px}
 h1{margin:0 0 4px;font-size:1.6rem}h2{font-size:1.05rem;margin:0 0 10px}.mu{color:var(--mu);font-size:.88rem}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px;margin:16px 0}
 textarea,input{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px}
@@ -30,6 +30,10 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <input type="file" id="fileD" accept=".csv,.txt">
 <p class="mu">Or paste the rows here, including the header line:</p>
 <textarea id="txtD"></textarea>
+<h2 style="margin-top:14px">Degiro account statement (optional, for dividends and costs)</h2>
+<input type="file" id="fileA" accept=".xlsx,.xls,.csv,.txt">
+<p class="mu">Or paste the rows here, including the header line:</p>
+<textarea id="txtA"></textarea>
 <h2 style="margin-top:14px">View</h2>
 <select id="bv"><option value="all">Saxo and Degiro combined</option><option value="Saxo">Saxo only</option><option value="Degiro">Degiro only</option></select>
 <h2 style="margin-top:14px">Benchmarks</h2>
@@ -50,7 +54,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
@@ -88,7 +92,7 @@ function num(v){
 function toTx(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>3);
   if(!r.length)throw new Error("No table found in the text.");
-  IG={};
+  IG={};SXD=[];
   let hi=r.findIndex(x=>x.some(c=>c.trim().toLowerCase()==="transactiedatum"));if(hi<0)hi=0;
   const h=r[hi].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
   const iD=ix("transactiedatum"),iS=ix("instrumentsymbool"),iA=ix("acties"),iN=ix("instrument"),iT=ix("type"),iC=ix("aantal"),iR=ix("omrekeningskoers"),iV=ix("instrumentvaluta");
@@ -96,6 +100,7 @@ function toTx(t){
   const a=[];
   for(const x of r.slice(hi+1)){
     const m=(x[iA]||"").match(/^\s*(koop|verkoop|buy|sell)\s+(-?[\d.]+)\s*@\s*([\d.]+)/i),d=pd(x[iD]);
+    if(d&&x[iS]&&/cashdividend/i.test(x[iA]||"")){const am=iC>=0?num(x[iC]):NaN,rr=iR>=0?num(x[iR]):NaN;if(isFinite(am))SXD.push({k:"div",d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),eur:am*(rr>0?rr:1),b:"Saxo"})}
     if(!m||!d||!x[iS]){const kk=((iT>=0?x[iT]:"")+" | "+(x[iA]||"").replace(/[-\d.,@]+/g,"").trim()).slice(0,60);IG[kk]=(IG[kk]||0)+1;continue}
     const sell=/^(verkoop|sell)/i.test(m[1]);
     a.push({d:d,s:x[iS].trim(),n:(x[iN]||x[iS]).trim(),q:(sell?-1:1)*Math.abs(parseFloat(m[2])),px:parseFloat(m[3]),c:iC>=0?num(x[iC]):NaN,rt:iR>=0?num(x[iR]):NaN,cur:iV>=0?(x[iV]||"").trim():"",b:"Saxo"});
@@ -279,8 +284,9 @@ function positions(){
     if(Math.abs(q)<1e-9){q=0;cost=0}
     if(o&&G.ex[s]!==undefined&&q>0){real-=cost;cost=0;q=0}
     const k=s,px=o?0:P[k][L],val=o?cost:q*px;
-    out.push({n:(o?by[s][0].n+" (derivative)":ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un:q>0?val-cost:0,real:real,o:o});
+    out.push({k:s,n:(o?by[s][0].n+" (derivative)":ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un:q>0?val-cost:0,real:real,o:o});
   }
+  POSL=out;
   const tv=out.reduce((a,r)=>a+r.val,0);
   out.sort((a,b)=>b.val-a.val);
   let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>Realised</th><th>Total</th></tr>';
@@ -307,6 +313,15 @@ function detail(syms){
   return h+"</table></div></div>";
 }
 function render(syms,bad,warn){
+  if(TAB==="d"&&rows.length&&!bad.length){
+    CH=[];positions();
+    $("out").innerHTML=tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+    return;
+  }
+  renderR(syms,bad,warn);
+  if(rows.length)$("out").innerHTML=tabsHtml()+$("out").innerHTML;
+}
+function renderR(syms,bad,warn){
   CH=[];
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
@@ -335,6 +350,92 @@ const MC={F:0,G:1,H:2,J:3,K:4,M:5,N:6,Q:7,U:8,V:9,X:10,Z:11};
 function optExp(s){
   const m=s.match(/\/(\d{1,2})([FGHJKMNQUVXZ])(\d{2})/);
   return m?new Date(Date.UTC(2000+ +m[3],MC[m[2]],+m[1])).toISOString().slice(0,10):null;
+}
+function toAcc(text){
+  const r=parseTable(text.replace(/^\uFEFF/,"")).filter(x=>x.length>5);
+  if(!r.length)throw new Error("No table found in the account statement.");
+  const h=r[0].map(x=>x.trim().toLowerCase()),ix=n=>h.indexOf(n);
+  const iD=ix("datum"),iP=ix("product"),iI=ix("isin"),iO=ix("omschrijving"),iM=ix("mutatie");
+  if(iD<0||iO<0||iM<0)throw new Error("Account statement columns not found. The first line must contain Datum, Omschrijving and Mutatie.");
+  const a=[];
+  for(const x of r.slice(1)){
+    const d=pd(x[iD]),amt=num(x[iM+1]),o=(x[iO]||"").trim();
+    if(!d||!isFinite(amt))continue;
+    let k=null;
+    if(/^dividend$/i.test(o))k="div";else if(/^dividendbelasting$/i.test(o))k="tax";
+    else if(/^transactiebelasting/i.test(o)||/aansluitingskosten/i.test(o))k="fee";
+    else if(/^rente$/i.test(o)||/^flatex interest/i.test(o))k="int";
+    if(k)a.push({k:k,d:d,isin:(x[iI]||"").trim(),n:(x[iP]||"").trim(),cur:(x[iM]||"EUR").trim()||"EUR",amt:amt,b:"Degiro"});
+  }
+  return a;
+}
+function fileToText(f,cb){
+  const r=new FileReader(),isX=/\.xls[xm]?$/i.test(f.name);
+  r.onload=()=>{
+    try{
+      if(isX){
+        const wb=XLSX.read(r.result,{type:"array"});
+        const a=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""});
+        cb(a.map(x=>x.map(c=>String(c).replace(/[\t\r\n]+/g," ")).join("\t")).join("\n"));
+      }else cb(r.result);
+    }catch(x){msg("Could not read the file: "+x.message)}
+  };
+  if(isX)r.readAsArrayBuffer(f);else r.readAsText(f);
+}
+function toEur(amt,cur,d){
+  if(!cur||cur==="EUR")return amt;
+  const pen=cur==="GBp"||cur==="GBX",s=FX[pen?"GBP":cur];
+  if(!s)return NaN;
+  let j=0;for(let i=0;i<s.d.length&&s.d[i]<=d;i++)j=i;
+  return amt/s.v[j]*(pen?0.01:1);
+}
+function buildDiv(){
+  DV=[];AO=[];
+  const shares=(k,d)=>tx.reduce((a,t)=>a+(t.key===k&&t.d<=d?t.q:0),0);
+  AC.forEach(a=>{
+    const e=toEur(a.amt,a.cur,a.d);if(!isFinite(e))return;
+    if(a.k==="fee"||a.k==="int"){AO.push({k:a.k,d:a.d,e:e});return}
+    const s="D:"+a.isin,t=tx.find(x=>x.s===s),k=t?t.key:s;
+    DV.push({b:"Degiro",d:a.d,k:k,n:t?t.n:a.n,g:a.k==="div"?e:0,t:a.k==="tax"?e:0,sh:shares(k,a.d)});
+  });
+  SXD.forEach(a=>{
+    const k=kof(a.s);
+    DV.push({b:"Saxo",d:a.d,k:k,n:a.n,g:a.eur,t:0,sh:shares(k,a.d)});
+  });
+  DV.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
+}
+const tabsHtml=()=>'<div class="card" style="padding:6px 12px"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button></div>';
+function dividends(){
+  if(!DV.length&&!AO.length)return '<div class="card"><h2>Dividends</h2><p class="mu">No dividend rows found. Load your Degiro account statement (and your Saxo file) and press Calculate.</p></div>';
+  const last=days[days.length-1],cd=new Date(last+"T00:00:00Z");cd.setUTCFullYear(cd.getUTCFullYear()-1);
+  const cut=cd.toISOString().slice(0,10),yr={},ins={};
+  DV.forEach(e=>{
+    const y=e.d.slice(0,4);yr[y]=yr[y]||{g:0,t:0};yr[y].g+=e.g;yr[y].t+=e.t;
+    const o=ins[e.k]=ins[e.k]||{n:e.n,g:0,t:0,c:0,last:"",dps:null,l12:0};
+    o.g+=e.g;o.t+=e.t;
+    if(e.g>0){o.c++;if(e.d>=o.last){o.last=e.d;o.dps=e.sh>0?e.g/e.sh:null}}
+    if(e.d>cut)o.l12+=e.g;
+  });
+  const pos={};POSL.forEach(r=>{pos[r.k]=r});
+  const G0=DV.reduce((a,e)=>a+e.g,0),T0=DV.reduce((a,e)=>a+e.t,0),L12=DV.filter(e=>e.d>cut).reduce((a,e)=>a+e.g+e.t,0);
+  let h='<div class="card"><h2>Dividends</h2><p>Net received in total: <b>'+eur(G0+T0)+'</b> (gross '+eur(G0)+', tax '+eur(T0)+'). Last 12 months, net: <b>'+eur(L12)+'</b>.</p>';
+  const ys=Object.keys(yr).sort(),mx=Math.max(1,...ys.map(y=>yr[y].g+yr[y].t));
+  h+='<div class="sc"><table><tr><th>Year</th><th>Gross</th><th>Tax</th><th>Net</th><th style="width:40%"></th></tr>';
+  ys.forEach(y=>{const n=yr[y].g+yr[y].t;h+='<tr><td>'+y+'</td><td>'+eur(yr[y].g)+'</td><td>'+eur(yr[y].t)+'</td><td>'+eur(n)+'</td><td><div style="background:var(--ac);height:8px;width:'+Math.max(0,n/mx*100).toFixed(0)+'%"></div></td></tr>'});
+  h+='</table></div></div>';
+  const list=Object.keys(ins).map(k=>({k:k,o:ins[k]})).sort((a,b)=>(b.o.g+b.o.t)-(a.o.g+a.o.t));
+  h+='<div class="card"><h2>Per instrument</h2><div class="sc"><table><tr><th>Instrument</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Last per share</th><th>Yield (12M)</th><th>Yield on cost</th></tr>';
+  list.forEach(x=>{
+    const o=x.o,p=pos[x.k],held=p&&p.q>0,cost=held?p.avg*p.q:0;
+    h+='<tr><td>'+esc(o.n)+'</td><td>'+o.c+'</td><td>'+eur(o.g)+'</td><td>'+eur(o.t)+'</td><td>'+eur(o.g+o.t)+'</td><td>'+(o.dps==null?"–":"€"+f2(o.dps))+'</td><td>'+(held&&p.val>0?(o.l12/p.val*100).toFixed(1)+"%":"–")+'</td><td>'+(held&&cost>0?(o.l12/cost*100).toFixed(1)+"%":"–")+'</td></tr>';
+  });
+  h+='</table></div><p class="mu">Yields use gross dividends of the last 12 months against the current value or the cost of what you still hold. Per-share amounts are in euro and use the shares you held on the payment date.</p></div>';
+  if(AO.length){
+    const f=AO.filter(a=>a.k==="fee").reduce((a,e)=>a+e.e,0),it=AO.filter(a=>a.k==="int").reduce((a,e)=>a+e.e,0);
+    const U=POSL.reduce((a,r)=>a+r.un,0),R=POSL.reduce((a,r)=>a+r.real,0);
+    h+='<div class="card"><h2>Reconciliation with Degiro</h2><div class="sc"><table><tr><td>Profit on trades (realised and unrealised, trading costs included)</td><td>'+eur(U+R)+'</td></tr><tr><td>Net dividends</td><td>'+eur(G0+T0)+'</td></tr><tr><td>Transaction tax and connection fees</td><td>'+eur(f)+'</td></tr><tr><td>Interest</td><td>'+eur(it)+'</td></tr><tr><td><b>Total result</b></td><td><b>'+eur(U+R+G0+T0+f+it)+'</b></td></tr></table></div><p class="mu">Compare the total with the result Degiro shows. Small differences come from exchange rates and from products without price data.</p></div>';
+  }
+  return h;
 }
 function toTxD(t){
   const r=parseTable(t.replace(/^\uFEFF/,"")).filter(x=>x.length>5);
@@ -391,13 +492,13 @@ function snap(f){
 }
 async function run(){
   IG={};
-  const text=$("txt").value.trim(),textD=$("txtD").value.trim();
+  const text=$("txt").value.trim(),textD=$("txtD").value.trim(),textA=$("txtA").value.trim();
   if(!text&&!textD){msg("Paste or load your transactions first.");return}
-  try{tx=[...(text?toTx(text):[]),...(textD?toTxD(textD):[])]}catch(e){msg(e.message);return}
+  try{tx=[...(text?toTx(text):[]),...(textD?toTxD(textD):[])];AC=textA?toAcc(textA):[]}catch(e){msg(e.message);return}
   tx.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:(p.tm||"")<(q.tm||"")?-1:(p.tm||"")>(q.tm||"")?1:(p.q>0?0:1)-(q.q>0?0:1));
-  ls.set("tx",text);ls.set("txd",textD);ls.set("bm",$("bm").value);
+  ls.set("tx",text);ls.set("txd",textD);ls.set("txa",textA);ls.set("bm",$("bm").value);
   BV=$("bv").value;ls.set("bv",BV);
-  if(BV!=="all")tx=tx.filter(t=>t.b===BV);
+  if(BV!=="all"){tx=tx.filter(t=>t.b===BV);AC=AC.filter(a=>a.b===BV);SXD=SXD.filter(a=>a.b===BV)}
   if(!tx.length){msg("No buy or sell rows found for this view.");return}
   SK=[...new Set(tx.filter(t=>ov[t.s]==="-").map(t=>t.s))];
   tx=tx.filter(t=>!SK.includes(t.s));
@@ -418,7 +519,7 @@ async function run(){
   await fetchAll(need);
   need.forEach(k=>{if(SC[k])ser[k]=SC[k];else bad.push(k)});
   if(bad.length){msg("Could not load: "+bad.join(", "));G={syms,keys,bms,warn};render(syms,bad,[]);return}
-  const cur=[...new Set([...need.map(k=>ser[k].cur),...tx.map(t=>t.cur)].map(c=>c==="GBp"||c==="GBX"?"GBP":c).filter(c=>c&&c!=="EUR"))];
+  const cur=[...new Set([...need.map(k=>ser[k].cur),...tx.map(t=>t.cur),...AC.map(a=>a.cur)].map(c=>c==="GBp"||c==="GBX"?"GBP":c).filter(c=>c&&c!=="EUR"))];
   await fetchAll(cur.map(c=>"EUR"+c+"=X"));
   FX={};cur.forEach(c=>{const fx=SC["EUR"+c+"=X"];if(fx)FX[c]=fx;else warn.push("No exchange rate for "+c+"; those holdings are not converted to euro.")});
   const first=tx[0].d,set=new Set();
@@ -467,6 +568,7 @@ async function run(){
   const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
   const neg=Object.keys(q).filter(s=>!isOpt(s)&&q[s]<-1e-9);
   if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
+  try{buildDiv()}catch(e){warn.push("Dividends could not be read: "+e.message)}
   G={syms,keys,bms,ex,warn,DR};
   calc();
 }
@@ -486,11 +588,12 @@ function calc(){
 }
 $("out").addEventListener("change",e=>{if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});
 $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
-$("clr").onclick=()=>{ls.del("tx");ls.del("txd");ls.del("ov");ls.del("isin");ls.del("bm");ov={};IS={};SC={};$("txt").value="";$("txtD").value="";$("out").innerHTML="";msg("Saved data cleared.")};
+$("clr").onclick=()=>{ls.del("tx");ls.del("txd");ls.del("txa");ls.del("ov");ls.del("isin");ls.del("bm");ov={};IS={};SC={};$("txt").value="";$("txtD").value="";$("txtA").value="";$("out").innerHTML="";msg("Saved data cleared.")};
 $("fileD").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=()=>{$("txtD").value=r.result;run().catch(x=>msg("Error: "+x.message))};r.readAsText(f);
 };
+$("fileA").onchange=e=>{const f=e.target.files[0];if(f)fileToText(f,t=>{$("txtA").value=t;run().catch(x=>msg("Error: "+x.message))})};
 $("bv").onchange=()=>run().catch(x=>msg("Error: "+x.message));
 $("file").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
@@ -513,6 +616,8 @@ $("file").onchange=e=>{
 };
 $("out").addEventListener("click",e=>{
   const t=e.target.getAttribute&&e.target.getAttribute("data-tf"),m=e.target.getAttribute&&e.target.getAttribute("data-vm");
+  const tb=e.target.getAttribute&&e.target.getAttribute("data-tab");
+  if(tb){TAB=tb;render(G.syms,[],G.warn)}
   if(t){TF=t;render(G.syms,[],G.warn)}
   if(m){VM=m;render(G.syms,[],G.warn)}
 });
@@ -530,6 +635,6 @@ $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}
 });
-if(ls.get("tx")||ls.get("txd")){$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
+if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
 </script>
 </body></html>

@@ -16,7 +16,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 th,td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}td:first-child{white-space:normal;min-width:170px;max-width:340px}
 .pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85rem}
-td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}
+td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}
 </style></head>
 <body>
 <h1>My Portfolio</h1>
@@ -54,7 +54,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
@@ -205,10 +205,11 @@ const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")
 
 let CH=[];
 const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
-function lineChart(S,x0,L,fmt,zero){
+function lineChart(S,x0,L,fmt,zero,marks){
   const id=CH.length,W=700,H=280,pl=58,pr=10,pt=10,pb=24;
   let mn=zero?0:1e18,mx=zero?0:-1e18;
   S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
+  (marks||[]).forEach(m=>{if(m.v<mn)mn=m.v;if(m.v>mx)mx=m.v});
   if(mx===mn){mx+=1;mn-=1}
   const raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
   mn=Math.floor(mn/step+1e-9)*step;mx=Math.ceil(mx/step-1e-9)*step;
@@ -220,6 +221,7 @@ function lineChart(S,x0,L,fmt,zero){
     g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(z?".6":".15")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-6)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+fmt(z?0:v)+'</text>';
   }
   S.forEach((s,k)=>{g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/>'});
+  (marks||[]).forEach(m=>{g+='<circle cx="'+xs(m.i).toFixed(1)+'" cy="'+ys(m.v).toFixed(1)+'" r="4" fill="'+m.c+'" stroke="#fff" stroke-width="1"/>'});
   [x0,Math.round((x0+L)/2),L].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-6)+'" font-size="11" text-anchor="'+(k==0?"start":k==2?"end":"middle")+'" fill="currentColor">'+days[i]+'</text>'});
   g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".6" visibility="hidden"/>';
   CH.push({S:S,x0:x0,L:L,fmt:fmt,pl:pl,pr:pr,W:W});
@@ -291,7 +293,7 @@ function positions(){
   out.sort((a,b)=>b.val-a.val);
   let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>Realised</th><th>Total</th></tr>';
   out.forEach(r=>{
-    h+='<tr><td>'+esc(r.n)+'</td><td>'+(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td>'+(tv>0?(r.val/tv*100).toFixed(1)+"%":"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.un+r.real)+"</tr>";
+    h+='<tr><td><a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a></td><td>'+(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td>'+(tv>0?(r.val/tv*100).toFixed(1)+"%":"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.un+r.real)+"</tr>";
   });
   const U=out.reduce((a,r)=>a+r.un,0),R=out.reduce((a,r)=>a+r.real,0);
   h+='<tr><td><b>Total</b></td><td></td><td></td><td></td><td><b>'+eur(tv)+'</b></td><td></td>'+pc(U)+pc(R)+pc(U+R)+"</tr></table></div>";
@@ -314,6 +316,7 @@ function detail(syms){
   return h+"</table></div></div>";
 }
 function render(syms,bad,warn){
+  if(DET&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+detailView(DET);return}
   if(TAB==="d"&&rows.length&&!bad.length){
     CH=[];positions();
     $("out").innerHTML=tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
@@ -328,7 +331,7 @@ function renderR(syms,bad,warn){
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
     h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Custom period: <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'"></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th><th>CAGR (all)</th></tr>";
-    rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+cell(cagr(r))+"</tr>"});
+    rows.forEach(r=>{h+="<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+cell(cagr(r))+"</tr>"});
     h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does. CAGR is the yearly growth rate behind the "All" figure and only appears once the period is at least a year. Options, turbos and other derivatives are part of the total, but they have no line of their own: a percentage on short-lived positions carried at cost is not meaningful, so look at their euro result in Positions.</p>'+periodInfo()+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
@@ -435,6 +438,52 @@ function dividends(){
     const f=AO.filter(a=>a.k==="fee").reduce((a,e)=>a+e.e,0),it=AO.filter(a=>a.k==="int").reduce((a,e)=>a+e.e,0);
     const U=POSL.reduce((a,r)=>a+r.un,0),R=POSL.reduce((a,r)=>a+r.real,0);
     h+='<div class="card"><h2>Reconciliation with Degiro</h2><div class="sc"><table><tr><td>Profit on trades (realised and unrealised, trading costs included)</td><td>'+eur(U+R)+'</td></tr><tr><td>Net dividends</td><td>'+eur(G0+T0)+'</td></tr><tr><td>Transaction tax and connection fees</td><td>'+eur(f)+'</td></tr><tr><td>Interest</td><td>'+eur(it)+'</td></tr><tr><td><b>Total result</b></td><td><b>'+eur(U+R+G0+T0+f+it)+'</b></td></tr></table></div><p class="mu">Compare the total with the result Degiro shows. Small differences come from exchange rates and from products without price data.</p></div>';
+  }
+  return h;
+}
+const pct1=v=>v==null?"–":(v>0?"+":"")+(v*100).toFixed(1)+"%";
+const eur2=v=>"€"+(Math.abs(v)<10?v.toFixed(2):v.toFixed(0));
+function detailView(k){
+  const back='<button data-back="1">← Back to overview</button>';
+  const T=tx.filter(t=>t.key===k);
+  if(!T.length)return '<div class="card">'+back+'<p>No trades found for this instrument in the current view.</p></div>';
+  const o=!!T[0].opt,x=ser[k],name=x?x.name:T[0].n,L=days.length-1;
+  let q=0,cost=0,real=0,bought=0;const R=[];
+  T.forEach(t=>{
+    const a=o?t.q:t.qa,c=isFinite(t.cs)?t.cs:t.g;let r=null;
+    if(a>0){q+=a;cost+=c;bought+=c}
+    else if(q>0){const f=Math.min(1,-a/q);r=c-cost*f;real+=r;cost-=cost*f;q+=a}
+    else{r=c;real+=c}
+    if(Math.abs(q)<1e-9){q=0;cost=0}
+    R.push({t:t,q:q,r:r});
+  });
+  if(o&&G.ex[k]!==undefined&&q>0){real-=cost;cost=0;q=0}
+  const px=o?0:P[k][L],val=o?cost:q*px,un=q>0?val-cost:0;
+  const D=DV.filter(e=>e.k===k),dn=D.reduce((a,e)=>a+e.g+e.t,0);
+  const row=rows.find(r=>r.k===k),tot=real+un;
+  let h='<div class="card">'+back+'<h2 style="margin-top:12px">'+esc(name)+'</h2><p class="mu">'+esc(o?"Derivative or product without price data (carried at cost until sold)":(x&&x.type||"")+" · "+k+" · "+(x&&x.cur||""))+'</p>';
+  h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
+  h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
+  if(row){
+    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th><th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+TFS.map(t=>cell(ret(row,t))).join("")+cell(ret(row,"C"))+cell(cagr(row))+"</tr></table></div>";
+  }
+  h+='</div>';
+  if(!o&&G.DR[k]){
+    const x0=T[0].di,v=[];
+    for(let i=x0;i<=L;i++)v.push(P[k][i]/G.DR[k][i]);
+    const marks=T.map(t=>({i:t.di,v:t.g/Math.max(1e-9,Math.abs(t.qa)),c:t.q>0?"#16a34a":"#dc2626"}));
+    h+='<div class="card"><h2>Price and your trades</h2>'+lineChart([{name:"Price (€)",a:x0,v:v}],x0,L,eur2,false,marks)+'<p class="mu"><b style="color:#16a34a">●</b> buys <b style="color:#dc2626">●</b> sells. Prices are euro-converted closes.</p></div>';
+  }
+  h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
+  R.forEach(z=>{
+    const t=z.t,buy=t.q>0,fee=isFinite(t.cs)&&isFinite(t.g)?(buy?t.cs-t.g:t.g-t.cs):NaN,qa=o?t.q:t.qa;
+    h+='<tr><td>'+t.d+'</td><td>'+t.b+'</td><td>'+(buy?"Buy":"Sell")+(t.fix?" *":"")+(t.free?" †":"")+'</td><td>'+(+Math.abs(t.q).toFixed(4))+'</td><td>'+(Math.abs(qa-t.q)>1e-9?(+Math.abs(qa).toFixed(4)):"=")+'</td><td>'+(isFinite(t.px)?f2(t.px)+" "+esc(t.cur||""):"–")+'</td><td>'+(isFinite(t.cs)?eur((buy?-1:1)*t.cs):"–")+'</td><td>'+(isFinite(fee)?eur(fee):"–")+'</td><td>'+(+z.q.toFixed(4))+'</td>'+(z.r==null?'<td></td>':pc(z.r))+'</tr>';
+  });
+  h+='</table></div><p class="mu">* share count re-derived from the trade value (price history did not match). † shares received at (almost) zero price, valued at market price. "Shares today" is on the basis of the current share count, after splits.</p></div>';
+  if(D.length){
+    h+='<div class="card"><h2>Dividends</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Gross</th><th>Tax</th><th>Net</th><th>Per share</th></tr>';
+    D.forEach(e=>{h+='<tr><td>'+e.d+'</td><td>'+e.b+'</td><td>'+eur(e.g)+'</td><td>'+eur(e.t)+'</td><td>'+eur(e.g+e.t)+'</td><td>'+(e.sh>0&&e.g>0?"€"+f2(e.g/e.sh):"–")+'</td></tr>'});
+    h+='</table></div></div>';
   }
   return h;
 }
@@ -584,7 +633,7 @@ function calc(){
   if(gs.length>1)gs.forEach(g=>{if(g[0]==="Derivatives")return;const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives"})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   const seen=new Set();
-  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
+  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k})});
   msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+"."+($("txtA").value.trim()?" Dividend payments found: "+DV.filter(e=>e.g>0).length+".":""));
   render(syms,[],G.warn);
 }
@@ -619,7 +668,10 @@ $("file").onchange=e=>{
 $("out").addEventListener("click",e=>{
   const t=e.target.getAttribute&&e.target.getAttribute("data-tf"),m=e.target.getAttribute&&e.target.getAttribute("data-vm");
   const tb=e.target.getAttribute&&e.target.getAttribute("data-tab");
-  if(tb){TAB=tb;render(G.syms,[],G.warn)}
+  const dt=e.target.getAttribute&&e.target.getAttribute("data-det"),bk=e.target.getAttribute&&e.target.getAttribute("data-back");
+  if(tb){TAB=tb;DET=null;render(G.syms,[],G.warn)}
+  if(dt){e.preventDefault();DET=dt;render(G.syms,[],G.warn);window.scrollTo(0,0)}
+  if(bk){DET=null;render(G.syms,[],G.warn)}
   if(t){TF=t;render(G.syms,[],G.warn)}
   if(m){VM=m;render(G.syms,[],G.warn)}
 });

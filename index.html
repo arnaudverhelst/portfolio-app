@@ -194,10 +194,13 @@ function periodInfo(){
 }
 function cagr(r){
   const v=ret(r,"All");if(v==null)return null;
-  const y=(new Date(days[days.length-1])-new Date(days[Math.max(0,r.st)]))/864e5/365.25;
-  return y<1?null:Math.pow(1+v,1/y)-1;
+  let e=days.length-1;
+  if(r.held){e=-1;for(let i=days.length-1;i>=0;i--)if(r.held[i]){e=i;break}if(e<0)return null}
+  const y=(new Date(days[e])-new Date(days[Math.max(0,r.st)]))/864e5/365.25;
+  return y<0.9?null:Math.pow(1+v,1/y)-1;
 }
 function ret(r,tf){
+  if(tf!=="All"&&tf!=="C"&&r.k&&r.open===false)return null;
   if(tf==="C"){const ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i},a=ia(CF),b=ia(CT);return(a<0||b<=a||r.st<0||a<r.st||(r.held&&!hasHeld(r.held,a,b)))?null:r.idx[b]/r.idx[a]-1}
   const L=days.length-1;
   if(tf==="All"&&r.kind!=="b")return r.st<0?null:r.idx[L]/100-1;
@@ -277,7 +280,14 @@ function costs(list){let tot=0,n=0;for(const t of list){if(t.opt||!isFinite(t.cs
 const eur=x=>(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{maximumFractionDigits:0});
 const f2=x=>x.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pc=v=>'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+"</td>";
-const typOf=k=>{const x=ser[k];return !x?"Derivative":(x.type==="ETF"?"ETF":"Stock")};
+const DERN=/(TURBO|WARRANT|\bCALL\b|\bPUT\b|\bSTR\b|\(SUB\)|\b[CP]\d+(\.\d+)?\b|\d{2}(JAN|FEB|MAR|APR|MAI|MEI|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DEC)\d{2}|ILLIMIT|LEVERAGED|\bLEV\b)/i;
+const ETFN=/\b(ETF|UCITS|ETC|ETN|TRACKER)\b/i;
+const typOf=k=>{
+  const x=ser[k],t=tx.find(z=>z.key===k),n=(t?t.n:"")+" "+(x?x.name:"");
+  if(x)return (x.type==="ETF"||ETFN.test(n))?"ETF":"Stock";
+  if(k.includes("/")||DERN.test(n))return "Derivative";
+  return ETFN.test(n)?"ETF":"Stock";
+};
 const TYPN={ETF:"ETFs",Stock:"Stocks",Derivative:"Options, turbos and other derivatives"};
 const byName=(a,b)=>a.localeCompare(b,undefined,{sensitivity:"base"});
 function positions(){
@@ -350,7 +360,7 @@ function renderR(syms,bad,warn){
       const g=rows.filter(r=>r.k&&r.typ===ty).sort((x,y)=>byName(x.name,y.name));
       if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
     });
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the period is at least a year. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=valueCard()+positions();
@@ -652,11 +662,11 @@ function calc(){
   const all=twrr(new Set(keys),MODE);
   rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true,held:all.held});
   const grp=f=>new Set(keys.filter(f));
-  const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Derivatives",grp(k=>!ser[k])]].filter(g=>g[1].size);
+  const gs=[["ETFs",grp(k=>typOf(k)==="ETF")],["Stocks",grp(k=>typOf(k)==="Stock")],["Derivatives",grp(k=>typOf(k)==="Derivative")]].filter(g=>g[1].size);
   if(gs.length>1)gs.forEach(g=>{if(g[0]==="Derivatives")return;const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives",held:r.held})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   const seen=new Set();
-  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k,held:r.held,typ:typOf(k)})});
+  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k,held:r.held,typ:typOf(k),open:(Math.abs(tx.reduce((a,t)=>a+(t.key===k?(t.opt?t.q:t.qa):0),0))>1e-6&&G.ex[k]===undefined)})});
   msg("Done. "+tx.length+" trades, "+fd(days[0])+" to "+fd(days[days.length-1])+"."+($("txtA").value.trim()?" Dividend payments found: "+DV.filter(e=>e.g>0).length+".":""));
   render(syms,[],G.warn);
 }

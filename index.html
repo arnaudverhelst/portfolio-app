@@ -20,7 +20,7 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 </style></head>
 <body>
 <h1>My Portfolio</h1>
-<p class="mu">Your transactions stay in this browser only. Version 3.1 (CAGR on holding period, closed positions blank, types by name, simple return, value chart timeframes).</p>
+<p class="mu">Your transactions stay in this browser only. Version 3.2</p>
 <div class="card">
 <h2>Transactions (Saxo export)</h2>
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
@@ -54,7 +54,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,MEAS="t",PTF="All",CU=false,DBG=false,DTF="All",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="All",PTF="All",CU=false,DBG=false,DTF="All",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
@@ -191,44 +191,6 @@ function periodInfo(){
   tx.forEach(t=>{if(t.di>a&&t.di<=b){const f=(t.q>0?1:-1)*t.fc;net+=f;w+=f*(b-t.di)/(b-a)}});
   const profit=Y-X-net,den=X+w;
   return '<p class="mu">Holdings only (no cash). Value on '+fd(days[a])+': <b>'+eur(X)+'</b>. Value on '+fd(days[b])+': <b>'+eur(Y)+'</b>. Bought minus sold in between: <b>'+eur(net)+'</b>. Profit: <b>'+eur(profit)+'</b>'+(den>0?'. Simple money-weighted return: <b>'+(profit/den*100).toFixed(1)+'%</b>':'')+'.</p>';
-}
-function sret(r,tf){
-  if(!r.ks)return ret(r,tf);
-  if(tf!=="All"&&tf!=="C"&&r.k&&r.open===false)return null;
-  if(r.st<0)return null;
-  const L=days.length-1;let a=-1,b=L;
-  if(tf==="C"){a=dayIdx(CF);b=dayIdx(CT);if(a<0||b<=a||a<r.st)return null}
-  else if(tf!=="All"){a=iStart(tf);if(a<0||a<r.st||a>=L)return null}
-  if(r.held&&tf!=="All"&&!hasHeld(r.held,Math.max(a,0),b))return null;
-  const X=a<0?0:valueAt(a,r.ks),Y=valueAt(b,r.ks);let buy=0,sell=0;
-  tx.forEach(t=>{
-    if(!r.ks.has(t.key)||t.di<=a||t.di>b)return;
-    const f=MODE?(isFinite(t.cs)?t.cs:t.g):t.g;
-    if(t.q>0)buy+=f;else sell+=f;
-  });
-  const d0=a<0?"":days[a],d1=days[b];let dv=0;
-  DV.forEach(d=>{if(r.ks.has(d.k)&&d.d>d0&&d.d<=d1)dv+=d.g+d.t});
-  const den=X+buy;
-  return den>0?(Y-X-buy+sell+dv)/den:null;
-}
-const RF=(r,t)=>MEAS==="s"?sret(r,t):ret(r,t);
-function xirr(r){
-  if(!r.ks||!r.held||r.st<0)return null;
-  const L=days.length-1;let e=-1;
-  for(let i=L;i>=0;i--)if(r.held[i]){e=i;break}
-  if(e<0)return null;
-  if((new Date(days[e])-new Date(days[r.st]))/864e5/365.25<0.9)return null;
-  const cf=[];
-  tx.forEach(t=>{if(!r.ks.has(t.key))return;const f=MODE?(isFinite(t.cs)?t.cs:t.g):t.g;cf.push([days[t.di],t.q>0?-f:f])});
-  DV.forEach(d=>{if(r.ks.has(d.k))cf.push([d.d,d.g+d.t])});
-  const fin=valueAt(L,r.ks);if(fin>1e-6)cf.push([days[L],fin]);
-  if(cf.length<2)return null;
-  const t0=Math.min(...cf.map(c=>new Date(c[0]).getTime()));
-  const npv=x=>cf.reduce((a,c)=>a+c[1]/Math.pow(1+x,(new Date(c[0]).getTime()-t0)/864e5/365),0);
-  let lo=-0.95,hi=5,fl=npv(lo);
-  if(!(fl*npv(hi)<0))return null;
-  for(let i=0;i<80;i++){const m=(lo+hi)/2,fm=npv(m);if(fl*fm<=0)hi=m;else{lo=m;fl=fm}}
-  return (lo+hi)/2;
 }
 function cagr(r){
   const v=ret(r,"All");if(v==null)return null;
@@ -378,6 +340,11 @@ function detail(syms){
 }
 function render(syms,bad,warn){
   if(DET&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+detailView(DET);return}
+  if(TAB==="a"&&rows.length&&!bad.length){
+    CH=[];
+    $("out").innerHTML=tabsHtml()+analysis()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+    return;
+  }
   if(TAB==="d"&&rows.length&&!bad.length){
     CH=[];positions();
     $("out").innerHTML=tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
@@ -391,15 +358,15 @@ function renderR(syms,bad,warn){
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Return: <select id="meas"><option value="t'+(MEAS==="t"?'" selected':'"')+'>time-weighted (TWRR)</option><option value="s'+(MEAS==="s"?'" selected':'"')+'>simple (profit ÷ money invested)</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+(MEAS==="s"?"<th>XIRR (all)</th>":"<th>CAGR (all)</th>")+"</tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
     const NC=TFS.length+(CU?1:0)+2;
-    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(RF(r,t))).join("")+(CU?cell(RF(r,"C")):"")+cell(MEAS==="s"?xirr(r):cagr(r))+"</tr>";
+    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
     rows.filter(r=>!r.k).forEach(r=>{h+=line(r)});
     ["ETF","Stock","Derivative"].forEach(ty=>{
       const g=rows.filter(r=>r.k&&r.typ===ty).sort((x,y)=>byName(x.name,y.name));
       if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
     });
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.'+(MEAS==="s"?" Simple return = profit (including dividends and costs) divided by the value at the start of the period plus the money bought during it. XIRR is the yearly rate that matches the timing of your buys, sells and dividends.":"")+'</p>'+(CU?periodInfo():"")+'</div>';
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=valueCard()+positions();
@@ -475,7 +442,91 @@ function buildDiv(){
   });
   DV.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
 }
-const tabsHtml=()=>'<div class="card" style="padding:6px 12px"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button></div>';
+const tabsHtml=()=>'<div class="card" style="padding:6px 12px"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
+const PIEC=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2","#db2777","#ca8a04","#64748b","#65a30d","#dc2626","#0d9488","#a8a29e"];
+function pie(items){
+  const tot=items.reduce((a,x)=>a+x.val,0);
+  if(tot<=0)return '<p class="mu">Nothing to show.</p>';
+  let ang=-Math.PI/2,g="",lg="";
+  items.forEach((x,i)=>{
+    const f=x.val/tot,a1=ang+f*2*Math.PI,c=PIEC[i%PIEC.length];
+    if(f>=0.9999)g+='<circle cx="100" cy="100" r="64" fill="none" stroke="'+c+'" stroke-width="32"/>';
+    else{
+      const R=80,r=48,P=(rr,an)=>(100+rr*Math.cos(an)).toFixed(2)+" "+(100+rr*Math.sin(an)).toFixed(2),lf=f>0.5?1:0;
+      g+='<path d="M'+P(R,ang)+'A'+R+' '+R+' 0 '+lf+' 1 '+P(R,a1)+'L'+P(r,a1)+'A'+r+' '+r+' 0 '+lf+' 0 '+P(r,ang)+'Z" fill="'+c+'"/>';
+    }
+    ang=a1;
+    lg+='<tr><td><b style="color:'+c+'">●</b> '+esc(x.name)+'</td><td>'+eur(x.val)+'</td><td>'+(f*100).toFixed(1)+'%</td></tr>';
+  });
+  return '<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center"><svg viewBox="0 0 200 200" style="width:240px;max-width:100%">'+g+'<text x="100" y="96" text-anchor="middle" font-size="11" style="fill:var(--mu)">Total</text><text x="100" y="114" text-anchor="middle" font-size="14" font-weight="600" style="fill:var(--fg)">'+eur(tot)+'</text></svg><div class="sc" style="flex:1;min-width:260px"><table>'+lg+'</table></div></div>';
+}
+const nameOf=k=>ser[k]?ser[k].name:((tx.find(t=>t.key===k)||{}).n||k);
+function allocation(){
+  const L=days.length-1,it=[];
+  POSL.filter(r=>r.val>0.5).forEach(r=>{
+    const k=r.k,sh={};
+    tx.forEach(t=>{if(t.key===k)sh[t.b]=(sh[t.b]||0)+(t.opt?t.q:t.qa)});
+    const br={};
+    if(r.o){const t0=tx.find(t=>t.key===k);br[t0?t0.b:"Saxo"]=r.val}
+    else{const tot=Object.values(sh).reduce((a,v)=>a+Math.max(0,v),0);for(const b in sh)if(sh[b]>0&&tot>0)br[b]=r.val*sh[b]/tot}
+    let cur=ser[k]?ser[k].cur:((tx.find(t=>t.key===k)||{}).cur||"EUR");
+    if(cur==="GBp"||cur==="GBX")cur="GBP";
+    it.push({n:r.n,typ:r.typ,val:r.val,cur:cur||"EUR",br:br});
+  });
+  const grp=f=>{const m={};it.forEach(x=>{const k=f(x);m[k]=(m[k]||0)+x.val});return Object.keys(m).map(k=>({name:k,val:m[k]})).sort((a,b)=>b.val-a.val)};
+  let items;
+  if(ALV==="h"){
+    const srt=it.slice().sort((a,b)=>b.val-a.val).map(x=>({name:x.n,val:x.val}));
+    items=srt.slice(0,12);const rest=srt.slice(12);
+    if(rest.length)items.push({name:"Other ("+rest.length+")",val:rest.reduce((a,x)=>a+x.val,0)});
+  }else if(ALV==="t")items=grp(x=>TYPN[x.typ]);
+  else if(ALV==="c")items=grp(x=>x.cur);
+  else{const m={};it.forEach(x=>{for(const b in x.br)m[b]=(m[b]||0)+x.br[b]});items=Object.keys(m).map(k=>({name:k,val:m[k]})).sort((a,b)=>b.val-a.val)}
+  const B=[["h","Holdings"],["t","Type"],["c","Currency"],["b","Broker"]].map(z=>'<button data-alv="'+z[0]+'"'+(ALV===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("");
+  return '<div class="card"><h2>Allocation</h2>'+B+'<p class="mu">Current value of what you hold, in euro. Currency is the currency the instrument is listed in. Derivatives are valued at cost.</p>'+pie(items)+'</div>';
+}
+function contrib(a){
+  const T=rows[0].idx,base=a<0?100:T[a],C={},pos={},bas={},pvk={};let k=0;
+  for(let i=0;i<days.length;i++){
+    const Bk={},Sk={};
+    while(k<tx.length&&tx[k].di<=i){
+      const t=tx[k],s=t.key;k++;
+      const f=MODE?t.fc:t.fg,buy=t.q>0;
+      if(!isFinite(f))continue;
+      if(buy)Bk[s]=(Bk[s]||0)+f;else Sk[s]=(Sk[s]||0)+f;
+      const q0=pos[s]||0;
+      if(t.opt){const q1=q0+t.q;if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);pos[s]=q1}
+      else pos[s]=q0+t.qa;
+      if(Math.abs(pos[s])<1e-9){pos[s]=0;bas[s]=0}
+    }
+    for(const s in G.ex)if(G.ex[s]===i&&pos[s]){pos[s]=0;bas[s]=0}
+    let den=0;for(const s in pvk)den+=pvk[s];for(const s in Bk)den+=Bk[s];
+    const w=(i>0?T[i-1]:100)/base,ks=new Set([...Object.keys(pos),...Object.keys(pvk),...Object.keys(Bk),...Object.keys(Sk)]);
+    ks.forEach(s=>{
+      const v=P[s]?(pos[s]||0)*P[s][i]:(bas[s]||0),num=v+(Sk[s]||0)-(Bk[s]||0)-(pvk[s]||0);
+      if(i>a&&den>0)C[s]=(C[s]||0)+num/den*w;
+      pvk[s]=v;
+    });
+  }
+  return C;
+}
+function contribCard(){
+  const L=days.length-1,a=CTF==="All"?-1:Math.max(-1,iStart(CTF)),C=contrib(a);
+  const T=rows[0].idx,base=a<0?100:T[a],tot=(T[L]/base-1)*100;
+  const list=Object.keys(C).map(k=>({k:k,n:nameOf(k),c:C[k]*100,typ:typOf(k)})).filter(x=>Math.abs(x.c)>=0.005).sort((x,y)=>y.c-x.c);
+  const mx=Math.max(0.01,...list.map(x=>Math.abs(x.c)));
+  const B=TFS.map(t=>'<button data-ctf="'+t+'"'+(t===CTF?' class="on"':"")+'>'+t+'</button>').join("");
+  const sum=list.reduce((x,y)=>x+y.c,0),by={};list.forEach(x=>{by[x.typ]=(by[x.typ]||0)+x.c});
+  let h='<div class="card"><h2>Contribution to your return</h2>'+B+'<p>Time-weighted return of the period: <b>'+pct1(tot/100)+'</b>. By type: '+["ETF","Stock","Derivative"].filter(t=>by[t]!==undefined).map(t=>TYPN[t]+' <b>'+(by[t]>0?"+":"")+by[t].toFixed(1)+' points</b>').join(", ")+'.</p>';
+  h+='<div class="sc"><table><tr><th>Instrument</th><th>Contribution (points)</th><th style="width:45%"></th></tr>';
+  list.forEach(x=>{
+    const w=(Math.abs(x.c)/mx*100).toFixed(0);
+    h+='<tr><td><a href="#" data-det="'+esc(x.k)+'">'+esc(x.n)+'</a></td><td class="'+(x.c>=0?"pos":"neg")+'">'+(x.c>0?"+":"")+x.c.toFixed(2)+'</td><td><div style="background:'+(x.c>=0?"var(--pos)":"var(--neg)")+';height:8px;width:'+w+'%"></div></td></tr>';
+  });
+  h+='<tr><td><b>Total</b></td><td><b>'+(sum>0?"+":"")+sum.toFixed(2)+'</b></td><td></td></tr></table></div>';
+  return h+'<p class="mu">A contribution is how many percentage points of your portfolio\'s time-weighted return came from one holding: its gain, weighted by how large it was in the portfolio at the time. The contributions add up to the total return of the period (small differences come from rounding and tiny contributions left out). Holdings that were bought and sold within the period are included.</p></div>';
+}
+function analysis(){positions();return allocation()+contribCard()}
 function dividends(){
   if(!DV.length&&!AO.length)return '<div class="card"><h2>Dividends</h2><p class="mu">No dividend rows found. Load your Degiro account statement (and your Saxo file) and press Calculate.</p></div>';
   const last=days[days.length-1],cd=new Date(last+"T00:00:00Z");cd.setUTCFullYear(cd.getUTCFullYear()-1);
@@ -536,7 +587,7 @@ function detailView(k){
   h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
   h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
   if(row){
-    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+(MEAS==="s"?"<th>XIRR (all)</th>":"<th>CAGR (all)</th>")+"</tr><tr><td>"+(MEAS==="s"?"Simple return":"Time-weighted return")+"</td>"+TFS.map(t=>cell(RF(row,t))).join("")+(CU?cell(RF(row,"C")):"")+cell(MEAS==="s"?xirr(row):cagr(row))+"</tr></table></div>";
+    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+TFS.map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
   }
   h+='</div>';
   if(!o&&G.DR[k]){
@@ -744,6 +795,9 @@ $("out").addEventListener("click",e=>{
   if(tb){TAB=tb;DET=null;render(G.syms,[],G.warn)}
   if(dt){e.preventDefault();DET=dt;render(G.syms,[],G.warn);window.scrollTo(0,0)}
   if(bk){DET=null;render(G.syms,[],G.warn)}
+  const av=e.target.getAttribute&&e.target.getAttribute("data-alv"),cz=e.target.getAttribute&&e.target.getAttribute("data-ctf");
+  if(av){ALV=av;render(G.syms,[],G.warn)}
+  if(cz){CTF=cz;render(G.syms,[],G.warn)}
   const pz=e.target.getAttribute&&e.target.getAttribute("data-ptf");
   if(pz){PTF=pz;render(G.syms,[],G.warn)}
   const dz=e.target.getAttribute&&e.target.getAttribute("data-dtf");
@@ -751,7 +805,7 @@ $("out").addEventListener("click",e=>{
   if(t){TF=t;render(G.syms,[],G.warn)}
   if(m){VM=m;render(G.syms,[],G.warn)}
 });
-$("out").addEventListener("change",e=>{if(e.target.id==="cu"){CU=e.target.checked;render(G.syms,[],G.warn)}if(e.target.id==="meas"){MEAS=e.target.value;render(G.syms,[],G.warn)}});
+$("out").addEventListener("change",e=>{if(e.target.id==="cu"){CU=e.target.checked;render(G.syms,[],G.warn)}});
 $("dbg").onchange=()=>{DBG=$("dbg").checked;if(rows.length)render(G.syms,[],G.warn)};
 const hov=e=>{
   const sv=e.target.closest&&e.target.closest("svg.ch");if(!sv)return;

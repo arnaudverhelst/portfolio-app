@@ -20,7 +20,7 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 </style></head>
 <body>
 <h1>My Portfolio</h1>
-<p class="mu">Your transactions stay in this browser only.</p>
+<p class="mu">Your transactions stay in this browser only. Version 3.1 (CAGR on holding period, closed positions blank, types by name, simple return, value chart timeframes).</p>
 <div class="card">
 <h2>Transactions (Saxo export)</h2>
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
@@ -54,7 +54,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,CU=false,DBG=false,DTF="All",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,MEAS="t",PTF="All",CU=false,DBG=false,DTF="All",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
@@ -167,10 +167,10 @@ const MN=["January","February","March","April","May","June","July","August","Sep
 const fd=d=>{if(!d)return "";const p=d.split("-");return (+p[2])+" "+MN[+p[1]-1]+" '"+p[0].slice(2)};
 const hasHeld=(h,a,b)=>{for(let i=a+1;i<=b;i++)if(h[i])return true;return false};
 const dayIdx=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i};
-function valueAt(i){
+function valueAt(i,ks){
   const pos={},bas={};let v=0;
   tx.forEach(t=>{
-    if(t.di>i)return;const s=t.key;
+    if(t.di>i||(ks&&!ks.has(t.key)))return;const s=t.key;
     if(t.opt){
       const q0=pos[s]||0,q1=q0+t.q,f=t.fc,buy=t.q>0;
       if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);
@@ -191,6 +191,44 @@ function periodInfo(){
   tx.forEach(t=>{if(t.di>a&&t.di<=b){const f=(t.q>0?1:-1)*t.fc;net+=f;w+=f*(b-t.di)/(b-a)}});
   const profit=Y-X-net,den=X+w;
   return '<p class="mu">Holdings only (no cash). Value on '+fd(days[a])+': <b>'+eur(X)+'</b>. Value on '+fd(days[b])+': <b>'+eur(Y)+'</b>. Bought minus sold in between: <b>'+eur(net)+'</b>. Profit: <b>'+eur(profit)+'</b>'+(den>0?'. Simple money-weighted return: <b>'+(profit/den*100).toFixed(1)+'%</b>':'')+'.</p>';
+}
+function sret(r,tf){
+  if(!r.ks)return ret(r,tf);
+  if(tf!=="All"&&tf!=="C"&&r.k&&r.open===false)return null;
+  if(r.st<0)return null;
+  const L=days.length-1;let a=-1,b=L;
+  if(tf==="C"){a=dayIdx(CF);b=dayIdx(CT);if(a<0||b<=a||a<r.st)return null}
+  else if(tf!=="All"){a=iStart(tf);if(a<0||a<r.st||a>=L)return null}
+  if(r.held&&tf!=="All"&&!hasHeld(r.held,Math.max(a,0),b))return null;
+  const X=a<0?0:valueAt(a,r.ks),Y=valueAt(b,r.ks);let buy=0,sell=0;
+  tx.forEach(t=>{
+    if(!r.ks.has(t.key)||t.di<=a||t.di>b)return;
+    const f=MODE?(isFinite(t.cs)?t.cs:t.g):t.g;
+    if(t.q>0)buy+=f;else sell+=f;
+  });
+  const d0=a<0?"":days[a],d1=days[b];let dv=0;
+  DV.forEach(d=>{if(r.ks.has(d.k)&&d.d>d0&&d.d<=d1)dv+=d.g+d.t});
+  const den=X+buy;
+  return den>0?(Y-X-buy+sell+dv)/den:null;
+}
+const RF=(r,t)=>MEAS==="s"?sret(r,t):ret(r,t);
+function xirr(r){
+  if(!r.ks||!r.held||r.st<0)return null;
+  const L=days.length-1;let e=-1;
+  for(let i=L;i>=0;i--)if(r.held[i]){e=i;break}
+  if(e<0)return null;
+  if((new Date(days[e])-new Date(days[r.st]))/864e5/365.25<0.9)return null;
+  const cf=[];
+  tx.forEach(t=>{if(!r.ks.has(t.key))return;const f=MODE?(isFinite(t.cs)?t.cs:t.g):t.g;cf.push([days[t.di],t.q>0?-f:f])});
+  DV.forEach(d=>{if(r.ks.has(d.k))cf.push([d.d,d.g+d.t])});
+  const fin=valueAt(L,r.ks);if(fin>1e-6)cf.push([days[L],fin]);
+  if(cf.length<2)return null;
+  const t0=Math.min(...cf.map(c=>new Date(c[0]).getTime()));
+  const npv=x=>cf.reduce((a,c)=>a+c[1]/Math.pow(1+x,(new Date(c[0]).getTime()-t0)/864e5/365),0);
+  let lo=-0.95,hi=5,fl=npv(lo);
+  if(!(fl*npv(hi)<0))return null;
+  for(let i=0;i<80;i++){const m=(lo+hi)/2,fm=npv(m);if(fl*fm<=0)hi=m;else{lo=m;fl=fm}}
+  return (lo+hi)/2;
 }
 function cagr(r){
   const v=ret(r,"All");if(v==null)return null;
@@ -247,8 +285,9 @@ function chart(){
   return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf,true);
 }
 function valueCard(){
-  const L=days.length-1,x0=rows[0].st;
-  if(x0<0||x0>=L)return "";
+  const L=days.length-1,st0=rows[0].st;
+  if(st0<0||st0>=L)return "";
+  let x0=PTF==="All"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
   let S,f;
   if(VM==="v"){
     const val=[],net=[];let cum=0,k=0;
@@ -259,13 +298,13 @@ function valueCard(){
     S=[{name:"Value of holdings",a:x0,v:val},{name:"Net invested",a:x0,v:net}];f=eur;
   }else{
     S=rows.filter(r=>r.name==="Total portfolio"||r.kind==="b").map(r=>{
-      const b=r.kind==="b"?r.idx[x0]:100,v=[];
+      const b=(r.kind==="b"||x0>st0)?r.idx[x0]:100,v=[];
       for(let i=x0;i<=L;i++)v.push((r.idx[i]/b-1)*100);
       return {name:r.name,a:x0,v:v};
     });
     f=pctf;
   }
-  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button>'+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. The gap between the two lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
+  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFS.map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. Net invested is cumulative since your first trade; over the full period, the gap between the lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
 }
 function hold(syms,bad){
   const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
@@ -352,15 +391,15 @@ function renderR(syms,bad,warn){
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Return: <select id="meas"><option value="t'+(MEAS==="t"?'" selected':'"')+'>time-weighted (TWRR)</option><option value="s'+(MEAS==="s"?'" selected':'"')+'>simple (profit ÷ money invested)</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+(MEAS==="s"?"<th>XIRR (all)</th>":"<th>CAGR (all)</th>")+"</tr>";
     const NC=TFS.length+(CU?1:0)+2;
-    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
+    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(RF(r,t))).join("")+(CU?cell(RF(r,"C")):"")+cell(MEAS==="s"?xirr(r):cagr(r))+"</tr>";
     rows.filter(r=>!r.k).forEach(r=>{h+=line(r)});
     ["ETF","Stock","Derivative"].forEach(ty=>{
       const g=rows.filter(r=>r.k&&r.typ===ty).sort((x,y)=>byName(x.name,y.name));
       if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
     });
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.'+(MEAS==="s"?" Simple return = profit (including dividends and costs) divided by the value at the start of the period plus the money bought during it. XIRR is the yearly rate that matches the timing of your buys, sells and dividends.":"")+'</p>'+(CU?periodInfo():"")+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=valueCard()+positions();
@@ -497,7 +536,7 @@ function detailView(k){
   h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
   h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
   if(row){
-    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+TFS.map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
+    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+(MEAS==="s"?"<th>XIRR (all)</th>":"<th>CAGR (all)</th>")+"</tr><tr><td>"+(MEAS==="s"?"Simple return":"Time-weighted return")+"</td>"+TFS.map(t=>cell(RF(row,t))).join("")+(CU?cell(RF(row,"C")):"")+cell(MEAS==="s"?xirr(row):cagr(row))+"</tr></table></div>";
   }
   h+='</div>';
   if(!o&&G.DR[k]){
@@ -660,13 +699,13 @@ function calc(){
   const syms=G.syms,keys=G.keys,bms=G.bms,nm={};
   tx.forEach(t=>{nm[t.s]=t.n});rows=[];
   const all=twrr(new Set(keys),MODE);
-  rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true,held:all.held});
+  rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true,held:all.held,ks:new Set(keys)});
   const grp=f=>new Set(keys.filter(f));
   const gs=[["ETFs",grp(k=>typOf(k)==="ETF")],["Stocks",grp(k=>typOf(k)==="Stock")],["Derivatives",grp(k=>typOf(k)==="Derivative")]].filter(g=>g[1].size);
-  if(gs.length>1)gs.forEach(g=>{if(g[0]==="Derivatives")return;const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives",held:r.held})});
+  if(gs.length>1)gs.forEach(g=>{if(g[0]==="Derivatives")return;const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives",held:r.held,ks:g[1]})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   const seen=new Set();
-  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k,held:r.held,typ:typOf(k),open:(Math.abs(tx.reduce((a,t)=>a+(t.key===k?(t.opt?t.q:t.qa):0),0))>1e-6&&G.ex[k]===undefined)})});
+  syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k,held:r.held,ks:new Set([k]),typ:typOf(k),open:(Math.abs(tx.reduce((a,t)=>a+(t.key===k?(t.opt?t.q:t.qa):0),0))>1e-6&&G.ex[k]===undefined)})});
   msg("Done. "+tx.length+" trades, "+fd(days[0])+" to "+fd(days[days.length-1])+"."+($("txtA").value.trim()?" Dividend payments found: "+DV.filter(e=>e.g>0).length+".":""));
   render(syms,[],G.warn);
 }
@@ -705,12 +744,14 @@ $("out").addEventListener("click",e=>{
   if(tb){TAB=tb;DET=null;render(G.syms,[],G.warn)}
   if(dt){e.preventDefault();DET=dt;render(G.syms,[],G.warn);window.scrollTo(0,0)}
   if(bk){DET=null;render(G.syms,[],G.warn)}
+  const pz=e.target.getAttribute&&e.target.getAttribute("data-ptf");
+  if(pz){PTF=pz;render(G.syms,[],G.warn)}
   const dz=e.target.getAttribute&&e.target.getAttribute("data-dtf");
   if(dz){DTF=dz;render(G.syms,[],G.warn)}
   if(t){TF=t;render(G.syms,[],G.warn)}
   if(m){VM=m;render(G.syms,[],G.warn)}
 });
-$("out").addEventListener("change",e=>{if(e.target.id==="cu"){CU=e.target.checked;render(G.syms,[],G.warn)}});
+$("out").addEventListener("change",e=>{if(e.target.id==="cu"){CU=e.target.checked;render(G.syms,[],G.warn)}if(e.target.id==="meas"){MEAS=e.target.value;render(G.syms,[],G.warn)}});
 $("dbg").onchange=()=>{DBG=$("dbg").checked;if(rows.length)render(G.syms,[],G.warn)};
 const hov=e=>{
   const sv=e.target.closest&&e.target.closest("svg.ch");if(!sv)return;

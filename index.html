@@ -295,7 +295,8 @@ function positions(){
   });
   const U=out.reduce((a,r)=>a+r.un,0),R=out.reduce((a,r)=>a+r.real,0);
   h+='<tr><td><b>Total</b></td><td></td><td></td><td></td><td><b>'+eur(tv)+'</b></td><td></td>'+pc(U)+pc(R)+pc(U+R)+"</tr></table></div>";
-  return h+'<p class="mu">Euro amounts, average-cost method, costs included, dividends not included. Shares are shown on today\'s basis, so a reverse split lowers the count. Options are carried at cost until sold or expired.</p></div>';
+  const dn=DV.reduce((a,e)=>a+e.g+e.t,0);
+  return h+(DV.length?'<p>Net dividends received: <b>'+eur(dn)+'</b>. Profit including dividends: <b>'+eur(U+R+dn)+'</b>. Details are in the Dividends tab.</p>':'')+'<p class="mu">Euro amounts, average-cost method, costs included, dividends not included. Shares are shown on today\'s basis, so a reverse split lowers the count. Options are carried at cost until sold or expired.</p></div>';
 }
 function cmp(k,x,f){
   if(!f||f.q<=0)return "–";
@@ -328,7 +329,7 @@ function renderR(syms,bad,warn){
   if(rows.length){
     h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; Custom period: <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'"></p><div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+"<th>Custom</th><th>CAGR (all)</th></tr>";
     rows.forEach(r=>{h+="<tr><td>"+esc(r.name)+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+cell(ret(r,"C"))+cell(cagr(r))+"</tr>"});
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does. CAGR is the yearly growth rate behind the "All" figure and only appears once the period is at least a year.</p>'+periodInfo()+'</div>';
+    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the period starts before the data does. CAGR is the yearly growth rate behind the "All" figure and only appears once the period is at least a year. Options, turbos and other derivatives are part of the total, but they have no line of their own: a percentage on short-lived positions carried at cost is not meaningful, so look at their euro result in Positions.</p>'+periodInfo()+'</div>';
     h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=valueCard()+positions();
@@ -568,6 +569,7 @@ async function run(){
   const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
   const neg=Object.keys(q).filter(s=>!isOpt(s)&&q[s]<-1e-9);
   if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
+  if($("txtA").value.trim()&&!AC.length)warn.push("The account statement was read, but no dividend or cost rows were found for this view. Check that the View menu is not set to Saxo only.");
   try{buildDiv()}catch(e){warn.push("Dividends could not be read: "+e.message)}
   G={syms,keys,bms,ex,warn,DR};
   calc();
@@ -579,11 +581,11 @@ function calc(){
   rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true});
   const grp=f=>new Set(keys.filter(f));
   const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Derivatives",grp(k=>!ser[k])]].filter(g=>g[1].size);
-  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives"})});
+  if(gs.length>1)gs.forEach(g=>{if(g[0]==="Derivatives")return;const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives"})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   const seen=new Set();
   syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});
-  msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+".");
+  msg("Done. "+tx.length+" trades, "+days[0]+" to "+days[days.length-1]+"."+($("txtA").value.trim()?" Dividend payments found: "+DV.filter(e=>e.g>0).length+".":""));
   render(syms,[],G.warn);
 }
 $("out").addEventListener("change",e=>{if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});

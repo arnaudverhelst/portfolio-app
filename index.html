@@ -4,7 +4,7 @@
 :root{--bg:#fbfbf9;--fg:#14213d;--mu:#667085;--bd:#dfe3e8;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#14213d;color-scheme:light}
 @media(prefers-color-scheme:dark){:root{--bg:#0c1220;--fg:#e6e9f0;--mu:#8b95a8;--bd:#273046;--card:#131b2e;--pos:#4ade80;--neg:#f87171;--ac:#7aa2ff;color-scheme:dark}}
 *{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:920px;margin:0 auto;padding:24px 16px}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:1500px;margin:0 auto;padding:24px 16px}
 h1{margin:0 0 4px;font-size:1.6rem}h2{font-size:1.05rem;margin:0 0 10px}.mu{color:var(--mu);font-size:.88rem}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px;margin:16px 0}
 textarea,input{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px}
@@ -13,8 +13,8 @@ button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--c
 button.on,button.go{background:var(--ac);color:var(--bg);border-color:var(--ac)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
+th,td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}td:first-child{white-space:normal;min-width:170px;max-width:340px}
 .pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85rem}
 td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}
 </style></head>
@@ -279,7 +279,7 @@ function positions(){
     if(Math.abs(q)<1e-9){q=0;cost=0}
     if(o&&G.ex[s]!==undefined&&q>0){real-=cost;cost=0;q=0}
     const k=s,px=o?0:P[k][L],val=o?cost:q*px;
-    out.push({n:(o?by[s][0].n+" (option)":ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un:q>0?val-cost:0,real:real,o:o});
+    out.push({n:(o?by[s][0].n+" (derivative)":ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un:q>0?val-cost:0,real:real,o:o});
   }
   const tv=out.reduce((a,r)=>a+r.val,0);
   out.sort((a,b)=>b.val-a.val);
@@ -328,7 +328,8 @@ function render(syms,bad,warn){
   h+='<p class="mu">Method: daily chain-linked returns on adjusted closing prices (dividends counted as reinvested). Each trade is valued at that day\'s close. Fees and currency effects are ignored in this version.</p>';
   $("out").innerHTML=h;
 }
-const isOpt=s=>s.includes("/");
+const UNR=new Set();
+const isOpt=s=>s.includes("/")||UNR.has(s);
 const kof=s=>isOpt(s)?s:map(s);
 const MC={F:0,G:1,H:2,J:3,K:4,M:5,N:6,Q:7,U:8,V:9,X:10,Z:11};
 function optExp(s){
@@ -380,6 +381,14 @@ async function fetchAll(keys){
     part.forEach((k,j)=>{if(r[j].status==="fulfilled")SC[k]=r[j].value});
   }
 }
+const NICE=[1,1.5,1.67,2,2.5,3,4,5,6,6.67,7,8,9];
+function snap(f){
+  const e0=Math.floor(Math.log10(f));
+  for(let e=e0;e<=e0+1;e++){const c=Math.pow(10,e);if(Math.abs(Math.log(f/c))<0.2)return c}
+  let best=f,bd=0.12;
+  for(let e=e0-1;e<=e0+1;e++)for(const m of NICE){const c=m*Math.pow(10,e),d=Math.abs(Math.log(f/c));if(d<bd){bd=d;best=c}}
+  return best;
+}
 async function run(){
   IG={};
   const text=$("txt").value.trim(),textD=$("txtD").value.trim();
@@ -393,10 +402,11 @@ async function run(){
   SK=[...new Set(tx.filter(t=>ov[t.s]==="-").map(t=>t.s))];
   tx=tx.filter(t=>!SK.includes(t.s));
   await resolveIsins([...new Set(tx.filter(t=>t.s.startsWith("D:")).map(t=>t.s))]);
+  UNR.clear();
   const unres=[...new Set(tx.filter(t=>t.s.startsWith("D:")&&!ov[t.s]&&!IS[t.s]).map(t=>t.s))],pre=[];
   if(unres.length){
-    pre.push(unres.length+" Degiro product(s) have no Yahoo price data and are left out (often warrants, turbos, options or delisted shares): "+[...new Set(tx.filter(t=>unres.includes(t.s)).map(t=>t.n))].join(", ")+".");
-    tx=tx.filter(t=>!unres.includes(t.s));
+    unres.forEach(s=>UNR.add(s));
+    pre.push(unres.length+" Degiro product(s) have no Yahoo price data (turbos, warrants, options or delisted shares). Their results count from your trades only, carried at cost until sold: "+[...new Set(tx.filter(t=>UNR.has(t.s)).map(t=>t.n))].join(", ")+".");
   }
   if(!tx.length){msg("Nothing left to calculate.");return}
   const syms=[...new Set(tx.map(t=>t.s))],eq=syms.filter(s=>!isOpt(s)),keys=syms.map(kof);
@@ -438,10 +448,16 @@ async function run(){
     t.qa=t.opt?t.q:t.q*(ser[t.key].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1);
     if(!t.opt){
       const pr=P[t.key][di],ref=isFinite(t.fc)?t.fc:t.fg,m0=Math.abs(t.qa)*pr;
-      if(t.px>0&&ref>0&&pr>0&&(m0/ref>8||m0/ref<0.125)){t.qa=(t.q>0?1:-1)*t.fg/pr;t.fix=1}
+      if(t.px>0&&ref>0&&pr>0&&(m0/ref>8||m0/ref<0.125)){t.f0=(t.fg/pr)/Math.abs(t.q);t.qa=(t.q>0?1:-1)*Math.abs(t.q)*snap(t.f0);t.fix=1}
     }
     if(!t.opt&&t.q>0){const mv=t.qa*P[t.key][di];if(mv>0&&t.fc<0.3*mv){t.fg=mv;t.fc=mv;t.g=mv/dr;t.cs=mv/dr;t.free=1}}
   });
+  const g2={};
+  tx.forEach(t=>{if(t.fix)(g2[t.key]=g2[t.key]||[]).push(t)});
+  for(const k in g2){
+    const L2=g2[k],fs=L2.map(t=>t.f0).sort((a,b)=>a-b);
+    if(fs[fs.length-1]/fs[0]<1.7){const c=snap(fs[Math.floor(fs.length/2)]);L2.forEach(t=>{t.qa=(t.q>0?1:-1)*Math.abs(t.q)*c})}
+  }
   const fxd=tx.filter(t=>t.fix);
   if(fxd.length)warn.push("Share counts were re-derived from the trade value (the share data and price history did not match, for example after a reverse split) for: "+[...new Set(fxd.map(t=>t.n))].join(", ")+".");
   const fr=tx.filter(t=>t.free);
@@ -460,8 +476,8 @@ function calc(){
   const all=twrr(new Set(keys),MODE);
   rows.push({name:"Total portfolio",idx:all.idx,st:all.st,chart:true});
   const grp=f=>new Set(keys.filter(f));
-  const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Options",grp(k=>!ser[k])]].filter(g=>g[1].size);
-  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Options"})});
+  const gs=[["ETFs",grp(k=>ser[k]&&ser[k].type==="ETF")],["Stocks",grp(k=>ser[k]&&ser[k].type!=="ETF")],["Derivatives",grp(k=>!ser[k])]].filter(g=>g[1].size);
+  if(gs.length>1)gs.forEach(g=>{const r=twrr(g[1],MODE);rows.push({name:g[0],idx:r.idx,st:r.st,chart:g[0]!=="Derivatives"})});
   bms.forEach(b=>rows.push({name:b,idx:P[b],st:0,chart:true,kind:"b"}));
   const seen=new Set();
   syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false})});

@@ -436,8 +436,14 @@ async function run(){
     const g=isFinite(t.ge)?t.ge:gi*r,dr=t.opt?1:DR[t.key][di];
     t.g=g;t.cs=cs;t.fg=g*dr;t.fc=(isFinite(cs)?cs:g)*dr;
     t.qa=t.opt?t.q:t.q*(ser[t.key].sp||[]).reduce((a,e)=>e.d>t.d?a*e.f:a,1);
+    if(!t.opt){
+      const pr=P[t.key][di],ref=isFinite(t.fc)?t.fc:t.fg,m0=Math.abs(t.qa)*pr;
+      if(t.px>0&&ref>0&&pr>0&&(m0/ref>8||m0/ref<0.125)){t.qa=(t.q>0?1:-1)*t.fg/pr;t.fix=1}
+    }
     if(!t.opt&&t.q>0){const mv=t.qa*P[t.key][di];if(mv>0&&t.fc<0.3*mv){t.fg=mv;t.fc=mv;t.g=mv/dr;t.cs=mv/dr;t.free=1}}
   });
+  const fxd=tx.filter(t=>t.fix);
+  if(fxd.length)warn.push("Share counts were re-derived from the trade value (the share data and price history did not match, for example after a reverse split) for: "+[...new Set(fxd.map(t=>t.n))].join(", ")+".");
   const fr=tx.filter(t=>t.free);
   if(fr.length)warn.push(fr.length+" buy(s) at (almost) zero price, such as spin-offs or transfers, were valued at that day's market price: "+[...new Set(fr.map(t=>t.n))].join(", ")+".");
   const ex={},last=days[days.length-1];

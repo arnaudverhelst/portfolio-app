@@ -1,28 +1,46 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Portfolio</title>
 <style>
-:root{--bg:#fbfbf9;--fg:#14213d;--mu:#667085;--bd:#dfe3e8;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#14213d;color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#0c1220;--fg:#e6e9f0;--mu:#8b95a8;--bd:#273046;--card:#131b2e;--pos:#4ade80;--neg:#f87171;--ac:#7aa2ff;color-scheme:dark}}
+:root,html[data-theme="calm"]{--bg:#f7f6f2;--fg:#1c2434;--mu:#6b7280;--bd:#e6e3db;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#1f3a8a;--onac:#fff;--fs:16px;--pad:22px;--rad:14px;--brad:999px;--gap:18px;--cp:10px 9px;--kv:2rem;--maxw:1100px;--sh:0 1px 3px rgba(28,36,52,.06);color-scheme:light}
+html[data-theme="dark"]{--bg:#0a0f1e;--fg:#e8ebf4;--mu:#93a0bd;--bd:#232d47;--card:#121a30;--pos:#34d399;--neg:#f87171;--ac:#60a5fa;--onac:#0a0f1e;--fs:15px;--pad:18px;--rad:12px;--brad:8px;--gap:14px;--cp:8px 9px;--kv:1.9rem;--maxw:1200px;--sh:none;color-scheme:dark}
+html[data-theme="dense"]{--bg:#eef0f3;--fg:#10151f;--mu:#566070;--bd:#cfd5dd;--card:#fff;--pos:#0a7d3b;--neg:#c0271b;--ac:#0b3d91;--onac:#fff;--fs:13px;--pad:10px;--rad:3px;--brad:3px;--gap:8px;--cp:3px 6px;--kv:1.4rem;--maxw:1500px;--sh:none;color-scheme:light}
 *{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);max-width:1200px;margin:0 auto;padding:24px 16px}
-h1{margin:0 0 4px;font-size:1.6rem}h2{font-size:1.05rem;margin:0 0 10px}.mu{color:var(--mu);font-size:.88rem}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:16px;margin:16px 0}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:var(--fs);background:var(--bg);color:var(--fg);max-width:var(--maxw);margin:0 auto;padding:var(--gap) 16px 40px}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
+h1{margin:0 0 2px;font-size:1.6em;letter-spacing:-.01em}h2{font-size:1.08em;margin:0 0 10px}.mu{color:var(--mu);font-size:.88em}
+.themes{display:flex;flex-wrap:wrap}.themes button{padding:5px 11px;margin:0 0 0 6px;font-size:.85em}
+.card,details.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:var(--pad);margin:var(--gap) 0;box-shadow:var(--sh)}
+details.card>summary{cursor:pointer;font-weight:600;list-style-position:inside}
 textarea,input{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px}
-textarea{height:90px;font-size:.8rem;font-family:monospace}
-button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:6px;padding:7px 12px;margin:6px 6px 0 0}
-button.on,button.go{background:var(--ac);color:var(--bg);border-color:var(--ac)}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+select{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:var(--brad);padding:5px 9px}
+textarea{height:90px;font-size:.8em;font-family:ui-monospace,Menlo,Consolas,monospace}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:var(--brad);padding:7px 13px;margin:6px 6px 0 0}
+button.on,button.go{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:var(--gap) 0}.tabs button{margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--gap);margin:var(--gap) 0}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:var(--pad);box-shadow:var(--sh)}
+.kl{color:var(--mu);font-size:.82em}.kv{font-size:var(--kv);font-weight:650;letter-spacing:-.02em;margin:4px 0;line-height:1.15}.ks{color:var(--mu);font-size:.8em}
+.sc{overflow-x:auto;-webkit-overflow-scrolling:touch}table{border-collapse:collapse;width:100%;font-size:.92em;font-variant-numeric:tabular-nums}
+th,td{padding:var(--cp);text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}td:first-child{white-space:normal;min-width:170px;max-width:340px}
-.pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85rem}
-td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}td.grp{font-weight:600;background:var(--bg);text-align:left}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.lg span{margin-right:14px;font-size:.85em}
+td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}svg.ch{touch-action:pan-y;cursor:crosshair}
+a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}td.grp{font-weight:600;background:var(--bg);text-align:left}
+@media(max-width:720px){
+  :root,html[data-theme]{--pad:14px;--gap:12px;--kv:1.55rem}
+  body{padding:12px 10px 30px}h1{font-size:1.3em}
+  .kpis{grid-template-columns:repeat(2,1fr)}.kpi{padding:12px}
+  td:first-child{min-width:130px;max-width:190px}
+  .sc td:first-child,.sc th:first-child{position:sticky;left:0;background:var(--card);z-index:1}
+  td.grp{position:static!important}
+}
 </style></head>
 <body>
-<h1>My Portfolio</h1>
-<p class="mu">Your transactions stay in this browser only. Version 3.3</p>
-<div class="card">
-<h2>Transactions (Saxo export)</h2>
+<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 4.0</p></div><div class="themes" id="themes"><button data-theme="calm">Calm</button><button data-theme="dark">Dark</button><button data-theme="dense">Dense</button></div></header>
+<details class="card" id="setup" open>
+<summary>Data and settings</summary>
+<h2 style="margin-top:12px">Transactions (Saxo export)</h2>
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
 <p class="mu">Or paste the rows here, including the header line:</p>
 <textarea id="txt"></textarea>
@@ -40,8 +58,8 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 <input id="bm" value="IWDA.AS">
 <p class="mu">Yahoo symbols, separated by commas (for example IWDA.AS, VUAA.AS)</p>
 <button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button><label style="margin-left:10px;font-size:.9rem"><input type="checkbox" id="dbg" style="width:auto"> Show data checks</label>
+</details>
 <p id="msg" class="mu"></p>
-</div>
 <div id="out"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -49,7 +67,11 @@ const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
 const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct:9,okt:9,nov:10,dec:11};
 const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL",xtsx:".V",xtse:".TO",xasx:".AX",xhkg:".HK"};
 const TFS=["1M","3M","6M","YTD","1Y","3Y","All"];
-const COL=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2"];
+const PALS={
+  calm:["#1f3a8a","#ea580c","#16a34a","#9333ea","#0891b2","#db2777","#ca8a04","#64748b","#65a30d","#dc2626","#0d9488","#7c3aed","#a8a29e"],
+  dark:["#60a5fa","#fb923c","#34d399","#c084fc","#22d3ee","#f472b6","#fbbf24","#94a3b8","#a3e635","#f87171","#2dd4bf","#a78bfa","#d6d3d1"],
+  dense:["#0b3d91","#d9480f","#2b8a3e","#862e9c","#0b7285","#c2255c","#e67700","#495057","#5c940d","#c92a2a","#087f5b","#5f3dc4","#868e96"]};
+let COL=PALS.calm.slice(0,6);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
@@ -342,16 +364,16 @@ function render(syms,bad,warn){
   if(DET&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+detailView(DET);return}
   if(TAB==="a"&&rows.length&&!bad.length){
     CH=[];
-    $("out").innerHTML=tabsHtml()+analysis()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+    $("out").innerHTML=kpis()+tabsHtml()+analysis()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
     return;
   }
   if(TAB==="d"&&rows.length&&!bad.length){
     CH=[];positions();
-    $("out").innerHTML=tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+    $("out").innerHTML=kpis()+tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
     return;
   }
   renderR(syms,bad,warn);
-  if(rows.length)$("out").innerHTML=tabsHtml()+$("out").innerHTML;
+  if(rows.length)$("out").innerHTML=kpis()+tabsHtml()+$("out").innerHTML;
 }
 function renderR(syms,bad,warn){
   CH=[];
@@ -442,7 +464,30 @@ function buildDiv(){
   });
   DV.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
 }
-const tabsHtml=()=>'<div class="card" style="padding:6px 12px"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
+function setTheme(t){
+  if(!PALS[t])t="calm";
+  if(document.documentElement&&document.documentElement.setAttribute)document.documentElement.setAttribute("data-theme",t);
+  ls.set("theme",t);COL=PALS[t].slice(0,6);PIEC=PALS[t];
+  if(document.querySelectorAll)document.querySelectorAll("#themes button").forEach(b=>b.classList.toggle("on",b.getAttribute("data-theme")===t));
+  if(rows.length)render(G.syms,[],G.warn);
+}
+function kpis(){
+  positions();
+  const tv=POSL.reduce((a,r)=>a+r.val,0),pr=POSL.reduce((a,r)=>a+r.un+r.real+r.dv,0);
+  const tot=rows[0],tw=ret(tot,"All"),cg=cagr(tot),bm=rows.find(r=>r.kind==="b"),bw=bm?ret(bm,"All"):null;
+  const sg=x=>x>=0?"pos":"neg";
+  const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div><div class="ks">'+sub+'</div></div>';
+  let h='<div class="kpis">';
+  h+=tile("Total value",eur(tv),"Holdings only, cash not included");
+  h+=tile("Total profit",(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr));
+  h+=tile("Time-weighted return",tw==null?"–":pct1(tw),cg==null?"All time":"All time · "+pct1(cg)+" per year",tw==null?"":sg(tw));
+  if(bm&&bw!=null&&tw!=null){
+    const d=(tw-bw)*100;
+    h+=tile("Against "+esc(bm.name),(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points","You "+pct1(tw)+" · index "+pct1(bw)+" (all time)",sg(d));
+  }
+  return h+"</div>";
+}
+const tabsHtml=()=>'<div class="tabs"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -460,7 +505,7 @@ async function loadSectors(){
   ls.set("sect",JSON.stringify(SEC));
   if(TAB==="a"&&rows.length)render(G.syms,[],G.warn);
 }
-const PIEC=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2","#db2777","#ca8a04","#64748b","#65a30d","#dc2626","#0d9488","#a8a29e"];
+let PIEC=PALS.calm;
 function pie(items){
   const tot=items.reduce((a,x)=>a+x.val,0);
   if(tot<=0)return '<p class="mu">Nothing to show.</p>';
@@ -781,6 +826,7 @@ function calc(){
   syms.forEach(s=>{const k=kof(s);if(seen.has(k))return;seen.add(k);const r=twrr(new Set([k]),MODE);rows.push({name:ser[k]?ser[k].name:nm[s],idx:r.idx,st:r.st,chart:false,k:k,held:r.held,ks:new Set([k]),typ:typOf(k),open:(Math.abs(tx.reduce((a,t)=>a+(t.key===k?(t.opt?t.q:t.qa):0),0))>1e-6&&G.ex[k]===undefined)})});
   msg("Done. "+tx.length+" trades, "+fd(days[0])+" to "+fd(days[days.length-1])+"."+($("txtA").value.trim()?" Dividend payments found: "+DV.filter(e=>e.g>0).length+".":""));
   render(syms,[],G.warn);
+  try{$("setup").open=false}catch(e){}
 }
 $("out").addEventListener("change",e=>{if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});
 $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
@@ -843,6 +889,8 @@ $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}
 });
+$("themes").addEventListener("click",e=>{const t=e.target.getAttribute&&e.target.getAttribute("data-theme");if(t)setTheme(t)});
+setTheme(ls.get("theme")||"calm");
 if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
 </script>
 </body></html>

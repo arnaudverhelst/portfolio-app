@@ -20,7 +20,7 @@ td input{width:120px;padding:3px 6px}svg{width:100%;height:auto;color:var(--mu)}
 </style></head>
 <body>
 <h1>My Portfolio</h1>
-<p class="mu">Your transactions stay in this browser only. Version 3.2</p>
+<p class="mu">Your transactions stay in this browser only. Version 3.3</p>
 <div class="card">
 <h2>Transactions (Saxo export)</h2>
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
@@ -443,6 +443,23 @@ function buildDiv(){
   DV.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:0);
 }
 const tabsHtml=()=>'<div class="card" style="padding:6px 12px"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
+let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
+const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
+const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
+async function loadSectors(){
+  const need=POSL.filter(r=>!r.o&&r.typ==="Stock"&&SEC[r.k]===undefined).map(r=>r.k);
+  for(let i=0;i<need.length;i+=6){
+    await Promise.allSettled(need.slice(i,i+6).map(async k=>{
+      try{
+        const r=await fetch(PROXY+"/?q="+encodeURIComponent(k)),j=await r.json();
+        const q=(j.quotes||[]).find(x=>x.symbol&&x.symbol.toUpperCase()===k.toUpperCase());
+        SEC[k]=(q&&(q.sectorDisp||q.sector))||"Unknown";
+      }catch(e){SEC[k]="Unknown"}
+    }));
+  }
+  ls.set("sect",JSON.stringify(SEC));
+  if(TAB==="a"&&rows.length)render(G.syms,[],G.warn);
+}
 const PIEC=["#14213d","#2563eb","#ea580c","#16a34a","#9333ea","#0891b2","#db2777","#ca8a04","#64748b","#65a30d","#dc2626","#0d9488","#a8a29e"];
 function pie(items){
   const tot=items.reduce((a,x)=>a+x.val,0);
@@ -471,7 +488,7 @@ function allocation(){
     else{const tot=Object.values(sh).reduce((a,v)=>a+Math.max(0,v),0);for(const b in sh)if(sh[b]>0&&tot>0)br[b]=r.val*sh[b]/tot}
     let cur=ser[k]?ser[k].cur:((tx.find(t=>t.key===k)||{}).cur||"EUR");
     if(cur==="GBp"||cur==="GBX")cur="GBP";
-    it.push({n:r.n,typ:r.typ,val:r.val,cur:cur||"EUR",br:br});
+    it.push({k:k,n:r.n,typ:r.typ,val:r.val,cur:cur||"EUR",br:br});
   });
   const grp=f=>{const m={};it.forEach(x=>{const k=f(x);m[k]=(m[k]||0)+x.val});return Object.keys(m).map(k=>({name:k,val:m[k]})).sort((a,b)=>b.val-a.val)};
   let items;
@@ -480,10 +497,15 @@ function allocation(){
     items=srt.slice(0,12);const rest=srt.slice(12);
     if(rest.length)items.push({name:"Other ("+rest.length+")",val:rest.reduce((a,x)=>a+x.val,0)});
   }else if(ALV==="t")items=grp(x=>TYPN[x.typ]);
+  else if(ALV==="s"){
+    items=grp(sectorOf);
+    const need=it.filter(x=>x.typ==="Stock"&&SEC[x.k]===undefined);
+    if(need.length&&!SECL){SECL=true;loadSectors().finally(()=>{SECL=false})}
+  }
   else if(ALV==="c")items=grp(x=>x.cur);
   else{const m={};it.forEach(x=>{for(const b in x.br)m[b]=(m[b]||0)+x.br[b]});items=Object.keys(m).map(k=>({name:k,val:m[k]})).sort((a,b)=>b.val-a.val)}
-  const B=[["h","Holdings"],["t","Type"],["c","Currency"],["b","Broker"]].map(z=>'<button data-alv="'+z[0]+'"'+(ALV===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("");
-  return '<div class="card"><h2>Allocation</h2>'+B+'<p class="mu">Current value of what you hold, in euro. Currency is the currency the instrument is listed in. Derivatives are valued at cost.</p>'+pie(items)+'</div>';
+  const B=[["h","Holdings"],["t","Type"],["s","Sector"],["c","Currency"],["b","Broker"]].map(z=>'<button data-alv="'+z[0]+'"'+(ALV===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("");
+  return '<div class="card"><h2>Allocation</h2>'+B+'<p class="mu">Current value of what you hold, in euro. Currency is the currency the instrument is listed in. Derivatives are valued at cost.'+(ALV==="s"?' Sectors come from Yahoo Finance for stocks. ETFs are shown as broad funds unless their name is clearly one sector (technology, defence, private equity), because a look-through into the fund\'s holdings is not available.':'')+'</p>'+pie(items)+'</div>';
 }
 function contrib(a){
   const T=rows[0].idx,base=a<0?100:T[a],C={},pos={},bas={},pvk={};let k=0;

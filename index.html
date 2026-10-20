@@ -40,9 +40,55 @@ a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}td.grp{
   .sc td:first-child,.sc th:first-child{position:sticky;left:0;background:var(--card);z-index:1}
   td.grp{position:static!important}
 }
+
+:root{--hv:rgba(120,120,150,.07);--cp:6px 10px;--lw:2;--ao:.22;--k:#4f8cff}
+html[data-mode=dark]{--hv:rgba(255,255,255,.045);background:radial-gradient(1.2px 1.2px at 8% 12%,#fffb,#0000),radial-gradient(1px 1px at 23% 64%,#fff8,#0000),radial-gradient(1.4px 1.4px at 41% 9%,#fffc,#0000),radial-gradient(1px 1px at 57% 38%,#fff7,#0000),radial-gradient(1.2px 1.2px at 72% 81%,#fffa,#0000),radial-gradient(1px 1px at 88% 22%,#fff9,#0000),radial-gradient(1.3px 1.3px at 95% 58%,#fff8,#0000),radial-gradient(1px 1px at 33% 91%,#fff8,#0000),radial-gradient(1px 1px at 63% 6%,#fff7,#0000),radial-gradient(1.2px 1.2px at 14% 46%,#fff9,#0000),radial-gradient(60% 40% at 88% -5%,rgba(124,92,255,.16),#0000),radial-gradient(50% 35% at 4% 104%,rgba(255,107,74,.09),#0000),var(--bg);background-attachment:fixed}
+html[data-mode=dark] body{background:none}
+html[data-mode=dark][data-design=nebula]{--bg:#04050c;--fg:#eef0ff;--mu:#8e94b8;--bd:rgba(150,150,255,.15);--card:rgba(15,17,36,.72);--ac:#8b7bff;--onac:#05060d;--pos:#3fe0a5;--neg:#ff6b7d}
+html[data-mode=dark][data-design=orbit]{--bg:#050608;--fg:#e6e9f0;--mu:#7d8596;--bd:#1c2029;--card:#0b0d12;--ac:#4f8cff;--onac:#050608}
+html[data-mode=dark][data-design=eclipse]{--bg:#07060a;--fg:#f4efe6;--mu:#9d95a8;--bd:#262230;--card:#121018;--ac:#f2b84b;--onac:#140f03;--pos:#4be0a8;--neg:#ff7a6b}
+html[data-design=nebula]{--rad:20px;--lw:2.2;--ao:.32}
+html[data-design=orbit]{--rad:8px;--brad:6px;--pad:16px;--gap:12px;--cp:4px 9px;--lw:1.6;--ao:.14;--fs:14.5px;--kv:1.7rem}
+html[data-design=eclipse]{--rad:28px;--pad:24px;--lw:2.8;--ao:.4;--kv:2.4rem}
+html[data-design=nebula] .card,html[data-design=nebula] .kpi{backdrop-filter:blur(10px)}
+.themes{justify-content:flex-end}
+.kpi{position:relative;overflow:hidden;background:linear-gradient(155deg,color-mix(in srgb,var(--k) 15%,var(--card)),var(--card) 62%)}
+.kpi:nth-child(1){--k:#4f8cff}.kpi:nth-child(2){--k:#3fd0a0}.kpi:nth-child(3){--k:#a78bfa}.kpi:nth-child(4){--k:#f2b84b}
+.kpi::after{content:"";position:absolute;right:-24px;top:-24px;width:88px;height:88px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#fff7,var(--k) 38%,#0000 72%);opacity:.5;pointer-events:none}
+html[data-design=orbit] .kpi{background:var(--card);border-top:2px solid var(--k)}html[data-design=orbit] .kpi::after{display:none}
+html[data-design=eclipse] .kpi{background:linear-gradient(145deg,var(--k),color-mix(in srgb,var(--k) 36%,#000));border:0}
+html[data-design=eclipse] .kpi:nth-child(1){--k:#3b6fe0}html[data-design=eclipse] .kpi:nth-child(2){--k:#1f9d78}html[data-design=eclipse] .kpi:nth-child(3){--k:#7c5ce0}html[data-design=eclipse] .kpi:nth-child(4){--k:#c9861a}
+html[data-design=eclipse] .kpi .kl,html[data-design=eclipse] .kpi .ks{color:#ffffffcc}html[data-design=eclipse] .kpi .kv{color:#fff}
+html[data-design=eclipse] .kpi::after{width:140px;height:140px;right:-44px;top:-44px;opacity:.3}
+.tabs button{padding:7px 18px}
+html[data-design=orbit] .tabs{border-bottom:1px solid var(--bd);gap:0}
+html[data-design=orbit] .tabs button{border:0;border-radius:0;background:none;border-bottom:2px solid transparent;padding:8px 16px;color:var(--mu)}
+html[data-design=orbit] .tabs button.on{border-bottom-color:var(--ac);color:var(--fg)}
+html[data-design=eclipse] .tabs{background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:5px;display:inline-flex}
+html[data-design=eclipse] .tabs button{border:0;background:none;color:var(--mu)}
+html[data-design=eclipse] .tabs button.on{background:var(--ac);color:var(--onac)}
+button[data-tf],button[data-ptf],button[data-ctf],button[data-dtf],button[data-vt],button[data-vm],button[data-alv],button[data-dvm],button[data-txf],button[data-txo]{padding:4px 12px;font-size:.82em;margin:0 4px 6px 0}
+.tfc{margin:2px 0 8px}
+th{font-size:.7em;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);font-weight:600}
+td{border-bottom-color:color-mix(in srgb,var(--bd) 55%,transparent)}
+tr:hover>td{background:var(--hv)}
+td.grp{background:none!important;color:var(--mu);font-size:.72em;text-transform:uppercase;letter-spacing:.09em;padding-top:16px}
+table.tx td:first-child{min-width:0;white-space:nowrap}
+.wt{min-width:80px}.wb{height:3px;border-radius:3px;background:var(--bd);margin-top:3px}.wb i{display:block;height:100%;border-radius:3px;background:var(--ac)}
+details.card>summary{list-style:none}details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"";float:right;width:7px;height:7px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:rotate(45deg);margin-top:4px;transition:transform .2s}
+details.card[open]>summary::after{transform:rotate(225deg);margin-top:8px}
+svg.ch .ln{fill:none;stroke-width:var(--lw);vector-effect:non-scaling-stroke}
+svg .gl{stroke-width:1;vector-effect:non-scaling-stroke;shape-rendering:crispEdges}
+.sl{transition:transform .16s ease,filter .16s,opacity .16s;transform-origin:100px 100px}
+.dvb{transition:filter .12s}.dvb:hover{filter:brightness(1.25)}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:.78em;font-weight:600;background:color-mix(in srgb,currentColor 15%,transparent)}
+.p-Buy{color:var(--pos)}.p-Sell{color:var(--neg)}.p-Dividend{color:#d9962b}.p-Tax,.p-Fee,.p-Interest{color:var(--mu)}
+.rdo{min-height:1.6em;margin:4px 0 6px}
+@media(max-width:720px){html[data-design]{--pad:14px;--gap:12px}.kpi::after{width:60px;height:60px}}
 </style></head>
 <body>
-<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 4.1</p></div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div></header>
+<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 5.0 (design preview)</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div class="themes" id="designs"><button data-d="nebula">Nebula</button><button data-d="orbit">Orbit</button><button data-d="eclipse">Eclipse</button></div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div></div></header>
 <details class="card" id="setup" open>
 <summary>Data and settings</summary>
 <h2 style="margin-top:12px">Transactions (Saxo export)</h2>
@@ -71,18 +117,22 @@ a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}td.grp{
 const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
 const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct:9,okt:9,nov:10,dec:11};
 const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL",xtsx:".V",xtse:".TO",xasx:".AX",xhkg:".HK"};
-const TFS=["1M","3M","6M","YTD","1Y","3Y","All"];
+const TFS=["1D","1W","1M","3M","6M","YTD","1Y","3Y","5Y","Max"];
 const PALS={
   light:["#1d4ed8","#ea580c","#059669","#7c3aed","#0891b2","#db2777","#ca8a04","#475569","#65a30d","#dc2626","#0d9488","#9333ea","#a8a29e"],
-  dark:["#60a5fa","#fb923c","#34d399","#c084fc","#22d3ee","#f472b6","#fbbf24","#94a3b8","#a3e635","#f87171","#2dd4bf","#a78bfa","#d6d3d1"]};
+  dark:["#4f8cff","#ef6a4c","#3fd0a0","#a78bfa","#6fd6e0","#f472b6","#f2b84b","#9aa5bd","#b5e04f","#ff9a6b","#2dd4bf","#c9b6ff","#d9d2c3"]};
 let MODEV="light";
 let COL=PALS.light.slice(0,6);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="All",PTF="All",CU=false,DBG=false,DTF="All",tx=[],days=[],P={},rows=[],ser={},TF="All",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
+let VT=["1D","1M","YTD","1Y","Max"],DVM="m",TXF="all",TXO=-1;try{const v=JSON.parse(ls.get("vt")||"null");if(v&&v.length)VT=v}catch(e){}
+const TFA=()=>TFS.filter(t=>t==="Max"||iStart(t)>=0);
+const VTs=()=>{const a=TFA().filter(t=>VT.includes(t));return a.length?a:["Max"]};
+const e2=v=>(v<0?"-":"")+"\u20ac"+(Math.abs(v)).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
 
@@ -183,10 +233,10 @@ function twrr(ks,mode){
   return {idx:out,st:st,held:held};
 }
 function iStart(tf){
-  if(tf==="All")return 0;
+  if(tf==="Max")return 0;
   const e=new Date(days[days.length-1]+"T00:00:00Z");let s;
   if(tf==="YTD")s=(e.getUTCFullYear()-1)+"-12-31";
-  else{e.setUTCMonth(e.getUTCMonth()-{"1M":1,"3M":3,"6M":6,"1Y":12,"3Y":36}[tf]);s=e.toISOString().slice(0,10)}
+  else{if(tf==="1D")return Math.max(0,days.length-2);if(tf==="1W")e.setUTCDate(e.getUTCDate()-7);else e.setUTCMonth(e.getUTCMonth()-{"1M":1,"3M":3,"6M":6,"1Y":12,"3Y":36,"5Y":60}[tf]);s=e.toISOString().slice(0,10)}
   let i=-1;for(let j=0;j<days.length&&days[j]<=s;j++)i=j;
   return i;
 }
@@ -220,18 +270,18 @@ function periodInfo(){
   return '<p class="mu">Holdings only (no cash). Value on '+fd(days[a])+': <b>'+eur(X)+'</b>. Value on '+fd(days[b])+': <b>'+eur(Y)+'</b>. Bought minus sold in between: <b>'+eur(net)+'</b>. Profit: <b>'+eur(profit)+'</b>'+(den>0?'. Simple money-weighted return: <b>'+(profit/den*100).toFixed(1)+'%</b>':'')+'.</p>';
 }
 function cagr(r){
-  const v=ret(r,"All");if(v==null)return null;
+  const v=ret(r,"Max");if(v==null)return null;
   let e=days.length-1;
   if(r.held){e=-1;for(let i=days.length-1;i>=0;i--)if(r.held[i]){e=i;break}if(e<0)return null}
   const y=(new Date(days[e])-new Date(days[Math.max(0,r.st)]))/864e5/365.25;
   return y<0.9?null:Math.pow(1+v,1/y)-1;
 }
 function ret(r,tf){
-  if(tf!=="All"&&tf!=="C"&&r.k&&r.open===false)return null;
+  if(tf!=="Max"&&tf!=="C"&&r.k&&r.open===false)return null;
   if(tf==="C"){const ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i},a=ia(CF),b=ia(CT);return(a<0||b<=a||r.st<0||a<r.st||(r.held&&!hasHeld(r.held,a,b)))?null:r.idx[b]/r.idx[a]-1}
   const L=days.length-1;
-  if(tf==="All"&&r.kind!=="b")return r.st<0?null:r.idx[L]/100-1;
-  const i0=tf==="All"?r.st:iStart(tf);
+  if(tf==="Max"&&r.kind!=="b")return r.st<0?null:r.idx[L]/100-1;
+  const i0=tf==="Max"?r.st:iStart(tf);
   if(i0<0||r.st<0||i0<r.st||i0>=L)return null;
   if(r.held&&!hasHeld(r.held,i0,L))return null;
   return r.idx[L]/r.idx[i0]-1;
@@ -253,17 +303,17 @@ function lineChart(S,x0,L,fmt,zero,marks){
   const n=Math.round((mx-mn)/step);
   for(let k=0;k<=n;k++){
     const v=mn+k*step,z=Math.abs(v)<step/1000,y=ys(v).toFixed(1);
-    g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(z?".65":".14")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+fmt(z?0:v)+'</text>';
+    g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl" stroke="currentColor" opacity="'+(z?".5":".09")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+fmt(z?0:v)+'</text>';
   }
   if(S.length<=2&&S[0].v.length>1){
     const s0=S[0],by=ys(zero?0:mn).toFixed(1);let d="M"+xs(s0.a).toFixed(1)+","+by;
     s0.v.forEach((v,j)=>{d+="L"+xs(s0.a+j).toFixed(1)+","+ys(v).toFixed(1)});
     d+="L"+xs(s0.a+s0.v.length-1).toFixed(1)+","+by+"Z";
-    g+='<path d="'+d+'" fill="'+COL[0]+'" opacity=".1"/>';
+    g+='<defs><linearGradient id="ag'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+COL[0]+'" style="stop-opacity:var(--ao)"/><stop offset="1" stop-color="'+COL[0]+'" stop-opacity="0"/></linearGradient></defs><path d="'+d+'" fill="url(#ag'+id+')"/>';
   }
-  S.forEach((s,k)=>{g+='<polyline fill="none" stroke="'+COL[k%COL.length]+'" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/>'});
+  S.forEach((s,k)=>{g+='<polyline class="ln" stroke="'+COL[k%COL.length]+'" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/><circle cx="'+xs(s.a+s.v.length-1).toFixed(1)+'" cy="'+ys(s.v[s.v.length-1]).toFixed(1)+'" r="3.5" fill="'+COL[k%COL.length]+'" style="stroke:var(--card)" stroke-width="1.5"/>'});
   (marks||[]).forEach(m=>{g+='<circle cx="'+xs(m.i).toFixed(1)+'" cy="'+ys(m.v).toFixed(1)+'" r="5" fill="'+m.c+'" style="stroke:var(--card)" stroke-width="2"/>'});
-  [x0,Math.round((x0+L)/2),L].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(k==0?"start":k==2?"end":"middle")+'" fill="currentColor">'+fd(days[i])+'</text>'});
+  [...new Set([x0,Math.round((x0+L)/2),L])].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(i===x0?"start":i===L?"end":"middle")+'" fill="currentColor">'+fd(days[i])+'</text>'});
   g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
   CH.push({S:S,x0:x0,L:L,fmt:fmt,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx});
   const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
@@ -272,7 +322,7 @@ function lineChart(S,x0,L,fmt,zero,marks){
 function chart(){
   const L=days.length-1,i0=Math.max(iStart(TF),0);
   const S=rows.filter(r=>r.chart&&r.st>=0).map(r=>{
-    const a=Math.max(i0,r.st),bs=(TF==="All"&&r.kind!=="b")?100:r.idx[a],v=[];
+    const a=Math.max(i0,r.st),bs=(TF==="Max"&&r.kind!=="b")?100:r.idx[a],v=[];
     for(let i=a;i<=L;i++)v.push((r.idx[i]/bs-1)*100);
     return {name:r.name,a:a,v:v};
   }).filter(s=>s.a<L);
@@ -282,7 +332,7 @@ function chart(){
 function valueCard(){
   const L=days.length-1,st0=rows[0].st;
   if(st0<0||st0>=L)return "";
-  let x0=PTF==="All"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
+  let x0=PTF==="Max"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
   let S,f;
   if(VM==="v"){
     const val=[],net=[];let cum=0,k=0;
@@ -299,7 +349,7 @@ function valueCard(){
     });
     f=pctf;
   }
-  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFS.map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. Net invested is cumulative since your first trade; over the full period, the gap between the lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
+  return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFA().map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. Net invested is cumulative since your first trade; over the full period, the gap between the lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
 }
 function hold(syms,bad){
   const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
@@ -349,7 +399,7 @@ function positions(){
     if(!g.length)return;
     h+='<tr><td colspan="10" class="grp">'+TYPN[ty]+'</td></tr>';
     g.forEach(r=>{
-      h+='<tr><td><a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a></td><td>'+(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td>'+(tv>0?(r.val/tv*100).toFixed(1)+"%":"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.dv)+pc(r.un+r.real+r.dv)+"</tr>";
+      h+='<tr><td><a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a></td><td>'+(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td class="wt">'+(tv>0?(r.val/tv*100).toFixed(1)+'%<div class="wb"><i style="width:'+Math.min(100,r.val/tv*300).toFixed(0)+'%"></i></div>':"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.dv)+pc(r.un+r.real+r.dv)+"</tr>";
     });
   });
   const U=out.reduce((a,r)=>a+r.un,0),R=out.reduce((a,r)=>a+r.real,0),Dv=out.reduce((a,r)=>a+r.dv,0);
@@ -384,7 +434,7 @@ function foldCards(){
     c.replaceWith(d);
   });
 }
-function cellVal(td,ci){
+function cellVal(td,ci){const ds=td&&td.getAttribute&&td.getAttribute("data-s");if(ds!=null&&ds!=="")return +ds;
   const t=(td?td.textContent:"").trim();
   if(t===""||t==="–"||t==="=")return null;
   const m=t.match(/^(\d{1,2}) ([A-Za-z]+) '(\d\d)$/);
@@ -440,6 +490,11 @@ function renderBase(syms,bad,warn){
     $("out").innerHTML=kpis()+tabsHtml()+analysis()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
     return;
   }
+  if(TAB==="t"&&rows.length&&!bad.length){
+    CH=[];
+    $("out").innerHTML=kpis()+tabsHtml()+transactions()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+    return;
+  }
   if(TAB==="d"&&rows.length&&!bad.length){
     CH=[];positions();
     $("out").innerHTML=kpis()+tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
@@ -453,16 +508,16 @@ function renderR(syms,bad,warn){
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="sc"><table><tr><th>Instrument</th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
-    const NC=TFS.length+(CU?1:0)+2;
-    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+TFS.map(t=>cell(ret(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+    const NC=VTs().length+(CU?1:0)+2;
+    const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+VTs().map(t=>cell(ret(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
     rows.filter(r=>!r.k).forEach(r=>{h+=line(r)});
     ["ETF","Stock","Derivative"].forEach(ty=>{
       const g=rows.filter(r=>r.k&&r.typ===ty).sort((x,y)=>byName(x.name,y.name));
       if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
     });
-    h+='</table></div><p class="mu">"All" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "All" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "All" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
-    h+='<div class="card"><h2>Comparison</h2>'+TFS.map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
+    h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. Closed positions show only "Max" and CAGR. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
+    h+='<div class="card"><h2>Comparison</h2>'+TFA().map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
   }
   if(rows.length)h+=valueCard()+positions();
   if(DBG||bad.length)h+=hold(syms,bad);
@@ -547,7 +602,7 @@ function setLook(m){
 function kpis(){
   positions();
   const tv=POSL.reduce((a,r)=>a+r.val,0),pr=POSL.reduce((a,r)=>a+r.un+r.real+r.dv,0);
-  const tot=rows[0],tw=ret(tot,"All"),cg=cagr(tot),bm=rows.find(r=>r.kind==="b"),bw=bm?ret(bm,"All"):null;
+  const tot=rows[0],tw=ret(tot,"Max"),cg=cagr(tot),bm=rows.find(r=>r.kind==="b"),bw=bm?ret(bm,"Max"):null;
   const sg=x=>x>=0?"pos":"neg";
   const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div><div class="ks">'+sub+'</div></div>';
   let h='<div class="kpis">';
@@ -560,7 +615,7 @@ function kpis(){
   }
   return h+"</div>";
 }
-const tabsHtml=()=>'<div class="tabs"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
+const tabsHtml=()=>'<div class="tabs"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="t"'+(TAB==="t"?' class="on"':"")+'>Transactions</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button></div>';
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -586,8 +641,8 @@ function pie(items){
   let ang=-Math.PI/2,g="",lg="";
   PIED={t1:"Total",t2:eur(tot)};
   items.forEach((x,i)=>{
-    const f=x.val/tot,a1=ang+f*2*Math.PI,c=PIEC[i%PIEC.length],pc=(f*100).toFixed(1)+"%",nm=x.name.length>26?x.name.slice(0,25)+"…":x.name;
-    const at=' class="sl" data-n="'+esc(nm)+'" data-v="'+eur(x.val)+'" data-p="'+pc+'"';
+    const f=x.val/tot,a1=ang+f*2*Math.PI,c=PIEC[i%PIEC.length],pc=(f*100).toFixed(1)+"%",nm=x.name.length>18?x.name.slice(0,17)+"…":x.name;
+    const am=(ang+a1)/2,at=' class="sl" data-n="'+esc(nm)+'" data-v="'+eur(x.val)+'" data-p="'+pc+'" data-c="'+c+'" data-dx="'+(Math.cos(am)*8).toFixed(2)+'" data-dy="'+(Math.sin(am)*8).toFixed(2)+'"';
     if(f>=0.9999)g+='<circle cx="100" cy="100" r="64" fill="none" stroke="'+c+'" stroke-width="32"'+at+'/>';
     else{
       const R=80,r=48,P=(rr,an)=>(100+rr*Math.cos(an)).toFixed(2)+" "+(100+rr*Math.sin(an)).toFixed(2),lf=f>0.5?1:0;
@@ -596,7 +651,7 @@ function pie(items){
     ang=a1;
     lg+='<tr><td><b style="color:'+c+'">●</b> '+esc(x.name)+'</td><td>'+eur(x.val)+'</td><td>'+pc+'</td></tr>';
   });
-  return '<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center"><svg viewBox="0 0 200 200" style="width:270px;max-width:100%">'+g+'<text id="pt1" x="100" y="92" text-anchor="middle" font-size="9.5" style="fill:var(--mu)" pointer-events="none">Total</text><text id="pt2" x="100" y="110" text-anchor="middle" font-size="14" font-weight="600" style="fill:var(--fg)" pointer-events="none">'+eur(tot)+'</text><text id="pt3" x="100" y="125" text-anchor="middle" font-size="10" style="fill:var(--mu)" pointer-events="none"></text></svg><div class="sc" style="flex:1;min-width:260px"><table>'+lg+'</table></div></div>';
+  return '<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center"><svg viewBox="0 0 200 200" style="width:290px;max-width:100%;overflow:visible">'+g+'<text id="pt1" x="100" y="92" text-anchor="middle" font-size="9.5" style="fill:var(--mu)" pointer-events="none">Total</text><text id="pt2" x="100" y="110" text-anchor="middle" font-size="14" font-weight="600" style="fill:var(--fg)" pointer-events="none">'+eur(tot)+'</text><text id="pt3" x="100" y="125" text-anchor="middle" font-size="10" style="fill:var(--mu)" pointer-events="none"></text></svg><div class="sc" style="flex:1;min-width:260px"><table>'+lg+'</table></div></div>';
 }
 const nameOf=k=>ser[k]?ser[k].name:((tx.find(t=>t.key===k)||{}).n||k);
 function allocation(){
@@ -654,11 +709,11 @@ function contrib(a){
   return C;
 }
 function contribCard(){
-  const L=days.length-1,a=CTF==="All"?-1:Math.max(-1,iStart(CTF)),C=contrib(a);
+  const L=days.length-1,a=CTF==="Max"?-1:Math.max(-1,iStart(CTF)),C=contrib(a);
   const T=rows[0].idx,base=a<0?100:T[a],tot=(T[L]/base-1)*100;
   const list=Object.keys(C).map(k=>({k:k,n:nameOf(k),c:C[k]*100,typ:typOf(k)})).filter(x=>Math.abs(x.c)>=0.005).sort((x,y)=>y.c-x.c);
   const mx=Math.max(0.01,...list.map(x=>Math.abs(x.c)));
-  const B=TFS.map(t=>'<button data-ctf="'+t+'"'+(t===CTF?' class="on"':"")+'>'+t+'</button>').join("");
+  const B=TFA().map(t=>'<button data-ctf="'+t+'"'+(t===CTF?' class="on"':"")+'>'+t+'</button>').join("");
   const sum=list.reduce((x,y)=>x+y.c,0),by={};list.forEach(x=>{by[x.typ]=(by[x.typ]||0)+x.c});
   let h='<div class="card"><h2>Contribution to your return</h2>'+B+'<p>Time-weighted return of the period: <b>'+pct1(tot/100)+'</b>. By type: '+["ETF","Stock","Derivative"].filter(t=>by[t]!==undefined).map(t=>TYPN[t]+' <b>'+(by[t]>0?"+":"")+by[t].toFixed(1)+' points</b>').join(", ")+'.</p>';
   h+='<div class="sc"><table><tr><th>Instrument</th><th>Contribution (points)</th><th style="width:45%"></th></tr>';
@@ -668,6 +723,83 @@ function contribCard(){
   });});
   h+='<tr><td><b>Total</b></td><td><b>'+(sum>0?"+":"")+sum.toFixed(2)+'</b></td><td></td></tr></table></div>';
   return h+'<p class="mu">A contribution is how many percentage points of your portfolio\'s time-weighted return came from one holding: its gain, weighted by how large it was in the portfolio at the time. The contributions add up to the total return of the period (small differences come from rounding and tiny contributions left out). Holdings that were bought and sold within the period are included.</p></div>';
+}
+const dvl=b=>DVM==="m"?MN[+b.slice(5)-1].slice(0,3)+" '"+b.slice(2,4):b;
+function txRows(){
+  const R=[];
+  tx.forEach(t=>{
+    const buy=t.q>0,fee=isFinite(t.cs)&&isFinite(t.g)?(buy?t.cs-t.g:t.g-t.cs):NaN;
+    R.push({d:t.d,ty:buy?"Buy":"Sell",n:nameOf(t.key),k:t.key,b:t.b,q:+Math.abs(t.q).toFixed(4),px:isFinite(t.px)?f2(t.px)+" "+(t.cur||""):"\u2013",a:isFinite(t.cs)?(buy?-1:1)*t.cs:NaN,f:fee,o:R.length});
+  });
+  DV.forEach(e=>{
+    if(e.g)R.push({d:e.d,ty:"Dividend",n:e.n,k:e.k,b:e.b,q:e.sh>0?+e.sh.toFixed(4):null,px:e.sh>0?"\u20ac"+f2(e.g/e.sh)+" / share":"\u2013",a:e.g,f:NaN,o:R.length});
+    if(e.t)R.push({d:e.d,ty:"Tax",n:e.n,k:e.k,b:e.b,q:null,px:"\u2013",a:e.t,f:NaN,o:R.length});
+  });
+  AO.forEach(a=>R.push({d:a.d,ty:a.k==="fee"?"Fee":"Interest",n:a.k==="fee"?"Account fees":"Account interest",k:null,b:"Degiro",q:null,px:"\u2013",a:a.e,f:NaN,o:R.length}));
+  return R;
+}
+function transactions(){
+  let R=txRows();
+  const sum=ty=>R.filter(r=>r.ty===ty).reduce((a,r)=>a+(isFinite(r.a)?r.a:0),0);
+  const bought=-sum("Buy"),sold=sum("Sell"),dv=sum("Dividend")+sum("Tax");
+  R=R.filter(r=>TXF==="all"||(TXF==="Other"?["Tax","Fee","Interest"].includes(r.ty):r.ty===TXF));
+  R.sort((x,y)=>(x.d<y.d?-1:x.d>y.d?1:x.o-y.o)*TXO);
+  const F=[["all","All"],["Buy","Buys"],["Sell","Sells"],["Dividend","Dividends"],["Other","Tax, fees, interest"]];
+  let h='<div class="card"><h2>Transactions</h2>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button>';
+  h+='<p class="mu">'+R.length+' shown \u00b7 bought '+eur(bought)+' \u00b7 sold '+eur(sold)+' \u00b7 dividends net of tax '+eur(dv)+'. Click a column header to sort.</p>';
+  h+='<div class="sc"><table class="tx"><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs</th></tr>';
+  R.forEach(r=>{
+    h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="pill p-'+r.ty+'">'+r.ty+'</span></td><td>'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+'</td><td>'+r.b+'</td><td>'+(r.q==null?"\u2013":r.q)+'</td><td>'+r.px+'</td><td>'+(isFinite(r.a)?(r.a>0?"+":"")+e2(r.a):"\u2013")+'</td><td>'+(isFinite(r.f)&&Math.abs(r.f)>=0.005?e2(r.f):"\u2013")+'</td></tr>';
+  });
+  return h+'</table></div><p class="mu">Amounts are cash in euro: negative is money spent on a buy, positive is money received. Costs are trading costs including currency conversion where known.</p></div>';
+}
+function dvData(){
+  const m={},tot={},nm={};
+  DV.forEach(e=>{const n=e.g+e.t;if(!n)return;const b=DVM==="m"?e.d.slice(0,7):e.d.slice(0,4);m[b]=m[b]||{};m[b][e.k]=(m[b][e.k]||0)+n;tot[e.k]=(tot[e.k]||0)+n;nm[e.k]=e.n});
+  const ks=Object.keys(m).sort();if(!ks.length)return null;
+  const end=(days[days.length-1]||ks[ks.length-1]).slice(0,DVM==="m"?7:4),all=[];let c=ks[0];
+  while((c<=end||c<=ks[ks.length-1])&&all.length<600){all.push(c);if(DVM==="m"){let y=+c.slice(0,4),mo=+c.slice(5)+1;if(mo>12){mo=1;y++}c=y+"-"+String(mo).padStart(2,"0")}else c=String(+c+1)}
+  return {m:m,nm:nm,keys:all.slice(DVM==="m"?-24:-10),order:Object.keys(tot).sort((a,b)=>tot[b]-tot[a])};
+}
+function divChart(){
+  const D=dvData();
+  const sw='<button data-dvm="m"'+(DVM==="m"?' class="on"':"")+'>Per month</button><button data-dvm="y"'+(DVM==="y"?' class="on"':"")+'>Per year</button>';
+  if(!D)return '<div>'+sw+'<p class="mu">No dividends to chart yet.</p></div>';
+  const m=D.m,nm=D.nm,keys=D.keys,order=D.order,n=keys.length,W=700,H=300,pl=54,pr=8,pt=18,pb=28;
+  const cl=k=>PIEC[Math.min(order.indexOf(k),12)%PIEC.length];
+  const tots=keys.map(b=>Object.values(m[b]||{}).reduce((a,v)=>a+Math.max(0,v),0));
+  let mx=Math.max(4,...tots);
+  const raw=mx/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+  mx=Math.ceil(mx/step-1e-9)*step;
+  const ys=v=>H-pb-v*(H-pt-pb)/mx,bw=(W-pl-pr)/n,w=Math.min(bw*0.66,48),ev=n>16?2:1;
+  let g="";
+  for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".09":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+eur(v)+'</text>'}
+  keys.forEach((b,i)=>{
+    const x=pl+i*bw+(bw-w)/2;let cum=0;
+    order.forEach(k=>{
+      const v=Math.max(0,(m[b]||{})[k]||0);if(v<=0)return;
+      const y1=ys(cum+v),h=ys(cum)-y1;
+      g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,h).toFixed(1)+'" rx="2" fill="'+cl(k)+'" style="stroke:var(--card)" stroke-width=".8" data-c="'+cl(k)+'" data-n="'+esc(nm[k]||k)+'" data-v="'+e2(v)+'" data-b="'+dvl(b)+'" data-t="'+e2(tots[i])+'"/>';
+      cum+=v;
+    });
+    if(n<=16&&tots[i]>0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(ys(tots[i])-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+eur2(tots[i])+'</text>';
+    if((n-1-i)%ev===0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
+  });
+  const vis=order.filter(k=>keys.some(b=>((m[b]||{})[k]||0)>0));
+  const lgd=vis.slice(0,12).map(k=>'<span><b style="color:'+cl(k)+'">\u25cf</b> '+esc(nm[k])+'</span>').join("")+(vis.length>12?'<span><b style="color:'+PIEC[12%PIEC.length]+'">\u25cf</b> Other ('+(vis.length-12)+')</span>':"");
+  const def='Net dividends shown: <b>'+e2(tots.reduce((a,v)=>a+v,0))+'</b>. Hover a bar to see which asset paid.';
+  return '<div>'+sw+'<div class="rdo" id="dvr" data-d="'+esc(def)+'">'+def+'</div><svg viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lgd+'</div></div>';
+}
+function divTable(){
+  const B={};
+  DV.forEach(e=>{const b=DVM==="m"?e.d.slice(0,7):e.d.slice(0,4),o=B[b]=B[b]||{g:0,t:0,c:0,v:{}};o.g+=e.g;o.t+=e.t;if(e.g>0)o.c++;o.v[e.n]=(o.v[e.n]||0)+e.g+e.t});
+  const ks=Object.keys(B).sort().reverse();if(!ks.length)return "";
+  let h='<h2 style="margin-top:16px">Detail per '+(DVM==="m"?"month":"year")+'</h2><div class="sc"><table><tr><th>'+(DVM==="m"?"Month":"Year")+'</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Paid by</th></tr>';
+  ks.forEach(b=>{
+    const o=B[b],who=Object.keys(o.v).sort((x,y)=>o.v[y]-o.v[x]).map(k=>esc(k)+' <span class="mu">'+e2(o.v[k])+'</span>').join(", ");
+    h+='<tr><td data-s="'+b.replace("-","")+'">'+(DVM==="m"?MN[+b.slice(5)-1]+" "+b.slice(0,4):b)+'</td><td>'+o.c+'</td><td>'+e2(o.g)+'</td><td>'+e2(o.t)+'</td><td><b>'+e2(o.g+o.t)+'</b></td><td style="white-space:normal;text-align:left;min-width:220px">'+who+'</td></tr>';
+  });
+  return h+'</table></div>';
 }
 function analysis(){positions();return allocation()+contribCard()}
 function dividends(){
@@ -686,10 +818,7 @@ function dividends(){
   const nb={};DV.forEach(e=>{if(e.g>0){(nb[e.b]=nb[e.b]||{n:0,g:0}).n++;nb[e.b].g+=e.g}});
   const brokerLine=Object.keys(nb).map(b=>b+": "+nb[b].n+" payments, "+eur(nb[b].g)+" gross").join(" · ")||"no dividends found";
   let h='<div class="card"><h2>Dividends</h2><p>Net received in total: <b>'+eur(G0+T0)+'</b> (gross '+eur(G0)+', tax '+eur(T0)+'). Last 12 months, net: <b>'+eur(L12)+'</b>.</p><p class="mu">By broker: '+brokerLine+'. Saxo dividends come from the dividend rows in your Saxo file.</p>';
-  const ys=Object.keys(yr).sort(),mx=Math.max(1,...ys.map(y=>yr[y].g+yr[y].t));
-  h+='<div class="sc"><table><tr><th>Year</th><th>Gross</th><th>Tax</th><th>Net</th><th style="width:40%"></th></tr>';
-  ys.forEach(y=>{const n=yr[y].g+yr[y].t;h+='<tr><td>'+y+'</td><td>'+eur(yr[y].g)+'</td><td>'+eur(yr[y].t)+'</td><td>'+eur(n)+'</td><td><div style="background:var(--ac);height:8px;width:'+Math.max(0,n/mx*100).toFixed(0)+'%"></div></td></tr>'});
-  h+='</table></div></div>';
+  h+=divChart();h+=divTable();h+='</div>';
   const list=Object.keys(ins).map(k=>({k:k,o:ins[k]})).sort((a,b)=>(b.o.g+b.o.t)-(a.o.g+a.o.t));
   h+='<div class="card"><h2>Per instrument</h2><div class="sc"><table><tr><th>Instrument</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Last per share</th><th>Yield (12M)</th><th>Yield on cost</th></tr>';
   ["ETF","Stock"].forEach(ty=>{
@@ -732,15 +861,15 @@ function detailView(k){
   h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
   h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
   if(row){
-    h+='<div class="sc"><table><tr><th></th>'+TFS.map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+TFS.map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
+    h+='<div class="sc"><table><tr><th></th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+VTs().map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
   }
   h+='</div>';
   if(!o&&G.DR[k]){
-    let x0=DTF==="All"?T[0].di:Math.max(0,iStart(DTF));
+    let x0=DTF==="Max"?T[0].di:Math.max(0,iStart(DTF));
     if(x0>=L)x0=Math.max(0,L-1);
     const v=[];for(let i=x0;i<=L;i++)v.push(P[k][i]/G.DR[k][i]);
     const marks=T.filter(t=>t.di>=x0).map(t=>({i:t.di,v:t.g/Math.max(1e-9,Math.abs(t.qa)),c:t.q>0?"#16a34a":"#dc2626"}));
-    h+='<div class="card"><h2>Price and your trades</h2>'+TFS.map(t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart([{name:"Price (€)",a:x0,v:v}],x0,L,eur2,false,marks)+'<p class="mu"><b style="color:#16a34a">●</b> buys <b style="color:#dc2626">●</b> sells. Prices are euro-converted closes.</p></div>';
+    h+='<div class="card"><h2>Price and your trades</h2>'+TFA().map(t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart([{name:"Price (€)",a:x0,v:v}],x0,L,eur2,false,marks)+'<p class="mu"><b style="color:#16a34a">●</b> buys <b style="color:#dc2626">●</b> sells. Prices are euro-converted closes.</p></div>';
   }
   h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
   R.forEach(z=>{
@@ -958,9 +1087,22 @@ $("out").addEventListener("toggle",e=>{const d=e.target;if(d&&d.tagName==="DETAI
 const hov=e=>{
   const sl=e.target.closest&&e.target.closest(".sl"),p1=$("pt1");
   if(p1&&PIED){
-    if(sl){p1.textContent=sl.getAttribute("data-n");$("pt2").textContent=sl.getAttribute("data-v");$("pt3").textContent=sl.getAttribute("data-p")}
-    else{p1.textContent=PIED.t1;$("pt2").textContent=PIED.t2;$("pt3").textContent=""}
+    const t2=$("pt2"),t3=$("pt3");
+    document.querySelectorAll(".sl").forEach(z=>{if(z!==sl){z.style.transform="";z.style.filter="";z.style.opacity=sl?".5":""}});
+    if(sl){
+      const c=sl.getAttribute("data-c");
+      sl.style.transform="translate("+sl.getAttribute("data-dx")+"px,"+sl.getAttribute("data-dy")+"px) scale(1.05)";
+      sl.style.filter="drop-shadow(0 3px 9px "+c+"aa)";sl.style.opacity="1";
+      if(sl.nextElementSibling&&sl.nextElementSibling.classList.contains("sl"))sl.parentNode.insertBefore(sl,p1);
+      p1.textContent=sl.getAttribute("data-n");t2.textContent=sl.getAttribute("data-v");t3.textContent=sl.getAttribute("data-p");
+      p1.style.fill=t2.style.fill=t3.style.fill=c;
+    }else{
+      p1.textContent=PIED.t1;t2.textContent=PIED.t2;t3.textContent="";
+      p1.style.fill="var(--mu)";t2.style.fill="var(--fg)";t3.style.fill="var(--mu)";
+    }
   }
+  const db=e.target.closest&&e.target.closest(".dvb"),dr=$("dvr");
+  if(dr){if(db)dr.innerHTML='<b style="color:'+db.getAttribute("data-c")+'">\u25cf</b> <b>'+db.getAttribute("data-b")+'</b> \u00b7 '+esc(db.getAttribute("data-n"))+': <b>'+db.getAttribute("data-v")+'</b> <span class="mu">(period total '+db.getAttribute("data-t")+')</span>';else dr.innerHTML=dr.getAttribute("data-d")}
   const sv=e.target.closest&&e.target.closest("svg.ch");
   if(!sv){CH.forEach((c,i)=>{const t=$("tg"+i),l=$("cur"+i);if(t)t.setAttribute("visibility","hidden");if(l)l.setAttribute("visibility","hidden")});return}
   const n=sv.getAttribute("data-c"),c=CH[+n];if(!c)return;
@@ -987,8 +1129,23 @@ $("out").addEventListener("change",e=>{
   const s=e.target.getAttribute&&e.target.getAttribute("data-s");
   if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=>msg("Error: "+x.message))}
 });
+$("out").addEventListener("click",e=>{
+  const a=n=>e.target.getAttribute&&e.target.getAttribute(n);
+  const vt=a("data-vt"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo");
+  if(vt){VT=VT.includes(vt)?VT.filter(x=>x!==vt):[...VT,vt];ls.set("vt",JSON.stringify(VT));render(G.syms,[],G.warn)}
+  if(dm){DVM=dm;render(G.syms,[],G.warn)}
+  if(tf){TXF=tf;render(G.syms,[],G.warn)}
+  if(to){TXO=-TXO;delete SORTS["Transactions|0"];render(G.syms,[],G.warn)}
+});
+function setDesign(d){
+  if(!["nebula","orbit","eclipse"].includes(d))d="nebula";
+  document.documentElement.setAttribute("data-design",d);ls.set("design",d);
+  document.querySelectorAll("#designs button").forEach(b=>b.classList.toggle("on",b.getAttribute("data-d")===d));
+}
+$("designs").addEventListener("click",e=>{const d=e.target.getAttribute&&e.target.getAttribute("data-d");if(d)setDesign(d)});
+setDesign(ls.get("design")||"nebula");
 $("themes").addEventListener("click",e=>{const m=e.target.getAttribute&&e.target.getAttribute("data-mode");if(m)setLook(m)});
-setLook(ls.get("mode")||((typeof window!=="undefined"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"));
+setLook(ls.get("mode")||"dark");
 if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
 </script>
 </body></html>

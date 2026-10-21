@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Portfolio</title>
 <style>
 :root,html[data-mode="light"]{--bg:#f6f5f1;--fg:#1c2434;--mu:#6b7280;--bd:#e4e1d8;--card:#fff;--pos:#0f7b4d;--neg:#b42318;--ac:#1f3a8a;--onac:#fff;--sh:0 1px 3px rgba(28,36,52,.07);color-scheme:light}
-html[data-mode="dark"]{--bg:#0a0f1e;--fg:#e8ebf4;--mu:#93a0bd;--bd:#232d47;--card:#121a30;--pos:#34d399;--neg:#f87171;--ac:#60a5fa;--onac:#0a0f1e;--sh:none;color-scheme:dark}
+html[data-mode="dark"]{--bg:#0e0f11;--fg:#e4e5e9;--mu:#8d909a;--bd:rgba(255,255,255,.075);--card:#1a1c20;--pos:#6fcf97;--neg:#e8786f;--ac:#d1ae6b;--onac:#16120a;--sh:none;color-scheme:dark}
 :root{--fs:16px;--pad:22px;--rad:14px;--brad:999px;--gap:18px;--cp:10px 9px;--kv:2rem;--maxw:1200px}
 *{box-sizing:border-box}
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:var(--fs);background:var(--bg);color:var(--fg);max-width:var(--maxw);margin:0 auto;padding:var(--gap) 16px 40px}
@@ -42,13 +42,11 @@ a{color:var(--ac);text-decoration:none}a:hover{text-decoration:underline}td.grp{
 }
 
 :root{--hv:rgba(120,120,150,.07);--cp:6px 10px;--lw:2;--ao:.22;--k:#4f8cff}
-html[data-mode=dark]{--hv:rgba(255,255,255,.045);background:radial-gradient(1.2px 1.2px at 8% 12%,#fffb,#0000),radial-gradient(1px 1px at 23% 64%,#fff8,#0000),radial-gradient(1.4px 1.4px at 41% 9%,#fffc,#0000),radial-gradient(1px 1px at 57% 38%,#fff7,#0000),radial-gradient(1.2px 1.2px at 72% 81%,#fffa,#0000),radial-gradient(1px 1px at 88% 22%,#fff9,#0000),radial-gradient(1.3px 1.3px at 95% 58%,#fff8,#0000),radial-gradient(1px 1px at 33% 91%,#fff8,#0000),radial-gradient(1px 1px at 63% 6%,#fff7,#0000),radial-gradient(1.2px 1.2px at 14% 46%,#fff9,#0000),radial-gradient(60% 40% at 88% -5%,rgba(124,92,255,.16),#0000),radial-gradient(50% 35% at 4% 104%,rgba(255,107,74,.09),#0000),var(--bg);background-attachment:fixed}
+html[data-mode=dark]{--hv:rgba(255,255,255,.045);background:radial-gradient(900px 520px at 12% -8%,rgba(209,174,107,.07),#0000),radial-gradient(800px 500px at 100% 110%,rgba(120,130,160,.06),#0000),var(--bg);background-attachment:fixed}
 html[data-mode=dark] body{background:none}
-html[data-mode=dark][data-design=nebula]{--bg:#04050c;--fg:#eef0ff;--mu:#8e94b8;--bd:rgba(150,150,255,.15);--card:rgba(15,17,36,.72);--ac:#8b7bff;--onac:#05060d;--pos:#3fe0a5;--neg:#ff6b7d}
 html[data-design=nebula]{--rad:20px;--lw:2.2;--ao:.32}
-html[data-design=nebula] .card,html[data-design=nebula] .kpi{backdrop-filter:blur(10px)}
 .themes{justify-content:flex-end}
-.kpi{position:relative;overflow:hidden;background:linear-gradient(155deg,color-mix(in srgb,var(--k) 15%,var(--card)),var(--card) 62%)}
+.kpi{position:relative;overflow:hidden}
 .kpi:nth-child(1){--k:#4f8cff}.kpi:nth-child(2){--k:#3fd0a0}.kpi:nth-child(3){--k:#a78bfa}.kpi:nth-child(4){--k:#f2b84b}
 
 
@@ -84,11 +82,82 @@ table.tx{table-layout:fixed;min-width:760px}
 table.tx td,table.tx th{overflow:hidden;text-overflow:ellipsis}
 table.tx td:first-child{max-width:none}
 table.tx th:nth-child(-n+4),table.tx td:nth-child(-n+4){text-align:left}
+
+html,body{height:100%}
+body{max-width:none;margin:0;padding:0;overflow:hidden}
+#app{height:100vh;display:flex;flex-direction:column;padding:10px 16px 14px;gap:10px}
+header.top{display:flex;align-items:center;gap:14px;margin:0;flex:none}
+header.top h1{font-size:1.15em;margin:0}
+#msg{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px;align-items:center}.pw{position:relative}
+.ib{width:36px;height:36px;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+svg.ic{width:18px;height:18px;color:inherit}
+.pop{position:absolute;right:0;top:44px;z-index:40;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;min-width:270px;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.pop[hidden],.modal[hidden]{display:none}
+.ps{font-size:.72em;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin:12px 0 2px}.ps:first-child{margin-top:0}
+.pop button{padding:4px 12px;font-size:.82em;margin:4px 6px 0 0}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,8,16,.6);display:flex;align-items:center;justify-content:center}
+.mcard{width:min(720px,94vw);max-height:90vh;overflow:auto;margin:0}.mhead{display:flex;justify-content:space-between;align-items:center}.mcard textarea{height:60px}
+#out{flex:1;min-height:0;display:grid;grid-template-columns:196px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px 14px}
+#side{grid-row:1/3;grid-column:1;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+#side .tabs{flex-direction:column;margin:0;gap:2px}
+#side .tabs button{text-align:left;border:0;background:none;border-radius:10px;padding:9px 12px;color:var(--mu);margin:0}
+#side .tabs button:hover{background:var(--hv);color:var(--fg)}
+#side .tabs button.on{background:color-mix(in srgb,var(--ac) 16%,transparent);color:var(--fg);font-weight:600}
+#side .tabs button::before{content:attr(data-i);display:inline-block;width:1.5em;opacity:.8}
+#side .tfc{display:flex;flex-direction:column;margin:12px 0 0;gap:2px;border-top:1px solid var(--bd);padding-top:10px}
+#side .tfc button{text-align:left;border-radius:8px;margin:2px 0 0;font-size:.8em}
+.sfoot{margin-top:auto;color:var(--mu);font-size:.72em;padding:6px 4px}
+details.note{font-size:.85em}details.note summary{cursor:pointer;color:var(--mu);font-size:.85em;padding:4px 0}
+#out>.kpis{grid-column:2;grid-row:1;margin:0}
+#view{grid-column:2;grid-row:2;min-height:0;min-width:0;display:grid;gap:12px;overflow:auto;grid-auto-rows:minmax(220px,auto)}
+#view>.card{margin:0;padding:12px 14px;min-height:0;min-width:0;overflow:hidden}
+#view svg:not(.ic){display:block}
+#view .sc{overflow:auto}.sc th{position:sticky;top:0;z-index:1;background:var(--card)}
+#view td:first-child{min-width:0;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view .tfc{margin:0 0 4px}
+.wtabs button{margin:0 6px 8px 0}.wpane:not(.on){display:none}
+#view.v-r{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"twrr charts" "pos pos"}
+#view.v-t{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"tx"}
+#view.v-d{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"chart chart" "detail inst"}
+#view.v-a{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"alloc contrib"}
+#view.v-w{grid-template-columns:minmax(340px,400px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"inputs result"}
+#view.v-det{grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr) minmax(0,.9fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"head dchart dchart" "head trades ddiv"}
+html[data-hide] #upl{display:none}.kpis:empty{display:none}
+html[data-kpi=a] .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:10px 0}
+html[data-kpi=a] .kpi{background:none;border:0;border-left:1px solid var(--bd);border-radius:0;box-shadow:none;padding:2px 20px}
+html[data-kpi=a] .kpi:first-child{border-left:0}
+html[data-kpi=a] .kl{text-transform:uppercase;letter-spacing:.07em;font-size:.68em}
+html[data-kpi=a] .kv{font-size:1.5rem;margin:2px 0 1px}html[data-kpi=a] .ks{font-size:.74em}
+.ks:empty{display:none}
+@media(max-width:900px){body{overflow:auto}#app{height:auto}#out{display:block}#side{flex-direction:row;flex-wrap:wrap;margin-bottom:10px;overflow:visible}#side .tabs{flex-direction:row;flex-wrap:wrap}#side .tfc{margin:0;border:0;padding:0;flex-direction:row;flex-wrap:wrap}#view{display:block;overflow:visible}#view>.card{margin-bottom:12px;overflow:visible}#view .sc{max-height:60vh}html[data-kpi] .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}header.top{flex-wrap:wrap}}
+#side .tabs button{white-space:nowrap}
+#view .wg{grid-template-columns:repeat(2,minmax(0,1fr));margin:8px 0}
+#view>.card{position:relative}
+.whead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.whead h2{margin:0}
+.wmenu summary{cursor:pointer;list-style:none;border:1px solid var(--bd);border-radius:999px;padding:3px 12px;font-size:.8em;color:var(--mu)}
+.wmenu summary::-webkit-details-marker{display:none}.wmenu[open] summary{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+.wpop{position:absolute;right:14px;top:46px;z-index:6;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;min-width:330px;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.wpop .tfc{margin:6px 0 0}
+[data-w=pos] tr:last-child td{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--bd)}
+#view div:has(>svg[data-pie]){display:flex!important;flex-wrap:nowrap!important;gap:16px;align-items:flex-start}
+#view svg[data-pie]{flex:none;width:46%!important}#view div:has(>svg[data-pie])>.sc{flex:1;min-width:0}
+[data-w=detail] td:last-child{white-space:nowrap!important;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.wbody{display:flow-root}
+html[data-mode=dark] .card,html[data-mode=dark] .kpis{background:linear-gradient(180deg,#1d1f24,#17191d);border-color:rgba(255,255,255,.07);box-shadow:0 1px 0 rgba(255,255,255,.045) inset,0 12px 32px -14px rgba(0,0,0,.7)}
+html[data-mode=dark] .modal .card,html[data-mode=dark] .pop{background:#1b1d22}
+h2{font-weight:600;letter-spacing:.01em}.kv{font-weight:600}
+#side .tabs button.on::before{color:var(--ac);opacity:1}
+html[data-mode=dark] button.on,html[data-mode=dark] button.go{box-shadow:0 0 0 1px rgba(209,174,107,.35),0 4px 14px -6px rgba(209,174,107,.5)}
 </style></head>
 <body>
-<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 5.3</p></div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button><button id="hid">Hide amounts</button></div></header>
-<details class="card" id="setup" open>
-<summary>Data and settings</summary>
+<div id="app">
+<header class="top"><div class="brand"><h1>My Portfolio</h1></div><span id="msg" class="mu"></span>
+<div class="tools"><button class="ib" id="upl" title="Load data and settings" aria-label="Load data and settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></button><button class="ib" id="hid" title="Hide amounts" aria-label="Hide amounts"></button>
+<div class="pw"><button class="ib" id="aprb" title="Appearance" aria-label="Appearance"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+<div class="pop" id="apr" hidden><div class="ps">Mode</div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div>
+</div></div></div></header>
+<div class="modal" id="setup" hidden><div class="card mcard"><div class="mhead"><h2>Data and settings</h2><button class="ib" id="mclose" title="Close" aria-label="Close">&#10005;</button></div>
 <h2 style="margin-top:12px">Transactions (Saxo export)</h2>
 <input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
 <p class="mu">Or paste the rows here, including the header line:</p>
@@ -107,9 +176,9 @@ table.tx th:nth-child(-n+4),table.tx td:nth-child(-n+4){text-align:left}
 <input id="bm" value="IWDA.AS">
 <p class="mu">Yahoo symbols, separated by commas (for example IWDA.AS, VUAA.AS)</p>
 <button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button><label style="margin-left:10px;font-size:.9rem"><input type="checkbox" id="dbg" style="width:auto"> Show data checks</label>
-</details>
-<p id="msg" class="mu"></p>
+</div></div>
 <div id="out"></div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const PROXY="https://price-proxy.arnaudverhelst.workers.dev";
@@ -479,7 +548,7 @@ function enhanceTables(){
   document.querySelectorAll("#out table").forEach(tb=>{
     const hr=[...tb.rows].find(r=>r.querySelector("th"));if(!hr)return;
     if([...tb.rows].filter(r=>!r.querySelector("th")).length<3||tb.querySelector("input"))return;
-    const sec=tb.closest("details.card"),h=sec&&sec.querySelector("summary h2"),key=(h?h.textContent.trim():"")+"|"+(sec?[...sec.querySelectorAll("table")].indexOf(tb):0);
+    const sec=tb.closest(".card"),h=sec&&sec.querySelector("h2"),key=(h?h.textContent.trim():"")+"|"+(sec?[...sec.querySelectorAll("table")].indexOf(tb):0);
     tb.setAttribute("data-sk",key);
     [...hr.cells].forEach(th=>{const t=th.textContent.trim();if(t){th.classList.add("srt");th.setAttribute("data-l",t)}});
     const st=SORTS[key];if(st){applySort(tb,st.c,st.d);markSort(tb,st)}
@@ -490,7 +559,7 @@ function sortClick(th){
   const n=(s&&s.c===c)?{c:c,d:-s.d}:{c:c,d:1};
   SORTS[key]=n;applySort(tb,n.c,n.d);markSort(tb,n);
 }
-function render(syms,bad,warn){renderBase(syms,bad,warn);foldCards();enhanceTables();wbUpdate()}
+function render(syms,bad,warn){renderBase(syms,bad,warn);enhanceTables();layout();wbUpdate();fit()}
 function renderBase(syms,bad,warn){
   if(DET&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+detailView(DET);return}
   if(TAB==="a"&&rows.length&&!bad.length){
@@ -521,7 +590,7 @@ function renderR(syms,bad,warn){if(rows.length&&!bad.length)positions();
   let h="";
   if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
   if(rows.length){
-    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included (like Saxo)</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'</div><div class="tfc"><span class="mu">Basis: </span>'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+    h+='<div class="card"><h2>Time-weighted return (TWRR)</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select> &nbsp; <label><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?' <input type="date" id="d0" style="width:auto" value="'+CF+'"> to <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</p><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'</div><div class="tfc"><span class="mu">Basis: </span>'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
     const NC=VTs().length+(CU?1:0)+2;
     const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+VTs().map(t=>cell(rt(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
     (PF==="all"?rows.filter(r=>!r.k):[subRow()].concat(rows.filter(r=>r.kind==="b")).filter(Boolean)).forEach(r=>{h+=line(r)});
@@ -763,7 +832,7 @@ function transactions(){
   const F=[["all","All"],["Buy","Buys"],["Sell","Sells"],["Dividend","Dividends"],["Other","Fees, interest, other"]];
   let h='<div class="card"><h2>Transactions</h2>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button>';
   h+='<p class="mu">'+R.length+' shown \u00b7 bought '+eur(bought)+' \u00b7 sold '+eur(sold)+' \u00b7 dividends net of tax '+eur(dv)+'. Click a column header to sort.</p>';
-  h+='<div class="sc"><table class="tx"><colgroup><col style="width:12%"><col style="width:9%"><col style="width:26%"><col style="width:9%"><col style="width:9%"><col style="width:13%"><col style="width:12%"><col style="width:10%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
+  h+='<div class="sc"><table class="tx"><colgroup><col style="width:15%"><col style="width:8%"><col style="width:25%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:12%"><col style="width:11%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
   R.forEach(r=>{
     h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="pill p-'+r.ty+'">'+r.ty+'</span></td><td><span class="ti" title="'+esc(r.n)+'">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+'</span></td><td>'+r.b+'</td><td>'+(r.q==null?"\u2013":sh(r.q))+'</td><td>'+r.px+'</td><td>'+(isFinite(r.a)?(r.a>0?"+":"")+e2(r.a):"\u2013")+'</td><td>'+(isFinite(r.f)&&Math.abs(r.f)>=0.005?e2(r.f):"\u2013")+'</td></tr>';
   });
@@ -810,7 +879,7 @@ function divTable(){
   const B={};
   DV.forEach(e=>{const b=DVM==="m"?e.d.slice(0,7):e.d.slice(0,4),o=B[b]=B[b]||{g:0,t:0,c:0,v:{}};o.g+=e.g;o.t+=e.t;if(e.g>0)o.c++;o.v[e.n]=(o.v[e.n]||0)+e.g+e.t});
   const ks=Object.keys(B).sort().reverse();if(!ks.length)return "";
-  let h='<h2 style="margin-top:16px">Detail per '+(DVM==="m"?"month":"year")+'</h2><div class="sc"><table><tr><th>'+(DVM==="m"?"Month":"Year")+'</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Paid by</th></tr>';
+  let h='<h2>Detail per '+(DVM==="m"?"month":"year")+'</h2><div class="sc"><table><tr><th>'+(DVM==="m"?"Month":"Year")+'</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Paid by</th></tr>';
   ks.forEach(b=>{
     const o=B[b],who=Object.keys(o.v).sort((x,y)=>o.v[y]-o.v[x]).map(k=>esc(k)+' <span class="mu">'+e2(o.v[k])+'</span>').join(", ");
     h+='<tr><td data-s="'+b.replace("-","")+'">'+(DVM==="m"?MN[+b.slice(5)-1]+" "+b.slice(0,4):b)+'</td><td>'+o.c+'</td><td>'+e2(o.g)+'</td><td>'+e2(o.t)+'</td><td><b>'+e2(o.g+o.t)+'</b></td><td style="white-space:normal;text-align:left;min-width:220px">'+who+'</td></tr>';
@@ -823,8 +892,8 @@ function wealth(){
   let h='<div class="card"><h2>Wealth builder</h2><button data-wm="age"'+(age?' class="on"':"")+'>When can I retire?</button><button data-wm="years"'+(age?"":' class="on"')+'>What do I have after X years?</button>';
   h+='<div class="wg">'+f("age","Your age now")+f("start","Starting capital (\u20ac)")+f("monthly","Monthly investment (\u20ac)")+f("grow","Yearly increase of that amount (%)")+f("ret","Average return per year (%)")+f("infl","Inflation per year (%)")
    +(age?f("income","Wanted monthly income (today\u2019s \u20ac)"):'<label class="wf">Years to invest: <b id="wby">'+WB.years+'</b><input type="range" min="1" max="50" step="1" data-w="years" value="'+WB.years+'"></label>')+f("wr","Withdrawal rate in retirement (%)")+'</div>';
-  h+='<p><label><input type="checkbox" data-w="real"'+(WB.real?" checked":"")+'> Show in today\u2019s euros (inflation-adjusted)</label></p><div id="wbo"></div>';
-  return h+'<p class="mu">Starting capital is prefilled with your current portfolio value. The estimate assumes a constant yearly return, monthly contributions, no taxes or fees, and that retirement means your capital reaches the amount where the withdrawal rate gives your wanted income. Real markets fluctuate; this is an illustration, not advice.</p></div>';
+  h+='<p><label><input type="checkbox" data-w="real"'+(WB.real?" checked":"")+'> Show in today\u2019s euros (inflation-adjusted)</label></p>';
+  return h+'<p class="mu">Starting capital is prefilled with your current portfolio value. The estimate assumes a constant yearly return, monthly contributions, no taxes or fees, and that retirement means your capital reaches the amount where the withdrawal rate gives your wanted income. Real markets fluctuate; this is an illustration, not advice.</p></div><div class="card"><h2>Projection</h2><div id="wbo"></div></div>';
 }
 function wbCalc(T){
   const rm=Math.pow(1+WB.ret/100,1/12)-1,inf=WB.infl/100,wr=Math.max(0.1,WB.wr)/100,inc=WB.income*12;
@@ -874,11 +943,12 @@ function wbUpdate(){
   el.innerHTML='<div class="kpis">'+t+'</div><div class="rdo" id="wbr" data-d="'+esc(def)+'">'+def+'</div><svg class="ch" viewBox="0 0 '+Wd+' '+H+'">'+g+'</svg><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> Total value</span><span><b style="color:var(--mu)">\u25cf</b> Invested</span>'+(tgt?'<span><b style="color:'+PIEC[1]+'">\u25cf</b> Capital needed</span>':"")+'</div>';
   const sv=el.querySelector("svg"),rd=$("wbr"),cl=$("wbl");
   sv.addEventListener("pointermove",ev=>{
-    const r=sv.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*Wd,i=Math.max(0,Math.min(n,Math.round((x-pl)*n/(Wd-pl-pr))));
+    const r=sv.getBoundingClientRect(),sc=Math.min(r.width/Wd,r.height/H),x=(ev.clientX-r.left-(r.width-Wd*sc)/2)/sc,i=Math.max(0,Math.min(n,Math.round((x-pl)*n/(Wd-pl-pr))));
     cl.setAttribute("x1",xs(i));cl.setAttribute("x2",xs(i));cl.setAttribute("visibility","visible");
     rd.innerHTML='Age <b>'+(a0+i)+'</b>: <b>'+eur(tot[i])+'</b> \u00b7 invested '+eur(cn[i])+' \u00b7 growth '+eur(tot[i]-cn[i])+(tgt?' \u00b7 needed '+eur(tgt[i]):"");
   });
   sv.addEventListener("pointerleave",()=>{cl.setAttribute("visibility","hidden");rd.innerHTML=rd.getAttribute("data-d")});
+  fit();
 }
 function analysis(){positions();return allocation()+contribCard()}
 function dividends(){
@@ -897,7 +967,7 @@ function dividends(){
   const nb={};DV.forEach(e=>{if(e.g>0){(nb[e.b]=nb[e.b]||{n:0,g:0}).n++;nb[e.b].g+=e.g}});
   const brokerLine=Object.keys(nb).map(b=>b+": "+nb[b].n+" payments, "+eur(nb[b].g)+" gross").join(" · ")||"no dividends found";
   let h='<div class="card"><h2>Dividends</h2><p>Net received in total: <b>'+eur(G0+T0)+'</b> (gross '+eur(G0)+', tax '+eur(T0)+'). Last 12 months, net: <b>'+eur(L12)+'</b>.</p><p class="mu">By broker: '+brokerLine+'. Saxo dividends come from the dividend rows in your Saxo file.</p>';
-  h+=divChart();h+=divTable();h+='</div>';
+  h+=divChart();h+='</div>';const dtb=divTable();if(dtb)h+='<div class="card">'+dtb+'</div>';
   const list=Object.keys(ins).map(k=>({k:k,o:ins[k]})).sort((a,b)=>(b.o.g+b.o.t)-(a.o.g+a.o.t));
   h+='<div class="card"><h2>Per instrument</h2><div class="sc"><table><tr><th>Instrument</th><th>Payments</th><th>Gross</th><th>Tax</th><th>Net</th><th>Last per share</th><th>Yield (12M)</th><th>Yield on cost</th></tr>';
   ["ETF","Stock"].forEach(ty=>{
@@ -1166,7 +1236,7 @@ $("out").addEventListener("toggle",e=>{const d=e.target;if(d&&d.tagName==="DETAI
 const hov=e=>{
   let sl=e.target.closest&&e.target.closest(".sl");const p1=$("pt1"),psv=e.target.closest&&e.target.closest("svg[data-pie]");
   if(!sl&&psv){
-    const rc=psv.getBoundingClientRect(),k=200/rc.width,dx=(e.clientX-rc.left)*k-100,dy=(e.clientY-rc.top)*k-100,rr=Math.hypot(dx,dy);
+    const rc=psv.getBoundingClientRect(),k=200/Math.min(rc.width,rc.height),dx=((e.clientX-rc.left)-rc.width/2)*k,dy=((e.clientY-rc.top)-rc.height/2)*k,rr=Math.hypot(dx,dy);
     if(rr>=18&&rr<=102){const t=(Math.atan2(dy,dx)+Math.PI/2+2*Math.PI)%(2*Math.PI);sl=[...psv.querySelectorAll(".sl")].find(z=>t>=+z.getAttribute("data-t0")&&t<+z.getAttribute("data-t1"))||null}
   }
   if(p1&&PIED){
@@ -1189,7 +1259,7 @@ const hov=e=>{
   const sv=e.target.closest&&e.target.closest("svg.ch");
   if(!sv){CH.forEach((c,i)=>{const t=$("tg"+i),l=$("cur"+i);if(t)t.setAttribute("visibility","hidden");if(l)l.setAttribute("visibility","hidden")});return}
   const n=sv.getAttribute("data-c"),c=CH[+n];if(!c)return;
-  const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*c.W;
+  const r=sv.getBoundingClientRect(),sc=Math.min(r.width/c.W,r.height/(c.H||336)),x=(e.clientX-r.left-(r.width-c.W*sc)/2)/sc;
   const i=Math.max(c.x0,Math.min(c.L,Math.round(c.x0+(x-c.pl)*(c.L-c.x0)/(c.W-c.pl-c.pr))));
   const px=c.pl+(i-c.x0)*(c.W-c.pl-c.pr)/(c.L-c.x0),ln=$("cur"+n),tg=$("tg"+n);
   ln.setAttribute("x1",px);ln.setAttribute("x2",px);ln.setAttribute("visibility","visible");
@@ -1230,13 +1300,85 @@ $("out").addEventListener("input",e=>{
   ls.set("wb",JSON.stringify(WB));wbUpdate();
 });
 document.documentElement.setAttribute("data-design","nebula");
+const EYE='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.9 10.9 0 0112 19C5 19 1 12 1 12a18.5 18.5 0 015.1-5.9M9.9 5.1A10.4 10.4 0 0112 5c7 0 11 7 11 7a18.6 18.6 0 01-2.2 3.2M14.1 14.1a3 3 0 11-4.2-4.2"/><path d="M1 1l22 22"/></svg>';
 function setHide(v){
   HIDE=v;ls.set("hide",v?"1":"0");if(v&&VM==="v")VM="p";
   if(v)document.documentElement.setAttribute("data-hide","1");else document.documentElement.removeAttribute("data-hide");
-  $("hid").classList.toggle("on",v);$("hid").textContent=v?"Amounts hidden":"Hide amounts";
+  $("hid").classList.toggle("on",v);$("hid").innerHTML=v?EYE_OFF:EYE;$("hid").title=v?"Show amounts":"Hide amounts";
   if(rows.length)render(G.syms,[],G.warn);
 }
 $("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
+let WT=ls.get("wt")||"val",WMENU=false;
+const WK={"Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Wealth builder":"inputs","Projection":"result"};
+const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
+function layout(){
+  const out=$("out");if(!out||!out.firstElementChild)return;
+  const kids=[...out.children],kp=kids.find(e=>e.classList.contains("kpis")),tabs=kids.find(e=>e.classList.contains("tabs")),pfc=kids.find(e=>e.classList.contains("tfc")&&e.querySelector("[data-pf]"));
+  const side=document.createElement("aside");side.id="side";
+  if(tabs){tabs.querySelectorAll("button").forEach(b=>b.setAttribute("data-i",{r:"\u2197",t:"\u21c4",d:"%",a:"\u25d1",w:"\u221e"}[b.getAttribute("data-tab")]||""));side.appendChild(tabs)}
+  if(pfc)side.appendChild(pfc);
+  const view=document.createElement("div");view.id="view";view.className="v-"+(DET?"det":TAB);
+  const warn=[];
+  kids.forEach(e=>{if(e===kp||e===tabs||e===pfc)return;if(e.classList.contains("card"))view.appendChild(e);else if(e.textContent.trim())warn.push(e.innerHTML)});
+  const foot=document.createElement("div");foot.className="sfoot";
+  foot.innerHTML=(warn.length?'<details class="note"><summary>Notes ('+warn.length+')</summary>'+warn.join("<br>")+'</details>':"")+"Data stays in this browser &middot; v5.5";
+  side.appendChild(foot);
+  while(out.firstChild)out.removeChild(out.firstChild);
+  out.appendChild(side);if(kp)out.appendChild(kp);out.appendChild(view);
+  const cards=[...view.querySelectorAll(":scope>.card")];
+  cards.forEach((c,i)=>{const h=c.querySelector("h2"),t=h?h.textContent.trim():"",key=DET?(i===0?"head":WKD[t]):WK[t];c.setAttribute("data-w",key||"x");if(key)c.style.gridArea=key});
+  if(TAB==="r"&&!DET){
+    const cv=view.querySelector('[data-w=val]'),cc=view.querySelector('[data-w=cmp]'),ps=[[cv,"val","Portfolio over time"],[cc,"cmp","Comparison"]].filter(p=>p[0]);
+    if(ps.length){
+      if(!ps.some(p=>p[1]===WT))WT=ps[0][1];
+      const w=document.createElement("div");w.className="card";w.setAttribute("data-w","charts");w.style.gridArea="charts";
+      const tb=document.createElement("div");tb.className="wtabs";
+      tb.innerHTML=ps.map(p=>'<button data-wt="'+p[1]+'"'+(p[1]===WT?' class="on"':"")+'>'+p[2]+'</button>').join("");w.appendChild(tb);
+      ps.forEach(p=>{const pane=document.createElement("div");pane.className="wpane"+(p[1]===WT?" on":"");pane.setAttribute("data-p",p[1]);const c=p[0],h=c.querySelector("h2");if(h)h.remove();while(c.firstChild)pane.appendChild(c.firstChild);w.appendChild(pane);c.remove()});
+      view.appendChild(w);
+    }
+  }
+  function noteify(c,min){
+    const ks=[...c.children],isC=k=>k.classList.contains("sc")||(k.matches&&k.matches("svg.ch,svg.dv"))||(k.querySelector&&k.querySelector("svg.ch,svg.dv,svg[data-pie]")),mi=ks.findIndex(isC);
+    const ns=ks.filter((k,i)=>k.tagName==="P"&&k.classList.contains("mu")&&k.textContent.length>min&&(mi<0||i>mi));
+    if(ns.length){const d=document.createElement("details");d.className="note";d.innerHTML="<summary>Notes</summary>";ns.forEach(n=>d.appendChild(n));c.appendChild(d)}
+  }
+  view.querySelectorAll(".wpane").forEach(p=>noteify(p,1));
+  const tw=view.querySelector("[data-w=twrr]");
+  if(tw){const h=tw.querySelector("h2"),ks=[...tw.children],si=ks.findIndex(k=>k.classList.contains("sc")),ctl=ks.slice(ks.indexOf(h)+1,si);
+    if(h&&ctl.length&&si>0){const hd=document.createElement("div");hd.className="whead";const d=document.createElement("details");d.className="wmenu";d.innerHTML="<summary>Options</summary>";const pp=document.createElement("div");pp.className="wpop";ctl.forEach(x=>pp.appendChild(x));d.appendChild(pp);if(WMENU)d.open=true;tw.insertBefore(hd,h);hd.appendChild(h);hd.appendChild(d)}}
+  view.querySelectorAll(":scope>.card").forEach(c=>{
+    if(!c.querySelector(".wpane"))noteify(c,90);
+    const b=document.createElement("div");b.className="wbody";while(c.firstChild)b.appendChild(c.firstChild);c.appendChild(b);
+  });
+}
+function fit(){
+  const v=$("view");if(!v)return;
+  const small=window.innerWidth<=900;
+  v.querySelectorAll(":scope>.card").forEach(c=>{
+    const b=c.firstElementChild;if(!b||!b.classList.contains("wbody"))return;
+    const fl=[...b.querySelectorAll("svg:not(.ic),.sc")];
+    if(small){fl.forEach(e=>{e.style.height="";e.style.maxHeight=""});return}
+    fl.forEach(e=>{if(e.tagName==="svg")e.style.height="0px";else e.style.maxHeight="0px"});
+    const cs=getComputedStyle(c),free=c.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-b.offsetHeight,h=Math.max(50,Math.floor(free));
+    fl.forEach(e=>{if(e.tagName==="svg")e.style.height=h+"px";else e.style.maxHeight=h+"px"});
+  });
+}
+let fitT=0;window.addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fit,60)});
+document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("wmenu"))WMENU=e.target.open;fit()},true);
+$("out").addEventListener("click",e=>{
+  const wt=e.target.getAttribute&&e.target.getAttribute("data-wt");
+  if(wt){WT=wt;ls.set("wt",wt);document.querySelectorAll("[data-wt]").forEach(b=>b.classList.toggle("on",b.getAttribute("data-wt")===wt));document.querySelectorAll(".wpane").forEach(p=>p.classList.toggle("on",p.getAttribute("data-p")===wt));fit()}
+});
+$("aprb").onclick=()=>{$("apr").hidden=!$("apr").hidden};
+document.addEventListener("click",e=>{if(!e.target.closest(".pw"))$("apr").hidden=true});
+$("upl").onclick=()=>{$("setup").hidden=false};
+$("mclose").onclick=()=>{$("setup").hidden=true};
+$("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true}});
+$("run").addEventListener("click",()=>{$("setup").hidden=true});
+document.documentElement.setAttribute("data-kpi","a");
+if(!(ls.get("tx")||ls.get("txd")))$("setup").hidden=false;
 $("themes").addEventListener("click",e=>{const m=e.target.getAttribute&&e.target.getAttribute("data-mode");if(m)setLook(m)});
 setLook(ls.get("mode")||"dark");
 if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}

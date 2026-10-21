@@ -77,11 +77,16 @@ svg .gl{stroke-width:1;vector-effect:non-scaling-stroke;shape-rendering:crispEdg
 input[type=range]{padding:0;border:none;background:none;accent-color:var(--ac)}
 button[data-pf],button[data-wm],button[data-pb]{padding:4px 12px;font-size:.82em;margin:0 4px 6px 0}
 #wbo .kpis{margin:6px 0}
-.ti{display:block;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ti{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.tx th,table.tx td{padding:5px 8px}
+html[data-hide] #setup,html[data-hide] button[data-vm="v"]{display:none}
+table.tx{table-layout:fixed;min-width:760px}
+table.tx td,table.tx th{overflow:hidden;text-overflow:ellipsis}
+table.tx td:first-child{max-width:none}
+table.tx th:nth-child(-n+4),table.tx td:nth-child(-n+4){text-align:left}
 </style></head>
 <body>
-<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 5.2</p></div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div></header>
+<header class="top"><div><h1>My Portfolio</h1><p class="mu">Your transactions stay in this browser only. Version 5.3</p></div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button><button id="hid">Hide amounts</button></div></header>
 <details class="card" id="setup" open>
 <summary>Data and settings</summary>
 <h2 style="margin-top:12px">Transactions (Saxo export)</h2>
@@ -125,8 +130,9 @@ const msg=t=>{$("msg").textContent=t};
 let VT=["1D","1M","YTD","1Y","Max"],DVM="m",TXF="all",TXO=-1;try{const v=JSON.parse(ls.get("vt")||"null");if(v&&v.length)VT=v}catch(e){}
 const TFA=()=>TFS.filter(t=>t==="Max"||iStart(t)>=0);
 const VTs=()=>{const a=TFA().filter(t=>VT.includes(t));return a.length?a:["Max"]};
-let PF=ls.get("pf")||"open",OPS=new Set(),PB=ls.get("pb")||"me";
+let HIDE=ls.get("hide")==="1",PF=ls.get("pf")||"open",OPS=new Set(),PB=ls.get("pb")||"me";
 function retPx(r,t){const L=days.length-1,i0=t==="Max"?Math.max(r.st,0):iStart(t);if(r.st<0||i0<0||i0>=L)return null;const p=P[r.k];return p[L]/p[i0]-1}
+const sh=v=>HIDE?"\u2022\u2022\u2022":v;
 const rt=(r,t)=>PB==="stock"&&r.k&&P[r.k]?retPx(r,t):ret(r,t);
 const pf=k=>PF==="all"||(PF==="open")===OPS.has(k);
 let WB={age:30,start:null,monthly:500,grow:0,ret:7,infl:2,income:2500,wr:4,years:25,real:false,mode:"age"};try{Object.assign(WB,JSON.parse(ls.get("wb")||"{}"))}catch(e){}
@@ -135,7 +141,7 @@ function subRow(){
   const ks=new Set(G.keys.filter(k=>pf(k)));if(!ks.size)return null;
   const r=twrr(ks,MODE);return {name:"Total portfolio ("+(PF==="open"?"open":"closed")+" positions)",idx:r.idx,st:r.st,held:r.held};
 }
-const e2=v=>(v<0?"-":"")+"\u20ac"+(Math.abs(v)).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const e2=v=>HIDE?"\u20ac\u2022\u2022\u2022":(v<0?"-":"")+"\u20ac"+(Math.abs(v)).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const ysym=s=>{const p=s.split(":");return p[0]+(SUF[(p[1]||"").toLowerCase()]||"")};
 const map=s=>ov[s]||IS[s]||ysym(s);
 
@@ -331,7 +337,7 @@ function chart(){
   if(!S.length)return '<p class="mu">Not enough data for this period.</p>';
   return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf,true);
 }
-function valueCard(){
+function valueCard(){if(HIDE)VM="p";
   const L=days.length-1,st0=rows[0].st;
   if(st0<0||st0>=L)return "";
   let x0=PTF==="Max"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
@@ -363,7 +369,7 @@ function hold(syms,bad){
   return h+"</table></div></div>";
 }
 function costs(list){let tot=0,n=0;for(const t of list){if(t.opt||!isFinite(t.cs)||!isFinite(t.g))continue;tot+=t.q>0?t.cs-t.g:t.g-t.cs;n++}return {tot:tot,n:n}}
-const eur=x=>(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{maximumFractionDigits:0});
+const eur=x=>HIDE?"\u20ac\u2022\u2022\u2022":(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{maximumFractionDigits:0});
 const f2=x=>x.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pc=v=>'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+"</td>";
 const DERN=/(TURBO|WARRANT|\bCALL\b|\bPUT\b|\bSTR\b|\(SUB\)|\b[CP]\d+(\.\d+)?\b|\d{2}(JAN|FEB|MAR|APR|MAI|MEI|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DEC)\d{2}|ILLIMIT|LEVERAGED|\bLEV\b)/i;
@@ -401,7 +407,7 @@ function positions(){
     if(!g.length)return;
     h+='<tr><td colspan="10" class="grp">'+TYPN[ty]+'</td></tr>';
     g.forEach(r=>{
-      h+='<tr><td><a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a></td><td>'+(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td class="wt">'+(tv>0?(r.val/tv*100).toFixed(1)+'%<div class="wb"><i style="width:'+Math.min(100,r.val/tv*300).toFixed(0)+'%"></i></div>':"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.dv)+pc(r.un+r.real+r.dv)+"</tr>";
+      h+='<tr><td><a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a></td><td>'+sh(+r.q.toFixed(4))+'</td><td>'+(r.o||!r.q?"–":"€"+f2(r.avg))+'</td><td>'+(r.o?"–":"€"+f2(r.px))+'</td><td>'+eur(r.val)+'</td><td class="wt">'+(tv>0?(r.val/tv*100).toFixed(1)+'%<div class="wb"><i style="width:'+Math.min(100,r.val/tv*300).toFixed(0)+'%"></i></div>':"–")+"</td>"+pc(r.un)+pc(r.real)+pc(r.dv)+pc(r.un+r.real+r.dv)+"</tr>";
     });
   });
   const U=vis.reduce((a,r)=>a+r.un,0),R=vis.reduce((a,r)=>a+r.real,0),Dv=vis.reduce((a,r)=>a+r.dv,0);
@@ -757,9 +763,9 @@ function transactions(){
   const F=[["all","All"],["Buy","Buys"],["Sell","Sells"],["Dividend","Dividends"],["Other","Fees, interest, other"]];
   let h='<div class="card"><h2>Transactions</h2>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button>';
   h+='<p class="mu">'+R.length+' shown \u00b7 bought '+eur(bought)+' \u00b7 sold '+eur(sold)+' \u00b7 dividends net of tax '+eur(dv)+'. Click a column header to sort.</p>';
-  h+='<div class="sc"><table class="tx"><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
+  h+='<div class="sc"><table class="tx"><colgroup><col style="width:12%"><col style="width:9%"><col style="width:26%"><col style="width:9%"><col style="width:9%"><col style="width:13%"><col style="width:12%"><col style="width:10%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
   R.forEach(r=>{
-    h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="pill p-'+r.ty+'">'+r.ty+'</span></td><td><span class="ti" title="'+esc(r.n)+'">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+'</span></td><td>'+r.b+'</td><td>'+(r.q==null?"\u2013":r.q)+'</td><td>'+r.px+'</td><td>'+(isFinite(r.a)?(r.a>0?"+":"")+e2(r.a):"\u2013")+'</td><td>'+(isFinite(r.f)&&Math.abs(r.f)>=0.005?e2(r.f):"\u2013")+'</td></tr>';
+    h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="pill p-'+r.ty+'">'+r.ty+'</span></td><td><span class="ti" title="'+esc(r.n)+'">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+'</span></td><td>'+r.b+'</td><td>'+(r.q==null?"\u2013":sh(r.q))+'</td><td>'+r.px+'</td><td>'+(isFinite(r.a)?(r.a>0?"+":"")+e2(r.a):"\u2013")+'</td><td>'+(isFinite(r.f)&&Math.abs(r.f)>=0.005?e2(r.f):"\u2013")+'</td></tr>';
   });
   return h+'</table></div><p class="mu">Amounts are cash in euro: negative is money spent on a buy, positive is money received. For dividends the amount is the net cash received and the last column is the tax withheld; for trades it is trading costs including currency conversion where known.</p></div>';
 }
@@ -783,7 +789,7 @@ function divChart(){
   mx=Math.ceil(mx/step-1e-9)*step;
   const ys=v=>H-pb-v*(H-pt-pb)/mx,bw=(W-pl-pr)/n,w=Math.min(bw*0.66,48),ev=n>16?2:1;
   let g="";
-  for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".09":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+eur(v)+'</text>'}
+  for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".09":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+(HIDE?"":eur(v))+'</text>'}
   keys.forEach((b,i)=>{
     const x=pl+i*bw+(bw-w)/2;let cum=0;
     order.forEach(k=>{
@@ -792,7 +798,7 @@ function divChart(){
       g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,h).toFixed(1)+'" rx="2" fill="'+cl(k)+'" style="stroke:var(--card)" stroke-width=".8" data-c="'+cl(k)+'" data-n="'+esc(nm[k]||k)+'" data-v="'+e2(v)+'" data-b="'+dvl(b)+'" data-t="'+e2(tots[i])+'"/>';
       cum+=v;
     });
-    if(n<=16&&tots[i]>0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(ys(tots[i])-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+eur2(tots[i])+'</text>';
+    if(n<=16&&tots[i]>0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(ys(tots[i])-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+(HIDE?"":eur2(tots[i]))+'</text>';
     if((n-1-i)%ev===0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
   });
   const vis=order.filter(k=>keys.some(b=>((m[b]||{})[k]||0)>0));
@@ -813,7 +819,7 @@ function divTable(){
 }
 function wealth(){
   if(WB.start==null)WB.start=Math.round(POSL.reduce((a,r)=>a+r.val,0));
-  const f=(k,l)=>'<label class="wf">'+l+'<input type="number" step="any" data-w="'+k+'" value="'+WB[k]+'"></label>',age=WB.mode==="age";
+  const f=(k,l)=>'<label class="wf">'+l+'<input type="'+(HIDE&&["start","monthly","income"].includes(k)?"password":"number")+'" step="any" data-w="'+k+'" value="'+WB[k]+'"></label>',age=WB.mode==="age";
   let h='<div class="card"><h2>Wealth builder</h2><button data-wm="age"'+(age?' class="on"':"")+'>When can I retire?</button><button data-wm="years"'+(age?"":' class="on"')+'>What do I have after X years?</button>';
   h+='<div class="wg">'+f("age","Your age now")+f("start","Starting capital (\u20ac)")+f("monthly","Monthly investment (\u20ac)")+f("grow","Yearly increase of that amount (%)")+f("ret","Average return per year (%)")+f("infl","Inflation per year (%)")
    +(age?f("income","Wanted monthly income (today\u2019s \u20ac)"):'<label class="wf">Years to invest: <b id="wby">'+WB.years+'</b><input type="range" min="1" max="50" step="1" data-w="years" value="'+WB.years+'"></label>')+f("wr","Withdrawal rate in retirement (%)")+'</div>';
@@ -855,7 +861,7 @@ function wbUpdate(){
   const Wd=700,H=300,pl=62,pr=12,pt=16,pb=28,raw0=Math.max(1,...tot)*1.08,raw=raw0/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),q=raw/pw,step=(q<=1?1:q<=2?2:q<=2.5?2.5:q<=5?5:10)*pw,mx=Math.ceil(raw0/step-1e-9)*step;
   const xs=i=>pl+i*(Wd-pl-pr)/n,ys=v=>H-pb-v*(H-pt-pb)/mx,pp=(arr,j)=>arr.map((v,i)=>xs(i).toFixed(1)+","+ys(v).toFixed(1)).join(j);
   let g='<defs><linearGradient id="wbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ac);stop-opacity:var(--ao)"/><stop offset="1" style="stop-color:var(--ac);stop-opacity:0"/></linearGradient></defs>';
-  for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(Wd-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".09":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+eur(v)+'</text>'}
+  for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(Wd-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".09":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+(HIDE?"":eur(v))+'</text>'}
   const area=arr=>"M"+xs(0).toFixed(1)+","+ys(0).toFixed(1)+"L"+pp(arr,"L")+"L"+xs(n).toFixed(1)+","+ys(0).toFixed(1)+"Z";
   g+='<path d="'+area(tot)+'" fill="url(#wbg)"/><path d="'+area(cn)+'" fill="currentColor" opacity=".16"/>';
   g+='<polyline class="ln" style="stroke:var(--ac)" points="'+pp(tot," ")+'"/><polyline class="ln" style="stroke:var(--mu);stroke-dasharray:4 4" points="'+pp(cn," ")+'"/>';
@@ -931,7 +937,7 @@ function detailView(k){
   const D=DV.filter(e=>e.k===k),dn=D.reduce((a,e)=>a+e.g+e.t,0);
   const row=rows.find(r=>r.k===k),tot=real+un;
   let h='<div class="card">'+back+'<h2 style="margin-top:12px">'+esc(name)+'</h2><p class="mu">'+esc(o?"Derivative or product without price data (carried at cost until sold)":(x&&x.type||"")+" · "+k+" · "+(x&&x.cur||""))+'</p>';
-  h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
+  h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+sh(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
   h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
   if(row){
     h+='<div class="sc"><table><tr><th></th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+VTs().map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
@@ -947,7 +953,7 @@ function detailView(k){
   h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
   R.forEach(z=>{
     const t=z.t,buy=t.q>0,fee=isFinite(t.cs)&&isFinite(t.g)?(buy?t.cs-t.g:t.g-t.cs):NaN,qa=o?t.q:t.qa;
-    h+='<tr><td>'+fd(t.d)+'</td><td>'+t.b+'</td><td>'+(buy?"Buy":"Sell")+(t.fix?" *":"")+(t.free?" †":"")+'</td><td>'+(+Math.abs(t.q).toFixed(4))+'</td><td>'+(Math.abs(qa-t.q)>1e-9?(+Math.abs(qa).toFixed(4)):"=")+'</td><td>'+(isFinite(t.px)?f2(t.px)+" "+esc(t.cur||""):"–")+'</td><td>'+(isFinite(t.cs)?eur((buy?-1:1)*t.cs):"–")+'</td><td>'+(isFinite(fee)?eur(fee):"–")+'</td><td>'+(+z.q.toFixed(4))+'</td>'+(z.r==null?'<td></td>':pc(z.r))+'</tr>';
+    h+='<tr><td>'+fd(t.d)+'</td><td>'+t.b+'</td><td>'+(buy?"Buy":"Sell")+(t.fix?" *":"")+(t.free?" †":"")+'</td><td>'+sh(+Math.abs(t.q).toFixed(4))+'</td><td>'+(Math.abs(qa-t.q)>1e-9?sh(+Math.abs(qa).toFixed(4)):"=")+'</td><td>'+(isFinite(t.px)?f2(t.px)+" "+esc(t.cur||""):"–")+'</td><td>'+(isFinite(t.cs)?eur((buy?-1:1)*t.cs):"–")+'</td><td>'+(isFinite(fee)?eur(fee):"–")+'</td><td>'+sh(+z.q.toFixed(4))+'</td>'+(z.r==null?'<td></td>':pc(z.r))+'</tr>';
   });
   h+='</table></div><p class="mu">* share count re-derived from the trade value (price history did not match). † shares received at (almost) zero price, valued at market price. "Shares today" is on the basis of the current share count, after splits.</p></div>';
   if(D.length){
@@ -1224,6 +1230,13 @@ $("out").addEventListener("input",e=>{
   ls.set("wb",JSON.stringify(WB));wbUpdate();
 });
 document.documentElement.setAttribute("data-design","nebula");
+function setHide(v){
+  HIDE=v;ls.set("hide",v?"1":"0");if(v&&VM==="v")VM="p";
+  if(v)document.documentElement.setAttribute("data-hide","1");else document.documentElement.removeAttribute("data-hide");
+  $("hid").classList.toggle("on",v);$("hid").textContent=v?"Amounts hidden":"Hide amounts";
+  if(rows.length)render(G.syms,[],G.warn);
+}
+$("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
 $("themes").addEventListener("click",e=>{const m=e.target.getAttribute&&e.target.getAttribute("data-mode");if(m)setLook(m)});
 setLook(ls.get("mode")||"dark");
 if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}

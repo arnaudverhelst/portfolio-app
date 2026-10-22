@@ -106,12 +106,12 @@ details.note{font-size:.85em}details.note summary{cursor:pointer;color:var(--mu)
 .wtabs button{margin:0 6px 8px 0}.wpane:not(.on){display:none}
 #view.v-r{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"twrr charts" "pos pos"}
 #view.v-t{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"tx"}
-#view.v-d{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"chart chart" "detail inst"}
+#view.v-d{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.6fr) minmax(0,1fr);grid-template-areas:"chart" "inst"}
 #view.v-a{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"alloc contrib"}
-#view.v-w{grid-template-columns:minmax(340px,400px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"inputs result"}
+#view.v-w{grid-template-columns:minmax(420px,480px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"inputs result"}
 #view.v-det{grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr) minmax(0,.9fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"head dchart dchart" "head trades ddiv"}
 html[data-hide] #upl{display:none}.kpis:empty{display:none}
-html[data-kpi=a] .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:10px 0}
+html[data-kpi=a] .kpis{display:grid;grid-template-columns:repeat(var(--kc,4),minmax(0,1fr));gap:0;background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:10px 0}
 html[data-kpi=a] .kpi{background:none;border:0;border-left:1px solid var(--bd);border-radius:0;box-shadow:none;padding:2px 20px}
 html[data-kpi=a] .kpi:first-child{border-left:0}
 html[data-kpi=a] .kl{text-transform:uppercase;letter-spacing:.07em;font-size:.68em}
@@ -136,3 +136,11 @@ html[data-mode=dark] .modal .card,html[data-mode=dark] .pop{background:#1b1d22}
 h2{font-weight:600;letter-spacing:.01em}.kv{font-weight:600}
 #side .tabs button.on::before{color:var(--ac);opacity:1}
 html[data-mode=dark] button.on,html[data-mode=dark] button.go{box-shadow:0 0 0 1px rgba(209,174,107,.35),0 4px 14px -6px rgba(209,174,107,.5)}
+
+.pp{font-size:.85em;opacity:.8}
+.dvb{cursor:pointer;transform-box:fill-box;transform-origin:center bottom;transition:transform .14s ease,filter .14s,opacity .14s}.dvb:hover{filter:none}
+.dvh{cursor:pointer}.dvh:hover{fill:var(--hv)}svg.dv text{pointer-events:none}
+.wf{justify-content:space-between}.wf>span{line-height:1.25}.wf>input{height:36px}
+.inf{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;border:1px solid var(--mu);border-radius:50%;font-size:10px;font-style:normal;font-weight:600;color:var(--mu);cursor:help;vertical-align:middle;text-transform:none;letter-spacing:0}
+.inf::after{content:attr(data-tip);position:absolute;right:-8px;bottom:calc(100% + 8px);width:270px;padding:8px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);box-shadow:0 12px 30px rgba(0,0,0,.35);font-size:12px;font-weight:400;line-height:1.4;text-align:left;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;z-index:30;transition:opacity .12s}
+.inf:hover::after,.inf:focus::after{opacity:1;visibility:visible}

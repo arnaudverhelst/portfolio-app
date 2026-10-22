@@ -149,3 +149,8 @@ td.pp{font-size:.9em;opacity:.85;padding-left:4px}
 .dvc{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 6px;flex-wrap:wrap}.dvc button{margin:0 6px 0 0}.dvc label{font-size:.85em;color:var(--mu)}
 .kl select{font-size:1em;text-transform:none;letter-spacing:0;padding:1px 8px;max-width:100%}
 #bmc{margin:6px 0 2px}#bmc button{padding:4px 12px;font-size:.82em;margin:0 6px 6px 0}#bmc .mu{font-size:.78em}
+
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--bd);border-radius:999px;background:var(--bg)}
+.seg button{margin:0;padding:4px 14px;font-size:.84em;border:0;background:none;color:var(--mu);border-radius:999px}
+.seg button:hover:not(.on){color:var(--fg)}.seg button.on{background:var(--ac);color:var(--onac)}
+.kl select{cursor:pointer}

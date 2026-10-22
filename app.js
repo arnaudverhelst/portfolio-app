@@ -16,8 +16,10 @@ const msg=t=>{$("msg").textContent=t};
 const infoI=t=>'<span class="inf" tabindex="0" data-tip="'+esc(t)+'"></span>';
 const BMN={"IWDA.AS":"World (MSCI World)","VWCE.DE":"All-World (FTSE)","VUAA.AS":"S&P 500","^STOXX50E":"Euro Stoxx 50","^NDX":"Nasdaq 100"};
 const bmLab=n=>BMN[n]||n;
+const BMP=[["IWDA.AS","World"],["VWCE.DE","All-World"],["VUAA.AS","S&P 500"],["^STOXX50E","Euro Stoxx 50"],["^NDX","Nasdaq 100"]];
+const ekc=v=>HIDE?"":v>=1e6?"\u20ac"+(+(v/1e6).toFixed(2))+"M":v>=1e3?"\u20ac"+Math.round(v/1e3)+"k":"\u20ac"+Math.round(v);
 const actB=()=>{const L=rows.filter(r=>r.kind==="b");return L.find(r=>r.name===BMA)||L[0]};
-let VT=["1D","1M","YTD","1Y","Max"],DVM="m",DVS="",DVT="chart",BMA=ls.get("bma")||"",TXF="all",TXO=-1;try{const v=JSON.parse(ls.get("vt")||"null");if(v&&v.length)VT=v}catch(e){}
+let VT=["1D","1M","YTD","1Y","Max"],DVM="m",DVS="",DVT="chart",BMA=ls.get("bma")||"",TXV="table",TXS="",TXF="all",TXO=-1;try{const v=JSON.parse(ls.get("vt")||"null");if(v&&v.length)VT=v}catch(e){}
 const TFA=()=>TFS.filter(t=>t==="Max"||iStart(t)>=0);
 const VTs=()=>{const a=TFA().filter(t=>VT.includes(t));return a.length?a:["Max"]};
 let HIDE=ls.get("hide")==="1",PF=ls.get("pf")||"open",OPS=new Set(),PB=ls.get("pb")||"me",PT=ls.get("pt")||"all";
@@ -302,7 +304,7 @@ out.push({k:s,n:(o?by[s][0].n:ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un
 }
 POSL=out;OPS=new Set(out.filter(r=>r.q>0).map(r=>r.k));const vis=out.filter(r=>pf(r.k));
 const tv=vis.reduce((a,r)=>a+r.val,0);
-let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>%'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>%'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>%'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>%'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
+let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>% of cost'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>% of sold cost'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>% of invested'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>% of invested'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
 ["ETF","Stock","Derivative"].forEach(ty=>{
 const g=vis.filter(r=>r.typ===ty).sort((a,b)=>byName(a.n,b.n));
 if(!g.length)return;
@@ -520,16 +522,14 @@ let tot=rows[0];
 if(ty!=="all"){const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(ks.size){const q=twrr(ks,MODE);tot={idx:q.idx,st:q.st,held:q.held}}else tot=null}
 const tw=tot?ret(tot,"Max"):null,cg=tot?cagr(tot):null,bm=actB(),bw=bm?ret(bm,"Max"):null,bs=bm?betaStats(tot,bm):null;
 const sg=x=>x>=0?"pos":"neg";
-const bmSel=()=>{const bl=rows.filter(r=>r.kind==="b");return bl.length>1?'<select id="bmsel">'+bl.map(r=>'<option value="'+esc(r.name)+'"'+(r===bm?" selected":"")+'>'+esc(bmLab(r.name))+'</option>').join("")+'</select>':esc(bmLab(bm.name))};
+const bmSel=()=>{const loaded=rows.filter(r=>r.kind==="b").map(r=>r.name),opts=[...new Set([...BMP.map(p=>p[0]),...loaded])],cur=bm?bm.name:"";return '<select id="bmsel" title="Compare with another index">'+opts.map(n=>'<option value="'+esc(n)+'"'+(n===cur?" selected":"")+'>'+esc(bmLab(n))+(loaded.includes(n)?"":" \u2026")+'</option>').join("")+'<option value="__other">Other symbol\u2026</option></select>'};
 const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div><div class="ks">'+sub+'</div></div>';
 const T=[];
 T.push(tile("Total value"+sfx,eur(tv),"Holdings only, cash not included"));
 T.push(tile("Total profit"+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
 T.push(tile("Time-weighted return"+sfx,tw==null?"\u2013":pct1(tw),cg==null?"All time":"All time \u00b7 "+pct1(cg)+" per year",tw==null?"":sg(tw)));
-if(bm&&bw!=null&&tw!=null){
-const d=(tw-bw)*100;
-T.push(tile("Against "+bmSel(),(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points","You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)",sg(d)));
-}
+{const ok=bm&&bw!=null&&tw!=null,d=ok?(tw-bw)*100:0;
+T.push(tile("Against "+bmSel(),ok?(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points":"\u2013",ok?"You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)":(bm?"No data for this period":"Pick an index to compare with"),ok?sg(d):""))}
 if(bm)T.push(tile("Beta"+sfx+infoI(BETA_TIP),bs==null?"\u2013":bs.beta.toFixed(2),"vs "+esc(bmLab(bm.name))+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
@@ -660,14 +660,57 @@ else if(o.t)R.push({d:o.d,ty:"Tax",n:o.n,k:o.k,b:o.b,q:null,px:"\u2013",a:o.t,f:
 AO.forEach(a=>R.push({d:a.d,ty:a.k==="fee"?"Fee":"Interest",n:a.k==="fee"?"Account fees":"Account interest",k:null,b:"Degiro",q:null,px:"\u2013",a:a.e,f:NaN,o:R.length}));
 return R;
 }
+const TXSW=v=>'<div class="seg"><button data-txv="table"'+(v==="table"?' class="on"':"")+'>Table</button><button data-txv="chart"'+(v==="chart"?' class="on"':"")+'>Bought &amp; sold</button></div>';
+const txBS=()=>txRows().filter(r=>(r.ty==="Buy"||r.ty==="Sell")&&isFinite(r.a)&&r.a!==0);
+const txKey=d=>TXS==="all"?d.slice(0,4):d.slice(0,7);
+function txChart(){
+const R=txBS(),yrs=[...new Set(R.map(r=>r.d.slice(0,4)))].sort();
+if(!(TXS==="all"||yrs.includes(TXS)))TXS=yrs[yrs.length-1]||"all";
+let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div class="seg">'+yrs.map(y=>'<button data-txp="'+y+'"'+(TXS===y?' class="on"':"")+'>'+y+'</button>').join("")+'<button data-txp="all"'+(TXS==="all"?' class="on"':"")+'>All time</button></div>'+TXSW("chart")+'</div>';
+if(!R.length)return h+'<p class="mu">No buys or sells to show yet.</p></div>';
+const keys=[],m={};
+if(TXS==="all"){const y1=Math.max(+yrs[yrs.length-1],+(days[days.length-1]||"0").slice(0,4));for(let y=+yrs[0];y<=y1;y++)keys.push(String(y))}
+else for(let i=1;i<=12;i++)keys.push(TXS+"-"+String(i).padStart(2,"0"));
+R.forEach(r=>{const b=txKey(r.d);if(!keys.includes(b))return;const o=m[b]=m[b]||{B:0,S:0,nb:0,ns:0};if(r.ty==="Buy"){o.B+=-r.a;o.nb++}else{o.S+=r.a;o.ns++}});
+const W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=28,n=keys.length,SER=[["B","Bought",PIEC[0],"nb"],["S","Sold",PIEC[2],"ns"]];
+let mx=Math.max(1,...keys.map(b=>Math.max((m[b]||{}).B||0,(m[b]||{}).S||0)));
+const raw=mx/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+mx=Math.ceil(mx/step-1e-9)*step;
+const ys=v=>H-pb-v*(H-pt-pb)/mx,bw=(W-pl-pr)/n,w=Math.min(bw*0.34,40);
+let g="";
+for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".08":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+ekc(v)+'</text>'}
+let tb=0,ts=0;
+keys.forEach((b,i)=>{
+const o=m[b]||{B:0,S:0,nb:0,ns:0},cx=pl+i*bw+bw/2;tb+=o.B;ts+=o.S;
+g+='<rect class="dvh" x="'+(pl+i*bw).toFixed(1)+'" y="'+pt+'" width="'+bw.toFixed(1)+'" height="'+(H-pt)+'" fill="transparent" data-tk="'+b+'"/>';
+SER.forEach((sr,j)=>{
+const v=o[sr[0]],cnt=o[sr[3]];if(v<=0)return;
+const x=j?cx+1:cx-w-1,y1=ys(v);
+g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,ys(0)-y1).toFixed(1)+'" rx="2" fill="'+sr[2]+'" data-c="'+sr[2]+'" data-n="'+sr[1]+'" data-v="'+e2(v)+'" data-b="'+dvt(b)+'" data-x="'+dvt(b)+' \u00b7 '+cnt+' trade'+(cnt===1?"":"s")+'" data-tk="'+b+'" data-ts="'+sr[0]+'"/>';
+if(n<=6)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(y1-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+ekc(v)+'</text>';
+});
+g+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
+});
+g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+PIEC[0]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Bought</text><circle cx="'+(pl+68)+'" cy="8" r="4" fill="'+PIEC[2]+'"/><text x="'+(pl+76)+'" y="12" font-size="11" style="fill:var(--fg)">Sold</text>';
+g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Bought '+e2(tb)+' \u00b7 sold '+e2(ts)+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
+return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Amounts are the cash paid or received in euro, including trading costs. Click a bar to see the trades behind it.</p></div>';
+}
+function openTx(b,sr){
+const R=txBS().filter(r=>txKey(r.d)===b).sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:x.o-y.o),bo=R.filter(r=>r.ty==="Buy").reduce((a,r)=>a-r.a,0),so=R.filter(r=>r.ty==="Sell").reduce((a,r)=>a+r.a,0);
+let h='<p class="mu">Bought <b>'+e2(bo)+'</b> \u00b7 sold <b>'+e2(so)+'</b> \u00b7 '+R.length+' trade'+(R.length===1?"":"s")+'</p><div class="sc"><table><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th></tr>';
+R.forEach(r=>{const c=r.ty==="Buy"?PIEC[0]:PIEC[2];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+esc(r.n)+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
+h+='</table></div>';
+showModal("Bought & sold \u00b7 "+dvt(b),h);
+}
 function transactions(){
+if(TXV==="chart")return txChart();
 let R=txRows();
 const sum=ty=>R.filter(r=>r.ty===ty).reduce((a,r)=>a+(isFinite(r.a)?r.a:0),0);
 const bought=-sum("Buy"),sold=sum("Sell"),dv=sum("Dividend")+sum("Tax");
 R=R.filter(r=>TXF==="all"||(TXF==="Other"?["Tax","Fee","Interest"].includes(r.ty):r.ty===TXF));
 R.sort((x,y)=>(x.d<y.d?-1:x.d>y.d?1:x.o-y.o)*TXO);
 const F=[["all","All"],["Buy","Buys"],["Sell","Sells"],["Dividend","Dividends"],["Other","Fees, interest, other"]];
-let h='<div class="card"><h2>Transactions</h2>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button>';
+let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button></div>'+TXSW("table")+'</div>';
 h+='<p class="mu">'+R.length+' shown \u00b7 bought '+eur(bought)+' \u00b7 sold '+eur(sold)+' \u00b7 dividends net of tax '+eur(dv)+'. Click a column header to sort.</p>';
 h+='<div class="sc"><table class="tx"><colgroup><col style="width:15%"><col style="width:8%"><col style="width:25%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:12%"><col style="width:11%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
 R.forEach(r=>{
@@ -717,17 +760,16 @@ g+='<rect class="dvh" x="'+(pl+i*bw).toFixed(1)+'" y="'+pt+'" width="'+bw.toFixe
 order.forEach(k=>{
 const v=Math.max(0,(m[b]||{})[k]||0);if(v<=0)return;
 const y1=ys(cum+v),h=ys(cum)-y1;
-g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,h).toFixed(1)+'" rx="2" fill="'+cl(k)+'"'+(fc?' fill-opacity=".72"':"")+' style="stroke:var(--card)" stroke-width=".8" data-c="'+cl(k)+'" data-n="'+esc(nm[k]||k)+'" data-v="'+e2(v)+'" data-b="'+dvt(b)+'" data-t="'+e2(tots[i])+'" data-f="'+(fc?1:0)+'" data-dk="'+b+'" data-ki="'+esc(k)+'"/>';
+g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,h).toFixed(1)+'" rx="2" fill="'+cl(k)+'"'+(fc?' fill-opacity=".26" stroke-dasharray="4 3" style="stroke:'+cl(k)+'" stroke-width="1.3"':' style="stroke:var(--card)" stroke-width=".8"')+' data-c="'+cl(k)+'" data-n="'+esc(nm[k]||k)+'" data-v="'+e2(v)+'" data-b="'+dvt(b)+'" data-t="'+e2(tots[i])+'" data-f="'+(fc?1:0)+'" data-dk="'+b+'" data-ki="'+esc(k)+'"/>';
 cum+=v;
 });
 if(n<=16&&tots[i]>0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(ys(tots[i])-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+(HIDE?"":eur2(tots[i]))+'</text>';
 if((n-1-i)%ev===0)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
 });
+g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">'+(fc?"Estimated net, next 12 months: ":"Net dividends: ")+e2(tots.reduce((a,v)=>a+v,0))+'</text>';
+if(fc)g+='<text x="'+pl+'" y="12" font-size="11" font-weight="600" style="fill:#d9962b">ESTIMATE \u00b7 based on your last 12 months</text>';
 g+='<g id="dvt" visibility="hidden" pointer-events="none"></g>';
-const vis=order.filter(k=>keys.some(b=>((m[b]||{})[k]||0)>0));
-const lgd=vis.slice(0,12).map(k=>'<span><b style="color:'+cl(k)+'">\u25cf</b> '+esc(nm[k])+'</span>').join("")+(vis.length>12?'<span><b style="color:'+PIEC[12%PIEC.length]+'">\u25cf</b> Other ('+(vis.length-12)+')</span>':"");
-const sum='<span class="mu">'+(fc?"Estimated net, next 12 months":"Net dividends")+': <b>'+e2(tots.reduce((a,v)=>a+v,0))+'</b></span>';
-return '<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lgd+sum+'</div>'+(fc?'<p class="mu">Forecast: the dividends you received in the last 12 months from holdings you still own, repeated in the same month next year and scaled to the number of shares you hold today. It is an estimate, not a promise: companies can raise, cut or skip a dividend.</p>':"");
+return '<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+(fc?'<p class="mu">Forecast: the dividends you received in the last 12 months from holdings you still own, repeated in the same month next year and scaled to the number of shares you hold today. It is an estimate, not a promise: companies can raise, cut or skip a dividend.</p>':"");
 }
 function divTable(){
 const B={};
@@ -747,17 +789,19 @@ let h='<div class="card"><h2>Wealth builder</h2><button data-wm="age"'+(age?' cl
 h+='<div class="wg">'+f("age","Current age")+f("start","Starting capital (\u20ac)")+f("monthly","Monthly contribution (\u20ac)")+f("grow","Annual contribution increase (%)")+f("ret","Expected annual return (%)")+f("infl","Annual inflation (%)")
 +(age?f("income","Target monthly income (today\u2019s \u20ac)"):'<label class="wf"><span>Investment horizon: <b id="wby">'+WB.years+'</b> years</span><input type="range" min="1" max="50" step="1" data-w="years" value="'+WB.years+'"></label>')+f("wr","Withdrawal rate (%)","The share of your capital you withdraw each year once retired. At 4%, a capital of \u20ac1,000,000 pays \u20ac40,000 per year (about \u20ac3,333 per month). Your target capital is your wanted yearly income divided by this rate: a lower rate is safer but needs more capital, a higher rate lets you retire sooner but risks running out.")+'</div>';
 h+='<p><label><input type="checkbox" data-w="real"'+(WB.real?" checked":"")+'> Show in today\u2019s euros (inflation-adjusted)</label>'+inf("Prices rise over time, so \u20ac100,000 in 25 years buys less than \u20ac100,000 today. Ticked: every amount is converted to today\u2019s purchasing power using the inflation rate above, which makes results easier to compare with your wanted income. Unticked: nominal euros, the actual amounts you would see at that date.")+'</p>';
-return h+'<p class="mu">Starting capital is prefilled with your current portfolio value. The estimate assumes a constant yearly return, monthly contributions, no taxes or fees, and that retirement means your capital reaches the amount where the withdrawal rate gives your wanted income. Real markets fluctuate; this is an illustration, not advice.</p></div><div class="card"><h2>Projection</h2><div id="wbo"></div></div>';
+return h+'<p class="mu">Starting capital is prefilled with your current portfolio value. The estimate assumes a constant yearly return, monthly contributions, no taxes or fees, and that retirement means your capital reaches the amount where the withdrawal rate gives your wanted income. From that moment contributions stop (there is no income left to invest) and you withdraw your target income every month, rising with inflation; the chart shows the capital running down. Real markets fluctuate; this is an illustration, not advice.</p></div><div class="card"><h2>Projection</h2><div id="wbo"></div></div>';
 }
-function wbCalc(T){
+function wbCalc(T,ret){
 const rm=Math.pow(1+WB.ret/100,1/12)-1,inf=WB.infl/100,wr=Math.max(0.1,WB.wr)/100,inc=WB.income*12;
-let bal=WB.start,con=WB.start,m=WB.monthly,hit=null,hb=null,hc=null;const pts=[{bal:bal,con:con}];
+let bal=WB.start,con=WB.start,m=WB.monthly,hit=null,hb=null,hc=null,wd=0,wdr=0;const pts=[{bal:bal,con:con,wd:0,wdr:0}];
 const tg=mo=>inc*Math.pow(1+inf,mo/12)/wr;
 if(bal>=tg(0)){hit=0;hb=bal;hc=con}
 for(let mo=1;mo<=T*12;mo++){
-bal=bal*(1+rm)+m;con+=m;
+const retired=ret&&hit!=null;
+if(retired){const f=Math.pow(1+inf,mo/12),w=Math.min(bal*(1+rm),inc/12*f);bal=bal*(1+rm)-w;wd+=w;wdr+=w/f}
+else{bal=bal*(1+rm)+m;con+=m}
 if(hit==null&&bal>=tg(mo)){hit=mo;hb=bal;hc=con}
-if(mo%12===0){pts.push({bal:bal,con:con});m*=1+WB.grow/100}
+if(mo%12===0){pts.push({bal:bal,con:con,wd:wd,wdr:wdr});if(!retired)m*=1+WB.grow/100}
 }
 return {pts:pts,hit:hit,hb:hb,hc:hc,tg:tg};
 }
@@ -765,8 +809,8 @@ function wbUpdate(){
 const el=$("wbo");if(!el||!POSL)return;
 const age=WB.mode==="age",inf=WB.infl/100,wr=Math.max(0.1,WB.wr)/100,inc=WB.income*12,a0=Math.round(WB.age);
 const T=age?Math.max(1,Math.min(70,100-a0)):Math.max(1,Math.min(60,Math.round(WB.years)));
-const A=wbCalc(T),fr=y=>WB.real?Math.pow(1+inf,-y):1,hit=age&&A.hit!=null;
-let n=T;if(hit){const hy=A.hit/12;n=Math.min(T,Math.max(2,Math.ceil(hy+Math.max(3,hy*0.15))))}
+const A=wbCalc(T,age),fr=y=>WB.real?Math.pow(1+inf,-y):1,hit=age&&A.hit!=null;
+let n=T;if(hit){const hy=A.hit/12;n=Math.min(T,Math.max(2,Math.ceil(hy+Math.max(10,hy*0.4))))}
 const pts=A.pts.slice(0,n+1),tot=pts.map((p,i)=>p.bal*fr(i)),cn=pts.map((p,i)=>p.con*fr(i));
 const tgt=age?pts.map((p,i)=>WB.real?inc/wr:A.tg(i*12)):null;
 const E=hit?{b:A.hb,c:A.hc,y:A.hit/12}:{b:A.pts[T].bal,c:A.pts[T].con,y:T},ef=fr(E.y);
@@ -791,18 +835,18 @@ g+='<path d="M'+xs(0).toFixed(1)+","+base+"L"+pp(cn,"L")+"L"+xs(n).toFixed(1)+",
 g+='<path d="M'+pp(tot,"L")+"L"+cr+'Z" fill="url(#wbg)"/>';
 g+='<polyline class="ln" style="stroke:var(--ac)" stroke-linejoin="round" points="'+pp(tot," ")+'"/><polyline class="ln" style="stroke:var(--mu);stroke-width:1.3;stroke-dasharray:2 4" stroke-linecap="round" points="'+pp(cn," ")+'"/>';
 if(tgt){const ty=Math.max(pt,ys(tgt[n]));g+='<polyline class="ln" style="stroke:'+PIEC[1]+';stroke-width:1.4;stroke-dasharray:6 4" points="'+tgt.map((v,i)=>xs(i).toFixed(1)+","+Math.max(pt,ys(v)).toFixed(1)).join(" ")+'"/><text x="'+(Wd-pr-2)+'" y="'+(ty-6).toFixed(1)+'" font-size="11" text-anchor="end" style="fill:'+PIEC[1]+'">Capital needed '+ek(tgt[n])+'</text>'}
-if(hit){const x=xs(A.hit/12),lb="Retire at "+Math.floor((a0*12+A.hit)/12),w2=lb.length*6.4+18,px2=Math.max(pl,Math.min(Wd-pr-w2,x-w2/2));
+if(hit){g+='<rect x="'+xs(A.hit/12).toFixed(1)+'" y="'+pt+'" width="'+(Wd-pr-xs(A.hit/12)).toFixed(1)+'" height="'+(H-pt-pb)+'" style="fill:'+PIEC[1]+'" opacity=".07"/><text x="'+(Wd-pr-6)+'" y="'+(pt+16)+'" font-size="10.5" font-weight="600" text-anchor="end" style="fill:var(--fg)">Retired: withdrawing</text><text x="'+(Wd-pr-6)+'" y="'+(pt+30)+'" font-size="10.5" text-anchor="end" style="fill:var(--fg)">'+eur(WB.real?WB.income:WB.income*Math.pow(1+inf,A.hit/12))+' per month</text><text x="'+(Wd-pr-6)+'" y="'+(pt+44)+'" font-size="10.5" text-anchor="end" style="fill:var(--mu)">no new contributions</text>';const x=xs(A.hit/12),lb="Retire at "+Math.floor((a0*12+A.hit)/12),w2=lb.length*6.4+18,px2=Math.max(pl,Math.min(Wd-pr-w2,x-w2/2));
 g+='<line class="gl" x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+(pt-4)+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".35" stroke-dasharray="3 3"/><circle cx="'+x.toFixed(1)+'" cy="'+ys(E.b*ef).toFixed(1)+'" r="5" style="fill:var(--ac);stroke:var(--card)" stroke-width="2"/><rect x="'+px2.toFixed(1)+'" y="3" width="'+w2.toFixed(0)+'" height="17" rx="8.5" style="fill:var(--ac)"/><text x="'+(px2+w2/2).toFixed(1)+'" y="15" font-size="11" font-weight="600" text-anchor="middle" style="fill:var(--onac)">'+lb+'</text>'}
 const ts=n<=10?1:n<=20?2:n<=40?5:10;
 for(let i=0;i<=n;i+=ts)g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+(a0+i)+'</text>';
 g+='<line id="wbl" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".5" visibility="hidden"/><g id="wbt" visibility="hidden" pointer-events="none"></g>';
-el.innerHTML='<div class="kpis">'+t+'</div><svg class="ch" viewBox="0 0 '+Wd+' '+H+'">'+g+'</svg><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> Total value</span><span><b style="color:var(--mu)">\u25cf</b> Invested</span><span><b style="color:var(--ac);opacity:.4">\u25cf</b> Growth</span>'+(tgt?'<span><b style="color:'+PIEC[1]+'">\u25cf</b> Capital needed</span>':"")+'<span class="mu">'+(WB.real?"Today\u2019s euros":"Nominal euros")+'</span></div>';
+el.innerHTML='<div class="kpis">'+t+'</div><svg class="ch" viewBox="0 0 '+Wd+' '+H+'">'+g+'</svg><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> Total value</span><span><b style="color:var(--mu)">\u25cf</b> Invested</span><span><b style="color:var(--ac);opacity:.4">\u25cf</b> Growth</span>'+(tgt?'<span><b style="color:'+PIEC[1]+'">\u25cf</b> Capital needed</span>':"")+(hit?'<span><b style="color:'+PIEC[1]+';opacity:.5">\u25a0</b> Retired: withdrawing, no new contributions</span>':"")+'<span class="mu">'+(WB.real?"Today\u2019s euros":"Nominal euros")+'</span></div>';
 const sv=el.querySelector("svg"),cl=$("wbl"),tg=$("wbt");
 const hv=ev=>{
 const r=sv.getBoundingClientRect(),sc=Math.min(r.width/Wd,r.height/H),x=(ev.clientX-r.left-(r.width-Wd*sc)/2)/sc,i=Math.max(0,Math.min(n,Math.round((x-pl)*n/(Wd-pl-pr)))),px=xs(i);
 cl.setAttribute("x1",px);cl.setAttribute("x2",px);cl.setAttribute("visibility","visible");
-const R=[["Total value",tot[i],"var(--ac)",1],["Invested",cn[i],"var(--mu)",1],["Growth",tot[i]-cn[i],"var(--ac)",.4]];if(tgt)R.push(["Capital needed",tgt[i],PIEC[1],1]);
-const T2=R.map(a=>[a[0],eur(a[1]),a[2],a[3]]),title="Age "+(a0+i)+" \u00b7 year "+i,mc=Math.max(title.length,...T2.map(l=>l[0].length+l[1].length+3)),w=Math.min(Wd-20,mc*6.6+34),h=17*(T2.length+1)+8;
+const R=[["Total value",tot[i],"var(--ac)",1],["Invested",cn[i],"var(--mu)",1],["Growth",tot[i]-cn[i],"var(--ac)",.4]];if(tgt)R.push(["Capital needed",tgt[i],PIEC[1],1]);if(hit&&i*12>A.hit)R.push(["Withdrawn so far",WB.real?pts[i].wdr:pts[i].wd,PIEC[1],.5]);
+const T2=R.map(a=>[a[0],eur(a[1]),a[2],a[3]]),title="Age "+(a0+i)+" \u00b7 year "+i+(hit&&i*12>A.hit?" \u00b7 retired":""),mc=Math.max(title.length,...T2.map(l=>l[0].length+l[1].length+3)),w=Math.min(Wd-20,mc*6.6+34),h=17*(T2.length+1)+8;
 let bx=px+12;if(bx+w>Wd-pr)bx=px-w-12;if(bx<pl)bx=pl;
 let sx='<rect x="'+bx.toFixed(1)+'" y="'+(pt+4)+'" width="'+w.toFixed(0)+'" height="'+h+'" rx="5" style="fill:var(--card);stroke:var(--bd)" stroke-width=".8"/><text x="'+(bx+8).toFixed(1)+'" y="'+(pt+19)+'" font-size="12" font-weight="600" style="fill:var(--fg)">'+title+'</text>';
 T2.forEach((l,k)=>{const y=pt+19+17*(k+1);sx+='<circle cx="'+(bx+11).toFixed(1)+'" cy="'+(y-4)+'" r="3.5" style="fill:'+l[2]+'" opacity="'+l[3]+'"/><text x="'+(bx+20).toFixed(1)+'" y="'+y+'" font-size="12" style="fill:var(--fg)">'+l[0]+'  <tspan font-weight="700">'+esc(l[1])+'</tspan></text>'});
@@ -847,7 +891,7 @@ h+='<tr><td>'+esc(o.n)+'</td><td>'+o.c+'</td><td>'+eur(o.g)+'</td><td>'+eur(o.t)
 h+='</table></div><p class="mu">Yields use gross dividends of the last 12 months against the current value or the cost of what you still hold. Per-share amounts are in euro and use the shares you held on the payment date.</p>';
 const instH=h,yrs=[...new Set(DV.map(e=>e.d.slice(0,4)))].sort().reverse();
 if(!(DVS==="all"||DVS==="fc"||yrs.includes(DVS)))DVS=yrs[0]||"all";
-const ctl='<div class="dvc"><div><button data-dvt="chart"'+(DVT==="chart"?' class="on"':"")+'>Chart</button><button data-dvt="inst"'+(DVT==="inst"?' class="on"':"")+'>Per instrument</button></div>'+(DVT==="chart"?'<label>Period <select id="dvs">'+yrs.map(y=>'<option value="'+y+'"'+(DVS===y?" selected":"")+'>'+y+'</option>').join("")+'<option value="all"'+(DVS==="all"?" selected":"")+'>All time</option><option value="fc"'+(DVS==="fc"?" selected":"")+'>Forecast (next 12 months)</option></select></label>':"")+'</div>';
+const ctl='<div class="dvc">'+(DVT==="chart"?'<div><span class="seg">'+yrs.slice().reverse().map(y=>'<button data-dvp="'+y+'"'+(DVS===y?' class="on"':"")+'>'+y+'</button>').join("")+'<button data-dvp="all"'+(DVS==="all"?' class="on"':"")+'>All time</button><button data-dvp="fc"'+(DVS==="fc"?' class="on"':"")+'>Forecast</button></span>'+(DVS==="fc"?' <span class="pill p-Dividend">Estimate</span>':"")+'</div>':"<div></div>")+'<div class="seg"><button data-dvt="chart"'+(DVT==="chart"?' class="on"':"")+'>Chart</button><button data-dvt="inst"'+(DVT==="inst"?' class="on"':"")+'>Per instrument</button></div></div>';
 h=topH+ctl+(DVT==="inst"?instH:divChart())+'<p class="mu">By broker: '+brokerLine+'. Saxo dividends come from the dividend rows in your Saxo file.</p></div>';
 if(DBG&&AO.length){
 const f=AO.filter(a=>a.k==="fee").reduce((a,e)=>a+e.e,0),it=AO.filter(a=>a.k==="int").reduce((a,e)=>a+e.e,0);
@@ -1055,7 +1099,7 @@ msg("Done. "+tx.length+" trades, "+fd(days[0])+" to "+fd(days[days.length-1])+".
 render(syms,[],G.warn);
 try{$("setup").open=false}catch(e){}
 }
-$("out").addEventListener("change",e=>{if(e.target.id==="dvs"){DVS=e.target.value;render(G.syms,[],G.warn)}if(e.target.id==="bmsel"){BMA=e.target.value;ls.set("bma",BMA);render(G.syms,[],G.warn)}if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});
+$("out").addEventListener("change",e=>{if(e.target.id==="dvs"){DVS=e.target.value;render(G.syms,[],G.warn)}if(e.target.id==="bmsel"){let v=e.target.value;if(v==="__other"){v=(prompt("Yahoo Finance symbol of an index or ETF, for example ^GDAXI or EXSA.DE")||"").trim();if(!v){render(G.syms,[],G.warn);return}}BMA=v;ls.set("bma",v);if(!bmList().includes(v)){$("bm").value=bmList().concat(v).join(", ");bmChips();run().catch(x=>msg("Error: "+x.message))}else render(G.syms,[],G.warn)}if(e.target.id==="mode"){MODE=+e.target.value;calc()}if(e.target.id==="d0"||e.target.id==="d1"){if($("d0").value)CF=$("d0").value;if($("d1").value)CT=$("d1").value;render(G.syms,[],G.warn)}});
 $("run").onclick=()=>run().catch(e=>msg("Error: "+e.message));
 $("clr").onclick=()=>{ls.del("tx");ls.del("txd");ls.del("txa");ls.del("ov");ls.del("isin");ls.del("bm");ov={};IS={};SC={};$("txt").value="";$("txtD").value="";$("txtA").value="";$("out").innerHTML="";msg("Saved data cleared.")};
 $("fileD").onchange=e=>{
@@ -1130,7 +1174,7 @@ const dh=db||null;if(dh!==DVH){DVH=dh;document.querySelectorAll(".dvb").forEach(
 const dg=$("dvt");
 if(dg){
 if(db){
-const x0=+db.getAttribute("x"),y0=+db.getAttribute("y"),w0=+db.getAttribute("width"),h0=+db.getAttribute("height"),c=db.getAttribute("data-c"),nme=db.getAttribute("data-n"),vv=db.getAttribute("data-v"),pt0=db.getAttribute("data-t"),ti=db.getAttribute("data-b")+(db.getAttribute("data-f")==="1"?" \u00b7 estimate":"")+" \u00b7 total "+pt0,nn=nme.length>32?nme.slice(0,31)+"\u2026":nme;
+const x0=+db.getAttribute("x"),y0=+db.getAttribute("y"),w0=+db.getAttribute("width"),h0=+db.getAttribute("height"),c=db.getAttribute("data-c"),nme=db.getAttribute("data-n"),vv=db.getAttribute("data-v"),pt0=db.getAttribute("data-t"),ti=db.getAttribute("data-x")||db.getAttribute("data-b")+(db.getAttribute("data-f")==="1"?" \u00b7 estimate":"")+" \u00b7 total "+pt0,nn=nme.length>32?nme.slice(0,31)+"\u2026":nme;
 const W=CD.dv.W,H=CD.dv.H,w=Math.min(W-12,Math.max(nn.length*6.5+32,vv.length*9+24,ti.length*5.6+24)),h=58;
 let x=x0+w0+10;if(x+w>W-6)x=x0-w-10;if(x<4)x=4;
 const y=Math.min(Math.max(4,y0+h0/2-h/2),H-30-h);
@@ -1183,10 +1227,13 @@ if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=
 });
 $("out").addEventListener("click",e=>{
 const a=n=>e.target.getAttribute&&e.target.getAttribute(n);
-const vt=a("data-vt"),dvt2=a("data-dvt"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo"),pfv=a("data-pf"),wm=a("data-wm"),pbv=a("data-pb"),ptv=a("data-pt");
+const vt=a("data-vt"),dvt2=a("data-dvt"),dvp=a("data-dvp"),txv=a("data-txv"),txp=a("data-txp"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo"),pfv=a("data-pf"),wm=a("data-wm"),pbv=a("data-pb"),ptv=a("data-pt");
 if(vt){VT=VT.includes(vt)?VT.filter(x=>x!==vt):[...VT,vt];ls.set("vt",JSON.stringify(VT));render(G.syms,[],G.warn)}
 if(dm){DVM=dm;render(G.syms,[],G.warn)}
 if(dvt2){DVT=dvt2;render(G.syms,[],G.warn)}
+if(dvp){DVS=dvp;render(G.syms,[],G.warn)}
+if(txv){TXV=txv;render(G.syms,[],G.warn)}
+if(txp){TXS=txp;render(G.syms,[],G.warn)}
 if(pbv){PB=pbv;ls.set("pb",PB);render(G.syms,[],G.warn)}
 if(ptv){PT=ptv;ls.set("pt",PT);render(G.syms,[],G.warn)}
 if(pfv){PF=pfv;ls.set("pf",PF);render(G.syms,[],G.warn)}
@@ -1295,7 +1342,6 @@ if(wt){WT=wt;ls.set("wt",wt);document.querySelectorAll("[data-wt]").forEach(b=>b
 });
 $("aprb").onclick=()=>{$("apr").hidden=!$("apr").hidden};
 document.addEventListener("click",e=>{if(!e.target.closest(".pw"))$("apr").hidden=true});
-const BMP=[["IWDA.AS","World"],["VWCE.DE","All-World"],["VUAA.AS","S&P 500"],["^STOXX50E","Euro Stoxx 50"],["^NDX","Nasdaq 100"]];
 const bmList=()=>$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
 function bmChips(){
 const box=$("bmc");if(!box)return;const cur=bmList();
@@ -1308,6 +1354,7 @@ $("upl").onclick=()=>{bmChips();$("setup").hidden=false};
 const show=e=>{const i=e.target.closest&&e.target.closest(".inf");if(!i)return;tp.textContent=i.getAttribute("data-tip");tp.hidden=false;const r=i.getBoundingClientRect(),w=tp.offsetWidth,h=tp.offsetHeight;tp.style.left=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8)+"px";let y=r.top-h-8;if(y<8)y=r.bottom+8;tp.style.top=y+"px"};
 const hide=e=>{if(e.target.closest&&e.target.closest(".inf")&&(e.type!=="pointerout"||e.pointerType==="mouse"))tp.hidden=true};
 document.addEventListener("pointerover",show);document.addEventListener("pointerout",hide);document.addEventListener("focusin",show);document.addEventListener("focusout",hide)}
+$("out").addEventListener("click",e=>{const r=e.target.closest&&e.target.closest("[data-tk]");if(r)openTx(r.getAttribute("data-tk"),r.getAttribute("data-ts"))});
 $("out").addEventListener("pointerleave",()=>{const d=$("dvt");if(d)d.setAttribute("visibility","hidden")});
 $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});

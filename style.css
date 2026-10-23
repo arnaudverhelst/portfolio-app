@@ -154,3 +154,10 @@ td.pp{font-size:.9em;opacity:.85;padding-left:4px}
 .seg button{margin:0;padding:4px 14px;font-size:.84em;border:0;background:none;color:var(--mu);border-radius:999px}
 .seg button:hover:not(.on){color:var(--fg)}.seg button.on{background:var(--ac);color:var(--onac)}
 .kl select{cursor:pointer}
+
+.ixb{display:inline-flex;align-items:center;gap:8px;margin:0;padding:0 12px 0 14px;height:36px;font-size:.85em}
+.ixb .ixk{color:var(--mu);font-size:.8em;text-transform:uppercase;letter-spacing:.07em}.ixb svg.ic{width:14px;height:14px}
+#ixp{min-width:230px;padding:8px}#ixp .ps{margin:2px 8px 6px}
+.pop .ixo{display:flex;width:100%;justify-content:space-between;align-items:baseline;gap:14px;margin:0;padding:8px 10px;border:0;border-radius:8px;background:none;font-size:.9em;text-align:left}
+.pop .ixo:hover{background:var(--hv)}.pop .ixo i{font-style:normal;color:var(--mu);font-size:.78em}
+.pop .ixo.on{background:color-mix(in srgb,var(--ac) 16%,transparent);font-weight:600}.pop .ixo.on span::before{content:"\2713\00a0";color:var(--ac)}

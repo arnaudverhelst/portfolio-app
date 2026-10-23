@@ -304,7 +304,7 @@ out.push({k:s,n:(o?by[s][0].n:ser[k].name),q:q,avg:q>0?cost/q:0,px:px,val:val,un
 }
 POSL=out;OPS=new Set(out.filter(r=>r.q>0).map(r=>r.k));const vis=out.filter(r=>pf(r.k));
 const tv=vis.reduce((a,r)=>a+r.val,0);
-let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>% of cost'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>% of sold cost'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>% of invested'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>% of invested'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
+let h='<div class="card"><h2>Positions</h2><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>% unrealised'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>% realised'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>% dividends'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>% total'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
 ["ETF","Stock","Derivative"].forEach(ty=>{
 const g=vis.filter(r=>r.typ===ty).sort((a,b)=>byName(a.n,b.n));
 if(!g.length)return;
@@ -522,14 +522,14 @@ let tot=rows[0];
 if(ty!=="all"){const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(ks.size){const q=twrr(ks,MODE);tot={idx:q.idx,st:q.st,held:q.held}}else tot=null}
 const tw=tot?ret(tot,"Max"):null,cg=tot?cagr(tot):null,bm=actB(),bw=bm?ret(bm,"Max"):null,bs=bm?betaStats(tot,bm):null;
 const sg=x=>x>=0?"pos":"neg";
-const bmSel=()=>{const loaded=rows.filter(r=>r.kind==="b").map(r=>r.name),opts=[...new Set([...BMP.map(p=>p[0]),...loaded])],cur=bm?bm.name:"";return '<select id="bmsel" title="Compare with another index">'+opts.map(n=>'<option value="'+esc(n)+'"'+(n===cur?" selected":"")+'>'+esc(bmLab(n))+(loaded.includes(n)?"":" \u2026")+'</option>').join("")+'<option value="__other">Other symbol\u2026</option></select>'};
+ixSync(bm);
 const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div><div class="ks">'+sub+'</div></div>';
 const T=[];
 T.push(tile("Total value"+sfx,eur(tv),"Holdings only, cash not included"));
 T.push(tile("Total profit"+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
 T.push(tile("Time-weighted return"+sfx,tw==null?"\u2013":pct1(tw),cg==null?"All time":"All time \u00b7 "+pct1(cg)+" per year",tw==null?"":sg(tw)));
 {const ok=bm&&bw!=null&&tw!=null,d=ok?(tw-bw)*100:0;
-T.push(tile("Against "+bmSel(),ok?(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points":"\u2013",ok?"You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)":(bm?"No data for this period":"Pick an index to compare with"),ok?sg(d):""))}
+T.push(tile("Against "+(bm?esc(bmLab(bm.name)):"index"),ok?(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points":"\u2013",ok?"You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)":(bm?"No data for this period":"Pick an index to compare with"),ok?sg(d):""))}
 if(bm)T.push(tile("Beta"+sfx+infoI(BETA_TIP),bs==null?"\u2013":bs.beta.toFixed(2),"vs "+esc(bmLab(bm.name))+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
@@ -672,7 +672,7 @@ const keys=[],m={};
 if(TXS==="all"){const y1=Math.max(+yrs[yrs.length-1],+(days[days.length-1]||"0").slice(0,4));for(let y=+yrs[0];y<=y1;y++)keys.push(String(y))}
 else for(let i=1;i<=12;i++)keys.push(TXS+"-"+String(i).padStart(2,"0"));
 R.forEach(r=>{const b=txKey(r.d);if(!keys.includes(b))return;const o=m[b]=m[b]||{B:0,S:0,nb:0,ns:0};if(r.ty==="Buy"){o.B+=-r.a;o.nb++}else{o.S+=r.a;o.ns++}});
-const W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=28,n=keys.length,SER=[["B","Bought",PIEC[0],"nb"],["S","Sold",PIEC[2],"ns"]];
+const W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=42,n=keys.length,SER=[["B","Bought",PIEC[0],"nb"],["S","Sold",PIEC[2],"ns"]];
 let mx=Math.max(1,...keys.map(b=>Math.max((m[b]||{}).B||0,(m[b]||{}).S||0)));
 const raw=mx/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
 mx=Math.ceil(mx/step-1e-9)*step;
@@ -681,23 +681,24 @@ let g="";
 for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".08":".4")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+ekc(v)+'</text>'}
 let tb=0,ts=0;
 keys.forEach((b,i)=>{
-const o=m[b]||{B:0,S:0,nb:0,ns:0},cx=pl+i*bw+bw/2;tb+=o.B;ts+=o.S;
+const o=m[b]||{B:0,S:0,nb:0,ns:0},cx=pl+i*bw+bw/2,nt=o.B-o.S;tb+=o.B;ts+=o.S;
 g+='<rect class="dvh" x="'+(pl+i*bw).toFixed(1)+'" y="'+pt+'" width="'+bw.toFixed(1)+'" height="'+(H-pt)+'" fill="transparent" data-tk="'+b+'"/>';
 SER.forEach((sr,j)=>{
 const v=o[sr[0]],cnt=o[sr[3]];if(v<=0)return;
 const x=j?cx+1:cx-w-1,y1=ys(v);
-g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,ys(0)-y1).toFixed(1)+'" rx="2" fill="'+sr[2]+'" data-c="'+sr[2]+'" data-n="'+sr[1]+'" data-v="'+e2(v)+'" data-b="'+dvt(b)+'" data-x="'+dvt(b)+' \u00b7 '+cnt+' trade'+(cnt===1?"":"s")+'" data-tk="'+b+'" data-ts="'+sr[0]+'"/>';
+g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0.5,ys(0)-y1).toFixed(1)+'" rx="2" fill="'+sr[2]+'" data-c="'+sr[2]+'" data-n="'+sr[1]+'" data-v="'+e2(v)+'" data-b="'+dvt(b)+'" data-x="'+dvt(b)+' \u00b7 '+cnt+' trade'+(cnt===1?"":"s")+' \u00b7 net invested '+(nt>=0?"+":"\u2212")+e2(Math.abs(nt))+'" data-tk="'+b+'" data-ts="'+sr[0]+'"/>';
 if(n<=6)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(y1-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+ekc(v)+'</text>';
 });
-g+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
+g+='<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
+if(o.B||o.S)g+='<text x="'+cx.toFixed(1)+'" y="'+(H-22)+'" font-size="10" font-weight="600" text-anchor="middle" style="fill:'+(nt>=0?PIEC[0]:PIEC[2])+'">'+(nt>=0?"+":"\u2212")+ekc(Math.abs(nt))+'</text>';
 });
 g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+PIEC[0]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Bought</text><circle cx="'+(pl+68)+'" cy="8" r="4" fill="'+PIEC[2]+'"/><text x="'+(pl+76)+'" y="12" font-size="11" style="fill:var(--fg)">Sold</text>';
-g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Bought '+e2(tb)+' \u00b7 sold '+e2(ts)+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
-return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Amounts are the cash paid or received in euro, including trading costs. Click a bar to see the trades behind it.</p></div>';
+g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Bought '+e2(tb)+' \u00b7 sold '+e2(ts)+' \u00b7 net invested '+(tb-ts>=0?"+":"\u2212")+e2(Math.abs(tb-ts))+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
+return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Amounts are the cash paid or received in euro, including trading costs. The figure above each period is net invested (bought minus sold). Click a bar to see the trades behind it.</p></div>';
 }
 function openTx(b,sr){
 const R=txBS().filter(r=>txKey(r.d)===b).sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:x.o-y.o),bo=R.filter(r=>r.ty==="Buy").reduce((a,r)=>a-r.a,0),so=R.filter(r=>r.ty==="Sell").reduce((a,r)=>a+r.a,0);
-let h='<p class="mu">Bought <b>'+e2(bo)+'</b> \u00b7 sold <b>'+e2(so)+'</b> \u00b7 '+R.length+' trade'+(R.length===1?"":"s")+'</p><div class="sc"><table><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th></tr>';
+let h='<p class="mu">Bought <b>'+e2(bo)+'</b> \u00b7 sold <b>'+e2(so)+'</b> \u00b7 net invested <b>'+(bo-so>=0?"+":"\u2212")+e2(Math.abs(bo-so))+'</b> \u00b7 '+R.length+' trade'+(R.length===1?"":"s")+'</p><div class="sc"><table><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th></tr>';
 R.forEach(r=>{const c=r.ty==="Buy"?PIEC[0]:PIEC[2];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+esc(r.n)+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
 h+='</table></div>';
 showModal("Bought & sold \u00b7 "+dvt(b),h);
@@ -1343,13 +1344,18 @@ if(wt){WT=wt;ls.set("wt",wt);document.querySelectorAll("[data-wt]").forEach(b=>b
 $("aprb").onclick=()=>{$("apr").hidden=!$("apr").hidden};
 document.addEventListener("click",e=>{if(!e.target.closest(".pw"))$("apr").hidden=true});
 const bmList=()=>$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
-function bmChips(){
-const box=$("bmc");if(!box)return;const cur=bmList();
-box.innerHTML=BMP.map(p=>'<button type="button" data-bmc="'+p[0]+'"'+(cur.includes(p[0])?' class="on"':"")+'>'+p[1]+'</button>').join("")+'<div class="mu">Pick the indices to compare with, then choose the active one in the top tile. Symbols starting with ^ are price indices without dividends; ETF symbols include dividends.</div>';
-}
-{const bx=document.createElement("div");bx.id="bmc";$("bm").insertAdjacentElement("afterend",bx);bmChips();$("bm").addEventListener("input",bmChips);
-bx.addEventListener("click",e=>{const sy=e.target.getAttribute&&e.target.getAttribute("data-bmc");if(!sy)return;let cur=bmList();if(cur.includes(sy))cur=cur.filter(x=>x!==sy);else{cur.push(sy);BMA=sy;ls.set("bma",sy)}if(!cur.length)cur=["IWDA.AS"];$("bm").value=cur.join(", ");bmChips();run().catch(x=>msg("Error: "+x.message))})}
-$("upl").onclick=()=>{bmChips();$("setup").hidden=false};
+function ixCur(){const b=actB();return b?b.name:(BMA||bmList()[0]||"IWDA.AS")}
+function ixSync(b){const n=b?b.name:ixCur(),l=$("ixl");if(l)l.textContent=bmLab(n);const p=$("ixp");if(p&&!p.hidden)ixList()}
+function ixList(){const cur=ixCur(),ex=[...new Set(rows.filter(r=>r.kind==="b").map(r=>r.name).concat(bmList()))].filter(n=>!BMP.some(p=>p[0]===n));
+$("ixp").innerHTML='<div class="ps">Compare with</div>'+BMP.map(p=>[p[0],p[1]]).concat(ex.map(n=>[n,bmLab(n)])).map(p=>'<button type="button" class="ixo'+(p[0]===cur?' on':'')+'" data-ix="'+esc(p[0])+'"><span>'+esc(p[1])+'</span><i>'+(p[0][0]==="^"?"price index":"incl. dividends")+'</i></button>').join("")+'<button type="button" class="ixo" data-ix="__other"><span>Other symbol\u2026</span></button>'}
+function ixPick(v){if(v==="__other"){v=(prompt("Yahoo Finance symbol of an index or ETF, for example ^GDAXI or EXSA.DE")||"").trim();if(!v)return}
+BMA=v;ls.set("bma",v);$("ixp").hidden=true;if(!bmList().includes(v)){$("bm").value=bmList().concat(v).join(", ");run().catch(x=>msg("Error: "+x.message))}else render(G.syms,[],G.warn)}
+$("ixb").onclick=()=>{const p=$("ixp");$("apr").hidden=true;p.hidden=!p.hidden;if(!p.hidden)ixList()};
+$("ixp").addEventListener("click",e=>{const o=e.target.closest&&e.target.closest("[data-ix]");if(o)ixPick(o.getAttribute("data-ix"))});
+document.addEventListener("click",e=>{if(!e.target.closest("#ixw"))$("ixp").hidden=true});
+$("aprb").addEventListener("click",()=>{$("ixp").hidden=true});
+ixSync(null);
+$("upl").onclick=()=>{$("setup").hidden=false};
 {const tp=document.createElement("div");tp.id="tip";tp.hidden=true;document.body.appendChild(tp);
 const show=e=>{const i=e.target.closest&&e.target.closest(".inf");if(!i)return;tp.textContent=i.getAttribute("data-tip");tp.hidden=false;const r=i.getBoundingClientRect(),w=tp.offsetWidth,h=tp.offsetHeight;tp.style.left=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8)+"px";let y=r.top-h-8;if(y<8)y=r.bottom+8;tp.style.top=y+"px"};
 const hide=e=>{if(e.target.closest&&e.target.closest(".inf")&&(e.type!=="pointerout"||e.pointerType==="mouse"))tp.hidden=true};
@@ -1358,10 +1364,10 @@ $("out").addEventListener("click",e=>{const r=e.target.closest&&e.target.closest
 $("out").addEventListener("pointerleave",()=>{const d=$("dvt");if(d)d.setAttribute("visibility","hidden")});
 $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true}});
 $("run").addEventListener("click",()=>{$("setup").hidden=true});
 document.documentElement.setAttribute("data-kpi","a");
 if(!(ls.get("tx")||ls.get("txd")))$("setup").hidden=false;
 $("themes").addEventListener("click",e=>{const m=e.target.getAttribute&&e.target.getAttribute("data-mode");if(m)setLook(m)});
 setLook(ls.get("mode")||"dark");
-if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");run().catch(e=>msg("Error: "+e.message))}
+if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");ixSync(null);run().catch(e=>msg("Error: "+e.message))}

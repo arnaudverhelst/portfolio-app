@@ -4,7 +4,7 @@
 <body>
 <div id="app">
 <header class="top"><div class="brand"><h1>My Portfolio</h1></div><span id="msg" class="mu"></span>
-<div class="tools"><button class="ib" id="upl" title="Load data and settings" aria-label="Load data and settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></button><button class="ib" id="hid" title="Hide amounts" aria-label="Hide amounts"></button>
+<div class="tools"><div class="pw" id="ixw"><button class="ixb" id="ixb" title="Comparison index" aria-label="Comparison index"><span class="ixk">Index</span><span id="ixl">World</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="pop" id="ixp" hidden></div></div><button class="ib" id="upl" title="Load data and settings" aria-label="Load data and settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></button><button class="ib" id="hid" title="Hide amounts" aria-label="Hide amounts"></button>
 <div class="pw"><button class="ib" id="aprb" title="Appearance" aria-label="Appearance"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
 <div class="pop" id="apr" hidden><div class="ps">Mode</div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div>
 </div></div></div></header>
@@ -23,9 +23,7 @@
 <textarea id="txtA"></textarea>
 <h2 style="margin-top:14px">View</h2>
 <select id="bv"><option value="all">Saxo and Degiro combined</option><option value="Saxo">Saxo only</option><option value="Degiro">Degiro only</option></select>
-<h2 style="margin-top:14px">Benchmarks</h2>
-<input id="bm" value="IWDA.AS">
-<p class="mu">Yahoo symbols, separated by commas (for example IWDA.AS, VUAA.AS)</p>
+<input id="bm" type="hidden" value="IWDA.AS">
 <button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button><label style="margin-left:10px;font-size:.9rem"><input type="checkbox" id="dbg" style="width:auto"> Show data checks</label>
 </div></div>
 <div id="out"></div>

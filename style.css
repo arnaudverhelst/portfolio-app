@@ -200,3 +200,9 @@ th{font:500 12px 'DM Sans',Inter,system-ui,sans-serif;text-transform:none;letter
 select{-webkit-appearance:none;appearance:none;cursor:pointer;padding:5px 30px 5px 12px;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d909a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center/13px}
 select:hover{border-color:color-mix(in srgb,var(--mu) 45%,transparent)}option{background:var(--card);color:var(--fg)}
 .kl select{padding:1px 24px 1px 8px}[data-w=users] td select{padding:3px 26px 3px 10px}
+
+#app{zoom:var(--z,1);height:calc(100vh / var(--z,1))}
+.modal .card{zoom:var(--z,1)}
+.kl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.fx th{white-space:nowrap}
+@media(max-width:900px){#app{zoom:1;height:auto}.modal .card{zoom:1}}

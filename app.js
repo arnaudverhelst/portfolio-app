@@ -38,7 +38,7 @@ const rt=(r,t)=>PB==="stock"&&r.k&&P[r.k]?retPx(r,t):ret(r,t);
 const pf=k=>(PF==="all"||(PF==="open")===OPS.has(k))&&(PT==="all"||typOf(k)===PT);
 const TYPS={ETF:"ETFs",Stock:"stocks",Derivative:"derivatives"};
 let WB={age:30,start:null,monthly:500,grow:0,ret:7,infl:2,income:2500,wr:4,years:25,real:false,mode:"age"};try{Object.assign(WB,JSON.parse(ls.get("wb")||"{}"))}catch(e){}
-const pfChips=()=>TAB!=="r"&&TAB!=="p"?"":'<div class="tfc"><span class="mu">Show: </span>'+[["open","Open positions"],["closed","Closed positions"],["all","All positions"]].map(z=>'<button data-pf="'+z[0]+'"'+(PF===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'<span class="mu" style="flex-basis:100%">Type: </span>'+[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]].map(z=>'<button data-pt="'+z[0]+'"'+(PT===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div>';
+const pfChips=()=>TAB!=="r"&&TAB!=="p"?"":'<div class="tfc"><span class="mu">Show: </span>'+[["all","All positions"],["open","Open positions"],["closed","Closed positions"]].map(z=>'<button data-pf="'+z[0]+'"'+(PF===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'<span class="mu" style="flex-basis:100%">Type: </span>'+[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]].map(z=>'<button data-pt="'+z[0]+'"'+(PT===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div>';
 function subRow(){
 const ks=new Set(G.keys.filter(k=>pf(k)));if(!ks.size)return null;
 const r=twrr(ks,MODE);return {name:(PT==="all"?"Total portfolio":"Total "+TYPS[PT])+(PF==="all"?"":" ("+(PF==="open"?"open":"closed")+" positions)"),idx:r.idx,st:r.st,held:r.held};
@@ -365,10 +365,19 @@ function markSort(tb,s){
 const hr=[...tb.rows].find(r=>r.querySelector("th"));
 [...hr.cells].forEach((th,i)=>{if(th.classList.contains("srt"))th.firstChild.nodeValue=th.getAttribute("data-l")+(s&&i===s.c?(s.d>0?" ▲":" ▼"):"")});
 }
+function fitCols(tb,hr){
+if(tb.classList.contains("tx"))return;
+const n=[...hr.cells].reduce((s,c)=>s+(c.colSpan||1),0);if(n<3)return;
+const old=tb.querySelector("colgroup");if(old)old.remove();
+const f=n<=4?32:n<=7?24:n<=10?18:14,o=((100-f)/(n-1)).toFixed(3)+"%",cg=document.createElement("colgroup");
+for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?o:f+"%";cg.appendChild(c)}
+tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=(150+(n-1)*88)+"px";
+}
 function enhanceTables(){
 if(!document.querySelectorAll)return;
 document.querySelectorAll("#out table").forEach(tb=>{
 const hr=[...tb.rows].find(r=>r.querySelector("th"));if(!hr)return;
+fitCols(tb,hr);
 if([...tb.rows].filter(r=>!r.querySelector("th")).length<3||tb.querySelector("input"))return;
 const sec=tb.closest(".card"),h=sec&&sec.querySelector("h2"),key=(h?h.textContent.trim():"")+"|"+(sec?[...sec.querySelectorAll("table")].indexOf(tb):0);
 tb.setAttribute("data-sk",key);
@@ -529,14 +538,14 @@ if(ty!=="all"){const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(ks.size){con
 const tw=tot?ret(tot,"Max"):null,cg=tot?cagr(tot):null,bm=actB(),bw=bm?ret(bm,"Max"):null,bs=bm?betaStats(tot,bm):null;
 const sg=x=>x>=0?"pos":"neg";
 ixSync(bm);
-const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div><div class="ks">'+sub+'</div></div>';
+const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+(sub?infoI(sub):"")+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div></div>';
 const T=[];
 T.push(tile("Total value"+sfx,eur(tv),"Holdings only, cash not included"));
 T.push(tile("Total profit"+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
 T.push(tile("Time-weighted return"+sfx,tw==null?"\u2013":pct1(tw),cg==null?"All time":"All time \u00b7 "+pct1(cg)+" per year",tw==null?"":sg(tw)));
 {const ok=bm&&bw!=null&&tw!=null,d=ok?(tw-bw)*100:0;
 T.push(tile("Against "+(bm?esc(bmLab(bm.name)):"index"),ok?(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points":"\u2013",ok?"You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)":(bm?"No data for this period":"Pick an index to compare with"),ok?sg(d):""))}
-if(bm)T.push(tile("Beta"+sfx+infoI(BETA_TIP),bs==null?"\u2013":bs.beta.toFixed(2),"vs "+esc(bmLab(bm.name))+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")));
+if(bm)T.push(tile("Beta"+sfx,bs==null?"\u2013":bs.beta.toFixed(2),"vs "+bmLab(bm.name)+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")+". "+BETA_TIP));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
 const TABI={r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
@@ -761,7 +770,7 @@ const bought=-sum("Buy"),sold=sum("Sell"),dv=sum("Dividend")+sum("Tax");
 R=R.filter(r=>TXF==="all"||(TXF==="Other"?["Tax","Fee","Interest"].includes(r.ty):r.ty===TXF));
 R.sort((x,y)=>(x.d<y.d?-1:x.d>y.d?1:x.o-y.o)*TXO);
 const F=[["all","All"],["Buy","Buys"],["Sell","Sells"],["Dividend","Dividends"],["Other","Fees, interest, other"]];
-let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+' &nbsp; <button data-txo="1">'+(TXO<0?"Newest first \u2193":"Oldest first \u2191")+'</button></div>'+TXSW("table")+'</div>';
+let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div>'+F.map(f=>'<button data-txf="'+f[0]+'"'+(TXF===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+'</div>'+TXSW("table")+'</div>';
 h+='<p class="mu">'+R.length+' shown \u00b7 bought '+eur(bought)+' \u00b7 sold '+eur(sold)+' \u00b7 dividends net of tax '+eur(dv)+'. Click a column header to sort.</p>';
 h+='<div class="sc"><table class="tx"><colgroup><col style="width:15%"><col style="width:8%"><col style="width:25%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:12%"><col style="width:11%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Costs / tax</th></tr>';
 R.forEach(r=>{
@@ -1220,9 +1229,9 @@ if(rr>=18&&rr<=102){const t=(Math.atan2(dy,dx)+Math.PI/2+2*Math.PI)%(2*Math.PI);
 }
 if(p1&&PIED){
 const t2=$("pt2"),t3=$("pt3");
-document.querySelectorAll(".sl").forEach(z=>{if(z!==sl){z.style.transform="";z.style.filter="";z.style.opacity=sl?".5":""}});
+document.querySelectorAll(".sl").forEach(z=>{if(z!==sl){z.classList.remove("ph");z.style.transform="";z.style.filter="";z.style.opacity=sl?".5":""}});
 if(sl){
-const c=sl.getAttribute("data-c");
+const c=sl.getAttribute("data-c");sl.classList.add("ph");
 sl.style.transform="translate("+sl.getAttribute("data-dx")+"px,"+sl.getAttribute("data-dy")+"px) scale(1.05)";
 sl.style.filter="drop-shadow(0 3px 9px "+c+"aa)";sl.style.opacity="1";
 if(sl.nextElementSibling&&sl.nextElementSibling.classList.contains("sl"))sl.parentNode.insertBefore(sl,p1);
@@ -1304,7 +1313,6 @@ if(ptv){PT=ptv;ls.set("pt",PT);render(G.syms,[],G.warn)}
 if(pfv){PF=pfv;ls.set("pf",PF);render(G.syms,[],G.warn)}
 if(wm){WB.mode=wm;ls.set("wb",JSON.stringify(WB));render(G.syms,[],G.warn)}
 if(tf){TXF=tf;render(G.syms,[],G.warn)}
-if(to){TXO=-TXO;delete SORTS["Transactions|0"];render(G.syms,[],G.warn)}
 });
 $("out").addEventListener("input",e=>{
 const k=e.target.getAttribute&&e.target.getAttribute("data-w");if(!k)return;

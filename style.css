@@ -182,3 +182,8 @@ html[data-sb=c] #side .tabs button{justify-content:center;padding:10px 0}
 .uf{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 100px auto;gap:8px;margin:10px 0}.uf button{margin:0}
 [data-w=users] .kpis{margin:6px 0}[data-w=users] td select{padding:3px 10px}
 @media(max-width:900px){#side .sec,#side .sbt{display:none}html[data-sb=c] #out{grid-template-columns:none}html[data-sb=c] #side .tl{display:inline}html[data-sb=c] #side .tfc{display:flex}html[data-sb=c] #side .sfoot{display:block}#side .tabs button{display:inline-flex}.uf{grid-template-columns:1fr 1fr}}
+
+.cs{display:flex;flex-wrap:wrap;gap:0;margin:8px 0 10px;border:1px solid var(--bd);border-radius:10px;width:fit-content;max-width:100%}
+.cs>div{display:flex;flex-direction:column;gap:2px;padding:8px 18px;border-left:1px solid var(--bd)}.cs>div:first-child{border-left:0}
+.cs span{font-size:.68em;text-transform:uppercase;letter-spacing:.07em;color:var(--mu)}.cs b{font-size:1.1em;font-weight:600;font-variant-numeric:tabular-nums}
+.dvc>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}

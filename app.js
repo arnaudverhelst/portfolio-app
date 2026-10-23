@@ -227,7 +227,7 @@ S.forEach((s,k)=>{g+='<polyline class="ln" stroke="'+COL[k%COL.length]+'" stroke
 g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
 CH[id]={S:S,x0:x0,L:L,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
 const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
-return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div><div class="mu">Hover over the chart, or touch and drag on a phone, to see the values.</div>';
+return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>'+(TAB==="r"?"":'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values.</div>');
 }
 function chart(){
 const L=days.length-1,i0=Math.max(iStart(TF),0);
@@ -641,7 +641,7 @@ const list=Object.keys(C).map(k=>({k:k,n:nameOf(k),c:C[k]*100,typ:typOf(k)})).fi
 const mx=Math.max(0.01,...list.map(x=>Math.abs(x.c)));
 const B=TFA().map(t=>'<button data-ctf="'+t+'"'+(t===CTF?' class="on"':"")+'>'+t+'</button>').join("");
 const sum=list.reduce((x,y)=>x+y.c,0),by={};list.forEach(x=>{by[x.typ]=(by[x.typ]||0)+x.c});
-let h='<div class="card"><h2>Contribution to your return</h2>'+B+'<p>Time-weighted return of the period: <b>'+pct1(tot/100)+'</b>. By type: '+["ETF","Stock","Derivative"].filter(t=>by[t]!==undefined).map(t=>TYPN[t]+' <b>'+(by[t]>0?"+":"")+by[t].toFixed(1)+' points</b>').join(", ")+'.</p>';
+let h='<div class="card"><h2>Contribution to your return</h2>'+B+'<div class="cs"><div><span>Return of the period</span><b class="'+(tot>=0?"pos":"neg")+'">'+pct1(tot/100)+'</b></div>'+["ETF","Stock","Derivative"].filter(t=>by[t]!==undefined).map(t=>'<div><span>'+({ETF:"ETFs",Stock:"Stocks",Derivative:"Derivatives"})[t]+'</span><b class="'+(by[t]>=0?"pos":"neg")+'">'+(by[t]>0?"+":"")+by[t].toFixed(1)+' pts</b></div>').join("")+'</div>';
 h+='<div class="sc"><table><tr><th>Instrument</th><th>Contribution (points)</th><th style="width:45%"></th></tr>';
 ["ETF","Stock","Derivative"].forEach(ty=>{const lg=list.filter(x=>x.typ===ty);if(!lg.length)return;h+='<tr><td colspan="3" class="grp">'+TYPN[ty]+'</td></tr>';lg.forEach(x=>{
 const w=(Math.abs(x.c)/mx*100).toFixed(0);
@@ -712,36 +712,45 @@ R.forEach(r=>{const c=r.ty==="Buy"?TXC()[0]:TXC()[1];h+='<tr style="background:c
 h+='</table></div>';
 showModal("Bought & sold \u00b7 "+dvt(b),h);
 }
+let GV="tot",GD=false;
 function txGain(){
-const C=TXC(),neg=MODEV==="dark"?"#e8786f":"#b42318",W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=28;
-let h='<div class="card"><h2>Transactions</h2><div class="dvc"><span class="mu">All time, per calendar year</span>'+TXSW("gain")+'</div>';
+const C=TXC(),neg=MODEV==="dark"?"#e8786f":"#b42318",amb="#d9962b",W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=28,sp=GV==="split";
+let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div><span class="seg"><button data-gv="tot"'+(!sp?' class="on"':"")+'>Total</button><button data-gv="split"'+(sp?' class="on"':"")+'>Realised / unrealised</button></span> <button data-gd="1"'+(GD?' class="on"':"")+'>Dividends</button></div>'+TXSW("gain")+'</div>';
 if(!days.length)return h+'<p class="mu">No data to show yet.</p></div>';
-const y0=+days[0].slice(0,4),y1=+days[days.length-1].slice(0,4),R=txRows(),Y=[];
+const y0=+days[0].slice(0,4),y1=+days[days.length-1].slice(0,4),R=txRows(),Y=[],RY={},by={};
+tx.forEach(t=>{(by[t.key]=by[t.key]||[]).push(t)});
+for(const k in by){const o=isOpt(k);let q=0,cost=0;by[k].forEach(t=>{const a=o?t.q:t.qa,c=isFinite(t.cs)?t.cs:t.g,yy=String(t.d).slice(0,4);let r=0;
+if(a>0){q+=a;cost+=c}else if(q>0){const f=Math.min(1,-a/q);r=c-cost*f;cost-=cost*f;q+=a}else r=c;
+if(isFinite(r))RY[yy]=(RY[yy]||0)+r})}
 for(let y=y0;y<=y1;y++){
 const yk=String(y);let ib=-1,ia=-1;
 for(let i=0;i<days.length;i++){const yy=days[i].slice(0,4);if(yy<=yk)ib=i;if(yy<yk)ia=i}
 const X=ia>=0?valueAt(ia):0,V=ib>=0?valueAt(ib):0;let net=0;
 tx.forEach(t=>{if(t.di>ia&&t.di<=ib&&isFinite(t.fc))net+=(t.q>0?1:-1)*t.fc});
-const dv=R.filter(r=>(r.ty==="Dividend"||r.ty==="Tax")&&r.d.slice(0,4)===yk&&isFinite(r.a)).reduce((a,r)=>a+r.a,0);
-Y.push({y:yk,g:V-X-net+dv,dv:dv});
+const dv=R.filter(r=>(r.ty==="Dividend"||r.ty==="Tax")&&r.d.slice(0,4)===yk&&isFinite(r.a)).reduce((a,r)=>a+r.a,0),tg=V-X-net,re=RY[yk]||0;
+Y.push({y:yk,re:re,un:tg-re,dv:dv,g:tg+(GD?dv:0)});
 }
-const n=Y.length,tot=Y.reduce((a,o)=>a+o.g,0);
-let mn=Math.min(0,...Y.map(o=>o.g)),mx=Math.max(0,...Y.map(o=>o.g));if(mx===mn)mx=mn+1;
+const S=sp?[["Realised",C[0],"re"],["Unrealised",C[1],"un"]].concat(GD?[["Dividends",amb,"dv"]]:[]):[["Total",null,"g"]];
+const n=Y.length,k=S.length,tot=sp?null:Y.reduce((a,o)=>a+o.g,0),vals=[];Y.forEach(o=>S.forEach(x=>vals.push(o[x[2]])));
+let mn=Math.min(0,...vals),mx=Math.max(0,...vals);if(mx===mn)mx=mn+1;
 const raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
 mn=Math.floor(mn/step+1e-9)*step;mx=Math.ceil(mx/step-1e-9)*step;
-const ys=v=>pt+(mx-v)*(H-pt-pb)/(mx-mn),bw=(W-pl-pr)/n,w=Math.min(bw*0.5,56),z=ys(0),lab=v=>(v<0?"\u2212":"")+ekc(Math.abs(v));
+const ys=v=>pt+(mx-v)*(H-pt-pb)/(mx-mn),bw=(W-pl-pr)/n,gw=Math.min(bw*0.7,sp?90:56),w=gw/k*(k>1?0.9:1),z=ys(0),lab=v=>(v<0?"\u2212":"")+ekc(Math.abs(v)),sg=v=>(v>=0?"+":"\u2212")+e2(Math.abs(v));
 let g="";
 for(let v=mn;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(Math.abs(v)<step/1000?".4":".08")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+lab(v)+'</text>'}
 Y.forEach((o,i)=>{
-const cx=pl+i*bw+bw/2,c=o.g>=0?C[1]:neg,y1=ys(o.g),top=Math.min(y1,z),ht=Math.max(1,Math.abs(y1-z));
+const cx=pl+i*bw+bw/2;
 g+='<rect class="dvh" x="'+(pl+i*bw).toFixed(1)+'" y="'+pt+'" width="'+bw.toFixed(1)+'" height="'+(H-pt)+'" fill="transparent"/>';
-g+='<rect class="dvb" x="'+(cx-w/2).toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+ht.toFixed(1)+'" rx="2" fill="'+c+'" data-c="'+c+'" data-n="'+(o.g>=0?"Gain":"Loss")+'" data-v="'+e2(o.g)+'" data-b="'+o.y+'" data-x="'+o.y+' \u00b7 incl. dividends '+e2(o.dv)+'"/>';
-if(n<=8)g+='<text x="'+cx.toFixed(1)+'" y="'+(o.g>=0?y1-5:y1+13).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+(o.g>=0?"+":"")+lab(o.g)+'</text>';
+S.forEach((x,j)=>{const v=o[x[2]],c=x[1]||(v>=0?C[1]:neg),bx=cx-gw/2+j*gw/k+(gw/k-w)/2,y1=ys(v),top=Math.min(y1,z),ht=Math.max(1,Math.abs(y1-z));
+g+='<rect class="dvb" x="'+bx.toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+ht.toFixed(1)+'" rx="2" fill="'+c+'" data-c="'+c+'" data-n="'+(sp?x[0]:(v>=0?"Gain":"Loss"))+'" data-v="'+e2(v)+'" data-b="'+o.y+'" data-x="'+o.y+(sp?'':(GD?' \u00b7 incl. dividends '+e2(o.dv):' \u00b7 excl. dividends'))+'"/>';
+if(n*k<=8)g+='<text x="'+(bx+w/2).toFixed(1)+'" y="'+(v>=0?y1-5:y1+13).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+(v>=0?"+":"")+lab(v)+'</text>'});
 g+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+o.y+'</text>';
 });
-g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+C[1]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Gain</text><circle cx="'+(pl+56)+'" cy="8" r="4" fill="'+neg+'"/><text x="'+(pl+64)+'" y="12" font-size="11" style="fill:var(--fg)">Loss</text>';
-g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Total '+(tot>=0?"+":"\u2212")+e2(Math.abs(tot))+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
-return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Gain or loss per calendar year for your whole portfolio: the change in value of what you hold, plus money received from sales, minus money put in, plus dividends net of tax. Trading costs are included. The latest year runs to your last price date. Idle cash is not included.</p></div>';
+let lx=pl+4;
+(sp?S.map(x=>[x[0],x[1]]):[["Gain",C[1]],["Loss",neg]]).forEach(x=>{g+='<circle cx="'+lx+'" cy="8" r="4" fill="'+x[1]+'"/><text x="'+(lx+8)+'" y="12" font-size="11" style="fill:var(--fg)">'+x[0]+'</text>';lx+=x[0].length*6.5+30});
+const T=sp?S.map(x=>x[0]+" "+sg(Y.reduce((a,o)=>a+o[x[2]],0))).join(" \u00b7 "):"Total "+sg(tot);
+g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">'+T+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
+return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Per calendar year, for your whole portfolio, trading costs included. <b>Realised</b> is profit or loss on shares you sold. <b>Unrealised</b> is the change during the year in the gain or loss on shares you still hold. Dividends are net of tax and only counted when switched on. The latest year runs to your last price date. Idle cash is not included.</p></div>';
 }
 function transactions(){
 if(TXV==="chart")return txChart();
@@ -1288,6 +1297,7 @@ if(dm){DVM=dm;render(G.syms,[],G.warn)}
 if(dvt2){DVT=dvt2;render(G.syms,[],G.warn)}
 if(dvp){DVS=dvp;render(G.syms,[],G.warn)}
 if(txv){TXV=txv;render(G.syms,[],G.warn)}
+const tg=e.target.closest&&e.target.closest("[data-gv],[data-gd]");if(tg){if(tg.hasAttribute("data-gv"))GV=tg.getAttribute("data-gv");else GD=!GD;render(G.syms,[],G.warn)}
 if(txp){TXS=txp;render(G.syms,[],G.warn)}
 if(pbv){PB=pbv;ls.set("pb",PB);render(G.syms,[],G.warn)}
 if(ptv){PT=ptv;ls.set("pt",PT);render(G.syms,[],G.warn)}

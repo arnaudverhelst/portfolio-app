@@ -1184,7 +1184,7 @@ r.readAsText(f);
 };
 $("out").addEventListener("click",e=>{
 const t=e.target.getAttribute&&e.target.getAttribute("data-tf"),m=e.target.getAttribute&&e.target.getAttribute("data-vm");
-const tb=e.target.getAttribute&&e.target.getAttribute("data-tab");
+const tbe=e.target.closest&&e.target.closest("[data-tab]"),tb=tbe&&tbe.getAttribute("data-tab");
 const dt=e.target.getAttribute&&e.target.getAttribute("data-det"),bk=e.target.getAttribute&&e.target.getAttribute("data-back");
 if(tb){TAB=tb;DET=null;render(G.syms,[],G.warn)}
 if(dt){e.preventDefault();DET=dt;render(G.syms,[],G.warn);window.scrollTo(0,0)}

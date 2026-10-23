@@ -38,7 +38,7 @@ const rt=(r,t)=>PB==="stock"&&r.k&&P[r.k]?retPx(r,t):ret(r,t);
 const pf=k=>(PF==="all"||(PF==="open")===OPS.has(k))&&(PT==="all"||typOf(k)===PT);
 const TYPS={ETF:"ETFs",Stock:"stocks",Derivative:"derivatives"};
 let WB={age:30,start:null,monthly:500,grow:0,ret:7,infl:2,income:2500,wr:4,years:25,real:false,mode:"age"};try{Object.assign(WB,JSON.parse(ls.get("wb")||"{}"))}catch(e){}
-const pfChips=()=>TAB!=="r"?"":'<div class="tfc"><span class="mu">Show: </span>'+[["open","Open positions"],["closed","Closed positions"],["all","All positions"]].map(z=>'<button data-pf="'+z[0]+'"'+(PF===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'<span class="mu" style="flex-basis:100%">Type: </span>'+[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]].map(z=>'<button data-pt="'+z[0]+'"'+(PT===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div>';
+const pfChips=()=>TAB!=="r"&&TAB!=="p"?"":'<div class="tfc"><span class="mu">Show: </span>'+[["open","Open positions"],["closed","Closed positions"],["all","All positions"]].map(z=>'<button data-pf="'+z[0]+'"'+(PF===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'<span class="mu" style="flex-basis:100%">Type: </span>'+[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]].map(z=>'<button data-pt="'+z[0]+'"'+(PT===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div>';
 function subRow(){
 const ks=new Set(G.keys.filter(k=>pf(k)));if(!ks.size)return null;
 const r=twrr(ks,MODE);return {name:(PT==="all"?"Total portfolio":"Total "+TYPS[PT])+(PF==="all"?"":" ("+(PF==="open"?"open":"closed")+" positions)"),idx:r.idx,st:r.st,held:r.held};
@@ -404,6 +404,12 @@ CH=[];positions();
 $("out").innerHTML=kpis()+tabsHtml()+dividends()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
 return;
 }
+if(TAB==="p"&&rows.length&&!bad.length){
+CH=[];
+$("out").innerHTML=kpis()+tabsHtml()+positions()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
+return;
+}
+if(TAB==="u"){CH=[];$("out").innerHTML=tabsHtml()+users();return}
 renderR(syms,bad,warn);
 if(rows.length)$("out").innerHTML=kpis()+tabsHtml()+$("out").innerHTML;
 }
@@ -423,7 +429,7 @@ if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.
 h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. For closed positions, a period shows the return while the position was held. Basis: "My performance" is time-weighted, so it ignores when you added money and equals the stock\'s own return over the time you held it; "Stock performance" is the price return over the whole period, whether or not you held it (dividends reinvested). Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
 h+='<div class="card"><h2>Comparison</h2>'+TFA().map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
 }
-if(rows.length)h+=valueCard()+positions();
+if(rows.length)h+=valueCard();
 if(DBG||bad.length)h+=hold(syms,bad);
 if(DBG&&rows.length)h+=detail(syms.filter(s=>!isOpt(s)));
 if(DBG&&rows.length){
@@ -516,7 +522,7 @@ return {beta:c/vx,corr:c/Math.sqrt(vx*vy),vp:Math.sqrt(vy/(N-1)*52),vm:Math.sqrt
 const BETA_TIP="Beta shows how strongly your portfolio moved with the benchmark: 1.00 means in step, below 1 smaller moves, above 1 bigger moves. It is calculated on weekly returns as correlation \u00d7 (your volatility \u00f7 the index volatility). So you can swing more than the index and still have a beta below 1 when much of your swing is unrelated to the index (single stocks, derivatives).";
 function kpis(){
 positions();
-const ty=TAB==="r"?PT:"all",pl=ty==="all"?POSL:POSL.filter(r=>r.typ===ty),sfx=ty==="all"?"":" \u00b7 "+TYPS[ty];
+const ty=TAB==="r"||TAB==="p"?PT:"all",pl=ty==="all"?POSL:POSL.filter(r=>r.typ===ty),sfx=ty==="all"?"":" \u00b7 "+TYPS[ty];
 const tv=pl.reduce((a,r)=>a+r.val,0),pr=pl.reduce((a,r)=>a+r.un+r.real+r.dv,0);
 let tot=rows[0];
 if(ty!=="all"){const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(ks.size){const q=twrr(ks,MODE);tot={idx:q.idx,st:q.st,held:q.held}}else tot=null}
@@ -533,7 +539,9 @@ T.push(tile("Against "+(bm?esc(bmLab(bm.name)):"index"),ok?(d>=0?"+":"-")+Math.a
 if(bm)T.push(tile("Beta"+sfx+infoI(BETA_TIP),bs==null?"\u2013":bs.beta.toFixed(2),"vs "+esc(bmLab(bm.name))+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
-const tabsHtml=()=>'<div class="tabs"><button data-tab="r"'+(TAB==="r"?' class="on"':"")+'>Returns</button><button data-tab="t"'+(TAB==="t"?' class="on"':"")+'>Transactions</button><button data-tab="d"'+(TAB==="d"?' class="on"':"")+'>Dividends</button><button data-tab="a"'+(TAB==="a"?' class="on"':"")+'>Analysis</button><button data-tab="w"'+(TAB==="w"?' class="on"':"")+'>Wealth builder</button></div>'+pfChips();
+const TABI={r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
+const tabBtn=(k,l)=>'<button data-tab="'+k+'" title="'+l+'"'+(TAB===k?' class="on"':"")+'><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
+const tabsHtml=()=>'<div class="tabs"><div class="sec">Overview</div>'+tabBtn("r","Returns")+tabBtn("p","Positions")+tabBtn("a","Analysis")+'<div class="sec">Activity</div>'+tabBtn("t","Transactions")+tabBtn("d","Dividends")+'<div class="sec">Planning</div>'+tabBtn("w","Wealth builder")+'<div class="sec">Admin</div>'+tabBtn("u","Users")+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -660,7 +668,8 @@ else if(o.t)R.push({d:o.d,ty:"Tax",n:o.n,k:o.k,b:o.b,q:null,px:"\u2013",a:o.t,f:
 AO.forEach(a=>R.push({d:a.d,ty:a.k==="fee"?"Fee":"Interest",n:a.k==="fee"?"Account fees":"Account interest",k:null,b:"Degiro",q:null,px:"\u2013",a:a.e,f:NaN,o:R.length}));
 return R;
 }
-const TXSW=v=>'<div class="seg"><button data-txv="table"'+(v==="table"?' class="on"':"")+'>Table</button><button data-txv="chart"'+(v==="chart"?' class="on"':"")+'>Bought &amp; sold</button></div>';
+const TXSW=v=>'<div class="seg"><button data-txv="table"'+(v==="table"?' class="on"':"")+'>Table</button><button data-txv="chart"'+(v==="chart"?' class="on"':"")+'>Bought &amp; sold</button><button data-txv="gain"'+(v==="gain"?' class="on"':"")+'>Gain / loss</button></div>';
+const TXC=()=>MODEV==="dark"?["#4f8cff","#2f9e75"]:["#1d4ed8","#15803d"];
 const txBS=()=>txRows().filter(r=>(r.ty==="Buy"||r.ty==="Sell")&&isFinite(r.a)&&r.a!==0);
 const txKey=d=>TXS==="all"?d.slice(0,4):d.slice(0,7);
 function txChart(){
@@ -672,7 +681,7 @@ const keys=[],m={};
 if(TXS==="all"){const y1=Math.max(+yrs[yrs.length-1],+(days[days.length-1]||"0").slice(0,4));for(let y=+yrs[0];y<=y1;y++)keys.push(String(y))}
 else for(let i=1;i<=12;i++)keys.push(TXS+"-"+String(i).padStart(2,"0"));
 R.forEach(r=>{const b=txKey(r.d);if(!keys.includes(b))return;const o=m[b]=m[b]||{B:0,S:0,nb:0,ns:0};if(r.ty==="Buy"){o.B+=-r.a;o.nb++}else{o.S+=r.a;o.ns++}});
-const W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=42,n=keys.length,SER=[["B","Bought",PIEC[0],"nb"],["S","Sold",PIEC[2],"ns"]];
+const W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=42,n=keys.length,SER=[["B","Bought",TXC()[0],"nb"],["S","Sold",TXC()[1],"ns"]];
 let mx=Math.max(1,...keys.map(b=>Math.max((m[b]||{}).B||0,(m[b]||{}).S||0)));
 const raw=mx/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
 mx=Math.ceil(mx/step-1e-9)*step;
@@ -690,21 +699,53 @@ g+='<rect class="dvb" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+w.toFi
 if(n<=6)g+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(y1-5).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+ekc(v)+'</text>';
 });
 g+='<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" font-size="11" text-anchor="middle" fill="currentColor">'+dvl(b)+'</text>';
-if(o.B||o.S)g+='<text x="'+cx.toFixed(1)+'" y="'+(H-22)+'" font-size="10" font-weight="600" text-anchor="middle" style="fill:'+(nt>=0?PIEC[0]:PIEC[2])+'">'+(nt>=0?"+":"\u2212")+ekc(Math.abs(nt))+'</text>';
+if(o.B||o.S)g+='<text x="'+cx.toFixed(1)+'" y="'+(H-22)+'" font-size="10" font-weight="600" text-anchor="middle" style="fill:'+(nt>=0?TXC()[0]:TXC()[1])+'">'+(nt>=0?"+":"\u2212")+ekc(Math.abs(nt))+'</text>';
 });
-g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+PIEC[0]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Bought</text><circle cx="'+(pl+68)+'" cy="8" r="4" fill="'+PIEC[2]+'"/><text x="'+(pl+76)+'" y="12" font-size="11" style="fill:var(--fg)">Sold</text>';
+g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+TXC()[0]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Bought</text><circle cx="'+(pl+68)+'" cy="8" r="4" fill="'+TXC()[1]+'"/><text x="'+(pl+76)+'" y="12" font-size="11" style="fill:var(--fg)">Sold</text>';
 g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Bought '+e2(tb)+' \u00b7 sold '+e2(ts)+' \u00b7 net invested '+(tb-ts>=0?"+":"\u2212")+e2(Math.abs(tb-ts))+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
 return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Amounts are the cash paid or received in euro, including trading costs. The figure above each period is net invested (bought minus sold). Click a bar to see the trades behind it.</p></div>';
 }
 function openTx(b,sr){
 const R=txBS().filter(r=>txKey(r.d)===b).sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:x.o-y.o),bo=R.filter(r=>r.ty==="Buy").reduce((a,r)=>a-r.a,0),so=R.filter(r=>r.ty==="Sell").reduce((a,r)=>a+r.a,0);
 let h='<p class="mu">Bought <b>'+e2(bo)+'</b> \u00b7 sold <b>'+e2(so)+'</b> \u00b7 net invested <b>'+(bo-so>=0?"+":"\u2212")+e2(Math.abs(bo-so))+'</b> \u00b7 '+R.length+' trade'+(R.length===1?"":"s")+'</p><div class="sc"><table><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th></tr>';
-R.forEach(r=>{const c=r.ty==="Buy"?PIEC[0]:PIEC[2];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+esc(r.n)+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
+R.forEach(r=>{const c=r.ty==="Buy"?TXC()[0]:TXC()[1];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+esc(r.n)+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
 h+='</table></div>';
 showModal("Bought & sold \u00b7 "+dvt(b),h);
 }
+function txGain(){
+const C=TXC(),neg=MODEV==="dark"?"#e8786f":"#b42318",W=CD.dv.W,H=CD.dv.H,pl=54,pr=8,pt=22,pb=28;
+let h='<div class="card"><h2>Transactions</h2><div class="dvc"><span class="mu">All time, per calendar year</span>'+TXSW("gain")+'</div>';
+if(!days.length)return h+'<p class="mu">No data to show yet.</p></div>';
+const y0=+days[0].slice(0,4),y1=+days[days.length-1].slice(0,4),R=txRows(),Y=[];
+for(let y=y0;y<=y1;y++){
+const yk=String(y);let ib=-1,ia=-1;
+for(let i=0;i<days.length;i++){const yy=days[i].slice(0,4);if(yy<=yk)ib=i;if(yy<yk)ia=i}
+const X=ia>=0?valueAt(ia):0,V=ib>=0?valueAt(ib):0;let net=0;
+tx.forEach(t=>{if(t.di>ia&&t.di<=ib&&isFinite(t.fc))net+=(t.q>0?1:-1)*t.fc});
+const dv=R.filter(r=>(r.ty==="Dividend"||r.ty==="Tax")&&r.d.slice(0,4)===yk&&isFinite(r.a)).reduce((a,r)=>a+r.a,0);
+Y.push({y:yk,g:V-X-net+dv,dv:dv});
+}
+const n=Y.length,tot=Y.reduce((a,o)=>a+o.g,0);
+let mn=Math.min(0,...Y.map(o=>o.g)),mx=Math.max(0,...Y.map(o=>o.g));if(mx===mn)mx=mn+1;
+const raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+mn=Math.floor(mn/step+1e-9)*step;mx=Math.ceil(mx/step-1e-9)*step;
+const ys=v=>pt+(mx-v)*(H-pt-pb)/(mx-mn),bw=(W-pl-pr)/n,w=Math.min(bw*0.5,56),z=ys(0),lab=v=>(v<0?"\u2212":"")+ekc(Math.abs(v));
+let g="";
+for(let v=mn;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(Math.abs(v)<step/1000?".4":".08")+'"/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+lab(v)+'</text>'}
+Y.forEach((o,i)=>{
+const cx=pl+i*bw+bw/2,c=o.g>=0?C[1]:neg,y1=ys(o.g),top=Math.min(y1,z),ht=Math.max(1,Math.abs(y1-z));
+g+='<rect class="dvh" x="'+(pl+i*bw).toFixed(1)+'" y="'+pt+'" width="'+bw.toFixed(1)+'" height="'+(H-pt)+'" fill="transparent"/>';
+g+='<rect class="dvb" x="'+(cx-w/2).toFixed(1)+'" y="'+top.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+ht.toFixed(1)+'" rx="2" fill="'+c+'" data-c="'+c+'" data-n="'+(o.g>=0?"Gain":"Loss")+'" data-v="'+e2(o.g)+'" data-b="'+o.y+'" data-x="'+o.y+' \u00b7 incl. dividends '+e2(o.dv)+'"/>';
+if(n<=8)g+='<text x="'+cx.toFixed(1)+'" y="'+(o.g>=0?y1-5:y1+13).toFixed(1)+'" font-size="10" text-anchor="middle" fill="currentColor">'+(o.g>=0?"+":"")+lab(o.g)+'</text>';
+g+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+o.y+'</text>';
+});
+g+='<circle cx="'+(pl+4)+'" cy="8" r="4" fill="'+C[1]+'"/><text x="'+(pl+12)+'" y="12" font-size="11" style="fill:var(--fg)">Gain</text><circle cx="'+(pl+56)+'" cy="8" r="4" fill="'+neg+'"/><text x="'+(pl+64)+'" y="12" font-size="11" style="fill:var(--fg)">Loss</text>';
+g+='<text x="'+(W-pr)+'" y="12" font-size="11" text-anchor="end" style="fill:var(--mu)">Total '+(tot>=0?"+":"\u2212")+e2(Math.abs(tot))+'</text><g id="dvt" visibility="hidden" pointer-events="none"></g>';
+return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><p class="mu">Gain or loss per calendar year for your whole portfolio: the change in value of what you hold, plus money received from sales, minus money put in, plus dividends net of tax. Trading costs are included. The latest year runs to your last price date. Idle cash is not included.</p></div>';
+}
 function transactions(){
 if(TXV==="chart")return txChart();
+if(TXV==="gain")return txGain();
 let R=txRows();
 const sum=ty=>R.filter(r=>r.ty===ty).reduce((a,r)=>a+(isFinite(r.a)?r.a:0),0);
 const bought=-sum("Buy"),sold=sum("Sell"),dv=sum("Dividend")+sum("Tax");
@@ -718,6 +759,19 @@ R.forEach(r=>{
 h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="pill p-'+r.ty+'">'+r.ty+'</span></td><td><span class="ti" title="'+esc(r.n)+'">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+'</span></td><td>'+r.b+'</td><td>'+(r.q==null?"\u2013":sh(r.q))+'</td><td>'+r.px+'</td><td>'+(isFinite(r.a)?(r.a>0?"+":"")+e2(r.a):"\u2013")+'</td><td>'+(isFinite(r.f)&&Math.abs(r.f)>=0.005?e2(r.f):"\u2013")+'</td></tr>';
 });
 return h+'</table></div><p class="mu">Amounts are cash in euro: negative is money spent on a buy, positive is money received. For dividends the amount is the net cash received and the last column is the tax withheld; for trades it is trading costs including currency conversion where known.</p></div>';
+}
+let USR=[];try{USR=JSON.parse(ls.get("users")||"[]")}catch(e){}
+const saveUsers=()=>ls.set("users",JSON.stringify(USR));
+function users(){
+const n=USR.length,pro=USR.filter(u=>u.plan==="Pro").length,act=USR.filter(u=>u.status==="Active").length;
+const tile=(l,v,t)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv">'+v+'</div><div class="ks">'+t+'</div></div>';
+const sel=(o,v,id,f)=>'<select data-uid="'+id+'" data-uf="'+f+'">'+o.map(x=>'<option'+(x===v?" selected":"")+'>'+x+'</option>').join("")+'</select>';
+let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:4">'+tile("Total users",n,"In this browser")+tile("Free",n-pro,"Basic access")+tile("Pro",pro,"Paid plan")+tile("Active",act,"Not suspended")+'</div>';
+h+='<div class="uf"><input id="uem" type="email" placeholder="name@company.com" autocomplete="off"><input id="unm" placeholder="Name" autocomplete="off"><select id="upl2"><option>Free</option><option>Pro</option></select><button class="go" data-ua="1">Add user</button></div>';
+h+='<div class="sc"><table><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th></th></tr>';
+if(!n)h+='<tr><td colspan="6" class="mu" style="text-align:left">No users yet. Add a test user to see how plans and statuses will look.</td></tr>';
+USR.forEach(u=>{h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td style="text-align:left">'+esc(u.email)+'</td><td>'+sel(["Free","Pro"],u.plan,u.id,"plan")+'</td><td>'+sel(["Active","Suspended"],u.status,u.id,"status")+'</td><td>'+fd(u.joined)+'</td><td><button class="ib" data-ud="'+u.id+'" title="Remove user" aria-label="Remove user">&#10005;</button></td></tr>'});
+return h+'</table></div><p class="mu">This list is stored in this browser only, so it is a placeholder. Once you add a login and a backend (for example Supabase or Firebase), this tab reads the real user table, and the plan decides what each user can open behind the paywall.</p></div>';
 }
 function dvEvents(){
 if(DVS==="fc"){
@@ -1258,12 +1312,13 @@ if(rows.length)render(G.syms,[],G.warn);
 }
 $("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
 let WT=ls.get("wt")||"val",WMENU=false;
-const WK={"Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Wealth builder":"inputs","Projection":"result"};
+const WK={"Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
 const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
 function layout(){
 const out=$("out");if(!out||!out.firstElementChild)return;
 const kids=[...out.children],kp=kids.find(e=>e.classList.contains("kpis")),tabs=kids.find(e=>e.classList.contains("tabs")),pfc=kids.find(e=>e.classList.contains("tfc")&&e.querySelector("[data-pf]"));
 const side=document.createElement("aside");side.id="side";
+{const sb=document.createElement("button");sb.type="button";sb.className="sbt";sb.id="sbt";const c=document.documentElement.getAttribute("data-sb")==="c";sb.title=c?"Expand sidebar":"Collapse sidebar";sb.setAttribute("aria-label",sb.title);sb.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>';side.appendChild(sb)}
 if(tabs){tabs.querySelectorAll("button").forEach(b=>b.setAttribute("data-i",{r:"\u2197",t:"\u21c4",d:"%",a:"\u25d1",w:"\u221e"}[b.getAttribute("data-tab")]||""));side.appendChild(tabs)}
 if(pfc)side.appendChild(pfc);
 const view=document.createElement("div");view.id="view";view.className="v-"+(DET?"det":TAB);
@@ -1330,7 +1385,7 @@ const n=t.querySelector("svg");if(n){n.style.height=svg.style.height;svg.replace
 });
 document.querySelectorAll("svg.dv").forEach(svg=>{
 sw(svg,"dv",()=>{
-const t=document.createElement("div");t.innerHTML=divChart();
+const t=document.createElement("div");t.innerHTML=TAB==="t"?(TXV==="gain"?txGain():txChart()):divChart();
 const n=t.querySelector("svg.dv");if(n){n.style.height=svg.style.height;svg.replaceWith(n)}
 });
 });
@@ -1349,7 +1404,7 @@ function ixSync(b){const n=b?b.name:ixCur(),l=$("ixl");if(l)l.textContent=bmLab(
 function ixList(){const cur=ixCur(),ex=[...new Set(rows.filter(r=>r.kind==="b").map(r=>r.name).concat(bmList()))].filter(n=>!BMP.some(p=>p[0]===n));
 $("ixp").innerHTML='<div class="ps">Compare with</div>'+BMP.map(p=>[p[0],p[1]]).concat(ex.map(n=>[n,bmLab(n)])).map(p=>'<button type="button" class="ixo'+(p[0]===cur?' on':'')+'" data-ix="'+esc(p[0])+'"><span>'+esc(p[1])+'</span><i>'+(p[0][0]==="^"?"price index":"incl. dividends")+'</i></button>').join("")+'<button type="button" class="ixo" data-ix="__other"><span>Other symbol\u2026</span></button>'}
 function ixPick(v){if(v==="__other"){v=(prompt("Yahoo Finance symbol of an index or ETF, for example ^GDAXI or EXSA.DE")||"").trim();if(!v)return}
-BMA=v;ls.set("bma",v);$("ixp").hidden=true;if(!bmList().includes(v)){$("bm").value=bmList().concat(v).join(", ");run().catch(x=>msg("Error: "+x.message))}else render(G.syms,[],G.warn)}
+BMA=v;ls.set("bma",v);$("ixp").hidden=true;const only=bmList().length===1&&bmList()[0]===v;$("bm").value=v;if(only)render(G.syms,[],G.warn);else run().catch(x=>msg("Error: "+x.message))}
 $("ixb").onclick=()=>{const p=$("ixp");$("apr").hidden=true;p.hidden=!p.hidden;if(!p.hidden)ixList()};
 $("ixp").addEventListener("click",e=>{const o=e.target.closest&&e.target.closest("[data-ix]");if(o)ixPick(o.getAttribute("data-ix"))});
 document.addEventListener("click",e=>{if(!e.target.closest("#ixw"))$("ixp").hidden=true});
@@ -1366,8 +1421,15 @@ $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true}});
 $("run").addEventListener("click",()=>{$("setup").hidden=true});
+$("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t)return;
+if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}if(USR.some(u=>u.email===em)){msg("That email is already in the list.");return}USR.push({id:Date.now().toString(36),email:em,name:nm,plan:$("upl2").value,status:"Active",joined:new Date().toISOString().slice(0,10)})}
+else USR=USR.filter(u=>u.id!==t.getAttribute("data-ud"));
+saveUsers();render(G.syms,[],G.warn)});
+$("out").addEventListener("change",e=>{const el=e.target,id=el.getAttribute&&el.getAttribute("data-uid");if(!id)return;const u=USR.find(x=>x.id===id);if(!u)return;if(el.getAttribute("data-uf")==="plan")u.plan=el.value;else u.status=el.value;saveUsers();render(G.syms,[],G.warn)});
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#sbt");if(!b)return;const R=document.documentElement,c=R.getAttribute("data-sb")==="c";if(c)R.removeAttribute("data-sb");else R.setAttribute("data-sb","c");ls.set("sb",c?"":"c");b.title=c?"Collapse sidebar":"Expand sidebar";b.setAttribute("aria-label",b.title);setTimeout(fit,0)});
+if(ls.get("sb")==="c")document.documentElement.setAttribute("data-sb","c");
 document.documentElement.setAttribute("data-kpi","a");
 if(!(ls.get("tx")||ls.get("txd")))$("setup").hidden=false;
 $("themes").addEventListener("click",e=>{const m=e.target.getAttribute&&e.target.getAttribute("data-mode");if(m)setLook(m)});
 setLook(ls.get("mode")||"dark");
-if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm"))$("bm").value=ls.get("bm");ixSync(null);run().catch(e=>msg("Error: "+e.message))}
+if(ls.get("tx")||ls.get("txd")){$("txtA").value=ls.get("txa")||"";$("txt").value=ls.get("tx")||"";$("txtD").value=ls.get("txd")||"";if(ls.get("bv"))$("bv").value=ls.get("bv");if(ls.get("bm")){const L=ls.get("bm").split(",").map(x=>x.trim()).filter(Boolean);$("bm").value=(L.includes(BMA)?BMA:L[0])||"IWDA.AS"}ixSync(null);run().catch(e=>msg("Error: "+e.message))}

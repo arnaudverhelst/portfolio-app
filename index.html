@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Portfolio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"></head>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="mobile.css" media="(max-width:700px)"></head>
 <body>
 <div id="app">
 <header class="top"><div class="brand"><h1>My Portfolio</h1></div><span id="msg" class="mu"></span>
@@ -31,4 +31,5 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="app.js"></script>
+<script>(function(){var q=matchMedia("(max-width:700px)");if(q.matches)document.write('<script src="mobile.js"><\/script>');if(q.addEventListener)q.addEventListener("change",function(){location.reload()})})()</script>
 </body></html>

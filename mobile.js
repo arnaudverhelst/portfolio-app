@@ -29,11 +29,11 @@ function chips(action, cur, list) {
     return '<button type="button" data-a="' + action + '" data-v="' + z[0] + '"' + (cur === z[0] ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + ">" + z[1] + "</button>";
   }).join("") + "</div>";
 }
-function bmShort(b) {
-  if (!b) return "index";
-  var p = BMP.filter(function (z) { return z[0] === b.name; })[0];
-  return p ? p[1] : bmLab(b.name);
+function bmName(n) {
+  var p = BMP.filter(function (z) { return z[0] === n; })[0];
+  return p ? p[1] : bmLab(n);
 }
+function bmShort(b) { return bmName(b ? b.name : ixCur()); }
 
 /* ---------- Returns ---------- */
 function vTiles() {
@@ -82,8 +82,10 @@ function vChart() {
     }).join("");
     body = '<div class="chw">' + svg.outerHTML + '</div><div class="mlg">' + lg + "</div>";
   }
+  var wn = ((typeof G !== "undefined" && G && G.warn) || []).map(function (w) { return '<p class="note">' + esc(w) + "</p>"; }).join("");
+  body += wn;
   return '<section class="card"><div class="ch-h"><h2>Performance</h2>' +
-    (bm ? '<button type="button" class="mixb" data-a="ix">vs ' + esc(bmShort(bm)) + " " + ic(I_DOWN) + "</button>" : "") +
+    '<button type="button" class="mixb" data-a="ix">vs ' + esc(bmShort(bm)) + " " + ic(I_DOWN) + "</button>" +
     "</div>" + chips("tf", TF, list.map(function (t) { return [t, t]; })) + body + "</section>";
 }
 
@@ -148,7 +150,7 @@ function vAlloc() {
 /* ---------- More ---------- */
 function vMore() {
   var li = function (a, v, l) { return '<button type="button" class="li" data-a="' + a + '" data-v="' + v + '"><span>' + l + "</span>" + ic(I_RIGHT) + "</button>"; };
-  return '<div class="list">' + li("scr", "a", "Allocation") + li("upload", "", "Data and settings") + "</div>" +
+  return '<div class="list">' + li("upload", "", "Data and settings") + "</div>" +
     '<div class="lab">Appearance</div>' + seg("mode", MODEV, [["light", "Light"], ["dark", "Dark"]]);
 }
 
@@ -176,16 +178,16 @@ function vSheet() {
 }
 
 /* ---------- shell ---------- */
-var TITLES = { r: "My Portfolio", p: "Positions", t: "Activity", d: "Dividends", m: "More", a: "Allocation" };
+var TITLES = { r: "My Portfolio", p: "Positions", t: "Transactions", d: "Dividends", m: "More", a: "Allocation" };
 function nav() {
-  var on = function (k) { return S.scr === k || (k === "m" && S.scr === "a"); };
+  var on = function (k) { return S.scr === k; };
   var b = function (k, l, p) { return '<button type="button" data-a="scr" data-v="' + k + '"' + (on(k) ? ' class="on" aria-current="page"' : "") + ">" + ic(p) + "<span>" + l + "</span></button>"; };
-  return '<nav class="mb">' + b("r", "Returns", TABI.r) + b("p", "Positions", TABI.p) + b("t", "Activity", TABI.t) + b("d", "Dividends", TABI.d) + b("m", "More", I_MORE) + "</nav>";
+  return '<nav class="mb">' + b("r", "Returns", TABI.r) + b("p", "Positions", TABI.p) + b("a", "Allocation", TABI.a) + b("t", "Transactions", TABI.t) + b("d", "Dividends", TABI.d) + b("m", "More", I_MORE) + "</nav>";
 }
 function head() {
   var eye = '<button type="button" class="mib" data-a="hide" title="' + (HIDE ? "Show amounts" : "Hide amounts") + '" aria-label="' + (HIDE ? "Show amounts" : "Hide amounts") + '">' + (HIDE ? EYE_OFF : EYE) + "</button>";
   var up = '<button type="button" class="mib" data-a="upload" title="Load data and settings" aria-label="Load data and settings">' + ic(I_UP) + "</button>";
-  return '<header class="mh"><h1>' + TITLES[S.scr] + '</h1><div class="mt">' + eye + (S.scr === "a" ? "" : up) + "</div></header>";
+  return '<header class="mh"><h1>' + TITLES[S.scr] + '</h1><div class="mt">' + eye + up + "</div></header>";
 }
 
 function mRender() {
@@ -261,6 +263,7 @@ window.render = function (syms, bad, warn) {
     return origRender.apply(this, arguments);
   }
   root.classList.remove("m-fb");
+  if (g("out").firstChild) g("out").innerHTML = ""; /* no hidden PC copy, so chart ids stay unique */
   mRender();
 };
 
@@ -274,6 +277,7 @@ if (msgEl && window.MutationObserver) {
   }).observe(msgEl, { childList: true, characterData: true, subtree: true });
 }
 
+if (!root.classList.contains("m-fb") && g("out").firstChild) g("out").innerHTML = ""; /* PC render that ran before this file loaded */
 ALV = "t"; /* phone starts the allocation on Type, as in the approved snapshot */
 mRender();
 })();

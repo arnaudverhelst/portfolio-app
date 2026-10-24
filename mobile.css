@@ -98,7 +98,8 @@ html.m #m .empty .go{margin-top:14px;min-height:44px;padding:0 22px;border-radiu
 
 /* bottom tab bar */
 html.m #m .mb{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--bd)}
-html.m #m .mb button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;padding:4px 0;border:0;background:transparent;color:var(--mu);font-size:.72rem;font-weight:500}
+html.m #m .mb button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;padding:4px 0;border:0;background:transparent;color:var(--mu);font-size:.6rem;font-weight:500;min-width:0;letter-spacing:-.01em}
+html.m #m .mb button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html.m #m .mb button.on{color:var(--fg)}
 
 /* index picker sheet */
@@ -117,3 +118,5 @@ html.m #m .mv>.lab{margin-top:20px}
 
 /* chart x-axis: keep only first and last date so labels never overlap on a phone */
 html.m #m svg.ch text[text-anchor="middle"]{display:none}
+
+html.m #m .note{margin:10px 0 0;color:var(--mu);font-size:.85rem}

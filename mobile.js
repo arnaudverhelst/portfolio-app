@@ -180,7 +180,7 @@ function vPositions() {
     });
   });
   if (!h) h = '<p class="mu pad">No positions in this selection.</p>';
-  var two = '<div class="two">' + seg("loc", LOC ? "1" : "0", [["0", "\u20AC"], ["1", "Local"]]) + seg("pcm", String(MODE), [["1", "Incl. costs"], ["0", "Excl."]]) + "</div>";
+  var two = '<div class="two">' + seg("pcm", String(MODE), [["1", "Incl. costs"], ["0", "Excl."]]) + "</div>";
   return seg("pf", PF, [["all", "All"], ["open", "Open"], ["closed", "Closed"]]) + two +
     chips("pt", PT, [["all", "All types"], ["ETF", "ETFs"], ["Stock", "Stocks"], ["Derivative", "Derivatives"]]) +
     '<div class="plist">' + h + "</div>" + (LOC ? '<p class="note">Each position is shown in the currency it trades in. Totals stay in \u20AC.</p>' : "");

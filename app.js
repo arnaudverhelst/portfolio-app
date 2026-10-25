@@ -1089,7 +1089,7 @@ const pv=v=>'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+'</b>',pp=v
 h+='<div class="dk"><div class="dkh">Position</div><div><span>Shares now</span><b>'+sh(+q.toFixed(4))+'</b></div><div><span>Avg buy</span><b>'+(q>0&&!o?"\u20ac"+f2(cost/q):"\u2013")+'</b></div><div><span>Price now</span><b>'+(o?"\u2013":"\u20ac"+f2(px))+'</b></div><div><span>Value</span><b>'+eur(val)+'</b></div><div class="dkh">Profit</div><div><span>Unrealised</span>'+pv(un)+'</div><div><span>Realised (sales)</span>'+pv(real)+'</div><div><span>Dividends (net)</span>'+pv(dn)+'</div><div><span>Total profit</span>'+pv(tot+dn)+'</div></div>';
 h+='<div class="dk"><div class="dkh">Return on money invested</div><div><span>Invested in total</span><b>'+eur(bought)+'</b></div><div><span>Result'+(D.length?' (incl. dividends)':'')+'</span>'+(bought>0?pp(D.length?(tot+dn)/bought:tot/bought):'<b class="mu">\u2013</b>')+'</div></div>';
 if(row){
-h+='<div class="dk dkr"><div class="dkh">Time-weighted return <i class="inf" title="Follows the price path, so it can differ from the result on the money invested.">i</i></div>'+VTs().map(t=>'<div><span>'+t+'</span>'+pp(ret(row,t))+'</div>').join("")+(CU?'<div><span>Custom</span>'+pp(ret(row,"C"))+'</div>':"")+'<div><span>CAGR (all)</span>'+pp(cagr(row))+'</div></div>';
+h+='<div class="dk dkr"><div class="dkh">Time-weighted return <span class="tip" tabindex="0"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span class="tt">Time-weighted return follows the price path and ignores when you added money, so it can differ from the result on the money invested. CAGR (all) is the same return as a yearly rate since your first buy.</span></span></div>'+VTs().map(t=>'<div><span>'+t+'</span>'+pp(ret(row,t))+'</div>').join("")+(CU?'<div><span>Custom</span>'+pp(ret(row,"C"))+'</div>':"")+'<div><span>CAGR (all)</span>'+pp(cagr(row))+'</div></div>';
 }
 h+='</div>';
 if(!o&&ser[k]&&ser[k].d.length>1){
@@ -1101,7 +1101,7 @@ const isIpo=dx[0]>lim.toISOString().slice(0,10),fb=di2(first);
 if(isIpo&&x0===0)evs.push({i:0,label:"Listed "+fd(dx[0])});
 if(first>dx[0]&&fb>x0&&fb<LL)evs.push({i:fb,label:"First buy"});
 const tfs=TFS.filter(t=>t==="Max"?true:tfStart(t,dx,first)>=dx[0]),btn=t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>',ho='<button data-dtf="Hold"'+(DTF==="Hold"?' class="on"':"")+'>Holding period</button>';
-h+='<div class="card"><h2>Price and your trades</h2><div class="dtf">'+tfs.filter(t=>t!=="Max").map(btn).join("")+ho+btn("Max")+'</div>'+lineChart([{name:"Price (\u20ac)",a:x0,v:v}],x0,LL,eur2,false,marks,undefined,dx,evs)+'<p class="mu"><b style="color:#16a34a">\u25cf</b> buys <b style="color:#dc2626">\u25cf</b> sells. '+(isIpo?'Listed on '+fd(dx[0])+' (first available price). ':(DTF==="Max"?'Showing up to 10 years of history. ':''))+'Prices are euro-converted closes.</p></div>';
+h+='<div class="card"><h2>Price and your trades</h2><div class="dtf">'+tfs.filter(t=>t!=="Max").map(btn).join("")+btn("Max")+ho+'</div>'+lineChart([{name:"Price (\u20ac)",a:x0,v:v}],x0,LL,eur2,false,marks,undefined,dx,evs)+'<p class="mu"><b style="color:#16a34a">\u25cf</b> buys <b style="color:#dc2626">\u25cf</b> sells. '+(isIpo?'Listed on '+fd(dx[0])+' (first available price). ':(DTF==="Max"?'Showing up to 10 years of history. ':''))+'Prices are euro-converted closes.</p></div>';
 }
 
 h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
@@ -1572,7 +1572,7 @@ const bmList=()=>$("bm").value.split(",").map(x=>x.trim()).filter(Boolean);
 function ixCur(){const b=actB();return b?b.name:(BMA||bmList()[0]||"IWDA.AS")}
 function ixSync(b){const n=b?b.name:ixCur(),l=$("ixl");if(l)l.textContent=bmLab(n);const p=$("ixp");if(p&&!p.hidden)ixList()}
 function ixList(){const cur=ixCur(),ex=[...new Set(rows.filter(r=>r.kind==="b").map(r=>r.name).concat(bmList()))].filter(n=>!BMP.some(p=>p[0]===n));
-$("ixp").innerHTML='<div class="ps">Compare with</div>'+BMP.map(p=>[p[0],p[1]]).concat(ex.map(n=>[n,bmLab(n)])).map(p=>'<button type="button" class="ixo'+(p[0]===cur?' on':'')+'" data-ix="'+esc(p[0])+'"><span>'+esc(p[1])+'</span><i>'+(p[0][0]==="^"?"price index":"incl. dividends")+'</i></button>').join("")+'<button type="button" class="ixo" data-ix="__other"><span>Other symbol\u2026</span></button>'}
+$("ixp").innerHTML='<div class="ps">Compare with</div>'+BMP.map(p=>[p[0],p[1]]).concat(ex.map(n=>[n,bmLab(n)])).map(p=>'<button type="button" class="ixo'+(p[0]===cur?' on':'')+'" data-ix="'+esc(p[0])+'"><span>'+esc(p[1])+'</span><i class="tk">'+esc(p[0])+'</i></button>').join("")+'<button type="button" class="ixo" data-ix="__other"><span>Other symbol\u2026</span></button>'}
 function ixPick(v){if(v==="__other"){v=(prompt("Yahoo Finance symbol of an index or ETF, for example ^GDAXI or EXSA.DE")||"").trim();if(!v)return}
 BMA=v;ls.set("bma",v);$("ixp").hidden=true;const only=bmList().length===1&&bmList()[0]===v;$("bm").value=v;if(only)render(G.syms,[],G.warn);else run().catch(x=>msg("Error: "+x.message))}
 $("ixb").onclick=()=>{const p=$("ixp");$("apr").hidden=true;p.hidden=!p.hidden;if(!p.hidden)ixList()};
@@ -1914,6 +1914,7 @@ info.n=n;return info;
 function syncFiles(){
 Object.keys(FK).forEach(k=>{const L=FILES.filter(f=>f.kind===k);document.getElementById(FK[k][0]).value=L.length?L[L.length-1].text:""});
 }
+const INFO_SVG='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
 function recon(){
 const dt=document.getElementById("txtD").value.trim(),ac=document.getElementById("txtA").value.trim();if(!dt||!ac)return null;
 let A,B;try{B=toTxD(dt);A=toTxA(ac)}catch(e){return null}
@@ -1937,7 +1938,7 @@ const sx=document.getElementById("txt").value.trim(),dt=document.getElementById(
 const wn=m=>'<div class="gl warn"><span>!</span><span>'+T_(m)+'</span></div>';
 if(dt&&!ac)html+=wn("Add the Degiro Account statement too to include dividends, costs and interest.");
 if(ac&&!dt){const f=FILES.filter(x=>x.kind==="degiro-acc").pop();if(f&&f.info&&/^0 trades/.test(f.info[0])&&!sx)html+=wn("No trades found in this statement. Check that the period starts at your first deposit.")}
-const rc=recon();if(rc)html+='<div class="gl sm '+(rc.warn?"warn":"info")+'" title="'+esc(rc.tip)+'"><span class="gi">i</span><span>'+esc(rc.s)+'</span></div>';
+const rc=recon();if(rc)html+='<div class="gl sm '+(rc.warn?"warn":"info")+'" tabindex="0">'+INFO_SVG+'<span>'+esc(rc.s)+'</span><span class="tt">'+esc(rc.tip)+'</span></div>';
 out.innerHTML=html;
 if(typeof bkRender==="function")bkRender();
 }

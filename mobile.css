@@ -162,3 +162,8 @@ html.m #m .uc .chips{margin:0;padding:0}
 html.m #m .uc .chips button{min-height:34px;padding:0 12px;font-size:.82rem}
 html.m #m section .go{margin-top:16px;min-height:44px;padding:0 22px;border:0;border-radius:999px;background:var(--ac);color:var(--onac);font-weight:500}
 html.m #m .note.neg{color:var(--neg)}
+
+html.m #m .two{display:flex;gap:10px}
+html.m #m .two .sgc{flex:1}
+html.m #m .two .sgc button{font-size:.88rem;padding:0 4px}
+html.m #m #rsr .mu{color:var(--mu)}

@@ -8,24 +8,21 @@
 <div class="tools"><div class="pw" id="ixw"><button class="ixb" id="ixb" title="Comparison index" aria-label="Comparison index"><span class="ixk">Index</span><span id="ixl">World</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="pop" id="ixp" hidden></div></div><button class="ib" id="upl" title="Load data and settings" aria-label="Load data and settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></button><button class="ib" id="hid" title="Hide amounts" aria-label="Hide amounts"></button>
 <div class="pw"><button class="ib" id="aprb" title="Appearance" aria-label="Appearance"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
 <div class="pop" id="apr" hidden><div class="ps">Mode</div><div class="themes" id="themes"><button data-mode="light">Light</button><button data-mode="dark">Dark</button></div>
+<div class="ps" style="margin-top:12px">Language</div><div class="themes" id="langs"><button data-lang="en">EN</button><button data-lang="fr">FR</button><button data-lang="nl">NL</button></div>
+<div class="ps" style="margin-top:12px">Currency</div><div class="themes" id="curs"><button data-loc="0">€</button><button data-loc="1">Local</button></div>
 </div></div></div></header>
-<div class="modal" id="setup" hidden><div class="card mcard"><div class="mhead"><h2>Data and settings</h2><button class="ib" id="mclose" title="Close" aria-label="Close">&#10005;</button></div>
-<h2 style="margin-top:12px">Transactions (Saxo export)</h2>
-<input type="file" id="file" accept=".xlsx,.xls,.csv,.txt,.tsv">
-<p class="mu">Or paste the rows here, including the header line:</p>
-<textarea id="txt"></textarea>
-<h2 style="margin-top:14px">Transactions (Degiro export, optional)</h2>
-<input type="file" id="fileD" accept=".csv,.txt">
-<p class="mu">Or paste the rows here, including the header line:</p>
-<textarea id="txtD"></textarea>
-<h2 style="margin-top:14px">Degiro account statement (optional, for dividends and costs)</h2>
-<input type="file" id="fileA" accept=".xlsx,.xls,.csv,.txt">
-<p class="mu">Or paste the rows here, including the header line:</p>
-<textarea id="txtA"></textarea>
+<div class="modal" id="setup" hidden><div class="card mcard"><div class="mhead"><h2>Import your transactions</h2><button class="ib" id="mclose" title="Close" aria-label="Close">&#10005;</button></div>
+<div id="gtabs"><button data-g="saxo" class="on">Saxo</button><button data-g="degiro">Degiro</button><button disabled title="Coming soon">Keytrade</button><button disabled title="Coming soon">Bolero</button></div>
+<div class="gcols"><div><div class="mu gh">Where to find it</div><ol id="gsteps"></ol><p class="mu" id="gnote"></p></div>
+<div><label class="drop" id="drop" for="fileX"><b>Drop your files here</b><span class="mu">or click to choose. We recognise which file is which.</span></label><input type="file" id="fileX" multiple accept=".csv,.txt,.tsv,.xls,.xlsx" hidden><div id="gres"></div></div></div>
+<details class="adv"><summary>Advanced: paste rows instead</summary>
+<p class="mu">Saxo transactions:</p><textarea id="txt"></textarea>
+<p class="mu">Degiro transactions:</p><textarea id="txtD"></textarea>
+<p class="mu">Degiro account statement:</p><textarea id="txtA"></textarea></details>
 <h2 style="margin-top:14px">View</h2>
 <select id="bv"><option value="all">Saxo and Degiro combined</option><option value="Saxo">Saxo only</option><option value="Degiro">Degiro only</option></select>
 <input id="bm" type="hidden" value="IWDA.AS">
-<button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button><label style="margin-left:10px;font-size:.9rem"><input type="checkbox" id="dbg" style="width:auto"> Show data checks</label>
+<button class="go" id="run">Calculate</button><button id="clr">Clear saved data</button>
 </div></div>
 <div id="out"></div>
 </div>

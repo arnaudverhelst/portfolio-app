@@ -112,7 +112,7 @@ function vChart() {
   return '<section class="card"><div class="ch-h">' + tog +
     (val ? "" : '<button type="button" class="mixb" data-a="ix">vs ' + esc(bmShort(bm)) + " " + ic(I_DOWN) + "</button>") +
     "</div>" + chips("tf", TF, list.map(function (t) { return [t, t]; })) + body +
-    (val ? '<p class="note">Holdings only, cash not included. The gap between the lines is your profit.</p>' : "") + "</section>";
+    (val ? '<p class="note">Holdings only, cash not included. The gap between the lines is your profit.</p>' : '<p class="note">Hold and drag over the chart to measure a period.</p>') + "</section>";
 }
 
 function vRetList() {
@@ -152,30 +152,38 @@ function vPositions() {
     if (!grp.length) return;
     h += '<div class="grp">' + TYPS[ty] + "</div>";
     grp.forEach(function (r) {
+      var Lc = LOC && r.loc ? r.loc : null;
       var closed = !(r.q > 0), tot = r.un + r.real + r.dv;
       var base = closed ? r.bg : (r.val - r.un);
       var top = closed ? tot : r.val;
       var pc = closed ? (r.bg > 0.005 ? tot / r.bg * 100 : null) : (base > 0.005 ? r.un / base * 100 : null);
+      var money = function (v) { return Lc ? lc0(v, Lc.cur) : eur(v); }, smoney = function (v) { return Lc ? lcsg(v, Lc.cur) : sgn(v); };
+      if (Lc) {
+        var ltot = Lc.un + Lc.real + Lc.dv, lbase = closed ? Lc.bg : Lc.cu;
+        tot = ltot; top = closed ? ltot : Lc.val;
+        pc = closed ? (Lc.bg > 0.005 ? ltot / Lc.bg * 100 : null) : (lbase > 0.005 ? Lc.un / lbase * 100 : null);
+      }
       var sub = closed ? "Closed" : sh(+r.q.toFixed(4)) + (r.o ? " contracts" : " shares") + (tv > 0 ? " \u00B7 " + (r.val / tv * 100).toFixed(1) + "%" : "");
       var cell = function (l, v, c) { return '<div><span>' + l + '</span><b class="' + (c || "") + '">' + v + "</b></div>"; };
       h += '<div class="pr' + (S.open[r.k] ? " open" : "") + '">' +
         '<button type="button" class="prh" data-a="row" data-v="' + esc(r.k) + '" aria-expanded="' + (S.open[r.k] ? "true" : "false") + '">' +
         '<span class="pl"><span class="pn">' + esc(r.n) + '</span><span class="psb">' + sub + "</span></span>" +
-        '<span class="pv"><span class="pa ' + (closed ? cls(top) : "") + '">' + (closed ? sgn(top) : eur(top)) + '</span><span class="pp ' + (pc == null ? "" : pcl(pc)) + '">' + (pc == null ? "\u2013" : (pc > 0 ? "+" : "") + pc.toFixed(1) + "%") + (closed ? " <i>total</i>" : "") + "</span></span></button>" +
+        '<span class="pv"><span class="pa ' + (closed ? cls(top) : "") + '">' + (closed ? smoney(top) : money(top)) + '</span><span class="pp ' + (pc == null ? "" : pcl(pc)) + '">' + (pc == null ? "\u2013" : (pc > 0 ? "+" : "") + pc.toFixed(1) + "%") + (closed ? " <i>total</i>" : "") + "</span></span></button>" +
         '<div class="pd">' +
-        cell("Avg buy", r.o || !r.q ? "\u2013" : "\u20AC" + f2(r.avg)) +
-        cell("Price now", r.o ? "\u2013" : "\u20AC" + f2(r.px)) +
-        cell("Unrealised", sgn(r.un), cls(r.un)) +
-        cell("Realised", sgn(r.real), cls(r.real)) +
-        cell("Dividends", sgn(r.dv), cls(r.dv)) +
-        cell("Total", sgn(tot), cls(tot)) +
+        cell("Avg buy", r.o || !(r.q > 0 || r.qb > 0) ? "\u2013" : Lc ? lc2(Lc.avg, Lc.cur) : "\u20AC" + f2(r.avg)) +
+        cell("Price now", r.o ? "\u2013" : Lc ? lc2(Lc.px, Lc.cur) : "\u20AC" + f2(r.px)) +
+        cell("Unrealised", smoney(Lc ? Lc.un : r.un), cls(Lc ? Lc.un : r.un)) +
+        cell("Realised", smoney(Lc ? Lc.real : r.real), cls(Lc ? Lc.real : r.real)) +
+        cell("Dividends", smoney(Lc ? Lc.dv : r.dv), cls(Lc ? Lc.dv : r.dv)) +
+        cell("Total", smoney(tot), cls(tot)) +
         "</div></div>";
     });
   });
   if (!h) h = '<p class="mu pad">No positions in this selection.</p>';
-  return seg("pf", PF, [["all", "All"], ["open", "Open"], ["closed", "Closed"]]) +
+  var two = '<div class="two">' + seg("loc", LOC ? "1" : "0", [["0", "\u20AC"], ["1", "Local"]]) + seg("pcm", String(MODE), [["1", "Incl. costs"], ["0", "Excl."]]) + "</div>";
+  return seg("pf", PF, [["all", "All"], ["open", "Open"], ["closed", "Closed"]]) + two +
     chips("pt", PT, [["all", "All types"], ["ETF", "ETFs"], ["Stock", "Stocks"], ["Derivative", "Derivatives"]]) +
-    '<div class="plist">' + h + "</div>";
+    '<div class="plist">' + h + "</div>" + (LOC ? '<p class="note">Each position is shown in the currency it trades in. Totals stay in \u20AC.</p>' : "");
 }
 
 /* ---------- Allocation ---------- */
@@ -225,7 +233,7 @@ function svgPrep(t) {
   if (!svg) return { svg: "", sm: "" };
   var x = svg.querySelector('text[text-anchor="end"][y="12"]');
   if (x) { sm = x.textContent; x.parentNode.removeChild(x); }
-  return { svg: svg.outerHTML, sm: sm };
+  return { svg: svg.outerHTML, sm: sm }; /* crowding is handled afterwards by dvFit (chartfit.js) */
 }
 var tipOf = function (r) { return r.sm ? '<div class="tip">' + esc(r.sm) + "</div>" : ""; };
 
@@ -439,7 +447,10 @@ function vUsers() {
 function vMore() {
   var li = function (a, v, l, sub) { return '<button type="button" class="li" data-a="' + a + '" data-v="' + v + '"><span>' + l + "<small>" + sub + "</small></span>" + ic(I_RIGHT) + "</button>"; };
   return '<div class="list">' + li("scr", "w", "Wealth builder", "Retirement age and future value") + li("scr", "u", "Users", "Plans and access (admin)") + li("upload", "", "Data and settings", "Load files, clear saved data") + "</div>" +
-    '<div class="lab">Appearance</div>' + seg("mode", MODEV, [["light", "Light"], ["dark", "Dark"]]);
+    '<div class="lab">Appearance</div>' + seg("mode", MODEV, [["light", "Light"], ["dark", "Dark"]]) +
+    '<div class="lab">Language</div>' + seg("lang", LANG, [["en", "English"], ["fr", "Fran\u00E7ais"], ["nl", "Nederlands"]]) +
+    '<div class="lab">Currency</div>' + seg("loc", LOC ? "1" : "0", [["0", "\u20AC (EUR)"], ["1", "Local currency"]]) +
+    '<p class="note">Local currency shows prices, averages and results of each position in the currency it trades in. Portfolio totals stay in \u20AC.</p>';
 }
 
 function vSoon(name) {
@@ -499,6 +510,7 @@ function mRender() {
     if (window.console) console.error(e);
   }
   g("m").innerHTML = head() + '<main class="mv">' + body + "</main>" + nav() + vSheet();
+  if (window.dvFit) [].slice.call(M.querySelectorAll("svg.dv")).forEach(window.dvFit);
   var t2 = g("tiles");
   if (t2) { t2.scrollLeft = tx0; }
   ["tiles:dots", "dtiles:ddots", "utiles:udots"].forEach(function (z) { var p = z.split(":"); bindDots(p[0], p[1]); });
@@ -526,6 +538,7 @@ var bar = document.createElement("div");
 bar.id = "mst"; bar.hidden = true;
 document.body.appendChild(bar);
 root.classList.add("m");
+window.DVFIT_NOSUM = true; /* the phone shows the chart summary as a line above the chart */
 
 M.addEventListener("click", function (e) {
   var b = e.target.closest && e.target.closest("[data-a]");
@@ -564,6 +577,9 @@ M.addEventListener("click", function (e) {
   else if (a === "close") { S.sheet = null; mRender(); }
   else if (a === "ixpick") { S.sheet = null; mRender(); ixPick(v); }
   else if (a === "mode") { setLook(v); if (!rows.length) mRender(); }
+  else if (a === "lang") setLang(v);
+  else if (a === "loc") setLoc(v === "1");
+  else if (a === "pcm") { MODE = +v; calc(); }
   else if (a === "row") {
     var pr = b.parentNode, o = !pr.classList.contains("open");
     pr.classList.toggle("open", o); b.setAttribute("aria-expanded", o ? "true" : "false"); S.open[v] = o;
@@ -594,6 +610,7 @@ M.addEventListener("pointermove", hov);
 M.addEventListener("pointerdown", hov);
 
 /* ---------- hook into app.js ---------- */
+window.mRefresh = function () { mRender(); };
 var origRender = window.render;
 window.render = function (syms, bad, warn) {
   /* symbols that need fixing, data checks and holding detail still use the PC view */

@@ -101,7 +101,7 @@ return best;
 }
 const BUYW=/^(koop|kopen|buy|bought|achat|acheter|kauf|kaufen|compra|comprar|acquisto|acquista|compro|kob|kop|kjop|ostaa)$/,SELLW=/^(verkoop|verkopen|sell|sold|vente|vendre|vend|verkauf|verkaufen|venta|vender|vendita|vendi|salg|salj|myy)$/;
 const SX_DATE=/^(transactiedatum|transaction date|trade date|handelsdatum|transaktionsdatum|transaktionsdato|handelsdato|date de transaction|date transaction|fecha de transaccion|fecha transaccion|data transazione|data operazione|data da transacao|datum|date|fecha|data|dato)$/;
-const SX_SYM=/(symbool|symbol|symbole|simbolo)/,SX_ACT=/^(acties|actie|actions|action|aktionen|aktion|acciones|accion|azioni|azione|handlinger|handlingar|acoes|acao)$/;
+const SX_SYM=/(symbool|symbol|symbole|simbolo)/,SX_ACT=/^(acties|event|evenement|ereignis|evento|actie|actions|action|aktionen|aktion|acciones|accion|azioni|azione|handlinger|handlingar|acoes|acao)$/;
 const SX_RATE=/(omrekeningskoers|conversion rate|taux de conversion|umrechnungskurs|tipo de cambio|tasso di cambio|wisselkoers|exchange rate|fx rate|valutakurs)/;
 const SX_CUR=/(currency|valuta|devise|wahrung|moneda|divisa|valuuta)/,SX_AMT=/^(aantal|amount|montant|betrag|importe|importo|bedrag|belop|beloeb|belopp)$/;
 function toTx(t){
@@ -255,7 +255,7 @@ const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")
 let CH=[];
 const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
 const CD={ch:{W:700,H:336},dv:{W:700,H:300}};
-function lineChart(S,x0,L,fmt,zero,marks,rid){
+function lineChart(S,x0,L,fmt,zero,marks,rid,dx,evs){
 const id=rid==null?CH.length:rid,W=CD.ch.W,H=CD.ch.H,pl=58,pr=10,pt=12,pb=26;
 let mn=zero?0:1e18,mx=zero?0:-1e18;
 S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
@@ -278,9 +278,10 @@ g+='<defs><linearGradient id="ag'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset
 }
 S.forEach((s,k)=>{g+='<polyline class="ln" stroke="'+COL[k%COL.length]+'" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/><circle cx="'+xs(s.a+s.v.length-1).toFixed(1)+'" cy="'+ys(s.v[s.v.length-1]).toFixed(1)+'" r="3.5" fill="'+COL[k%COL.length]+'" style="stroke:var(--card)" stroke-width="1.5"/>'});
 (marks||[]).forEach(m=>{g+='<circle cx="'+xs(m.i).toFixed(1)+'" cy="'+ys(m.v).toFixed(1)+'" r="5" fill="'+m.c+'" style="stroke:var(--card)" stroke-width="2"/>'});
-[...new Set([x0,Math.round((x0+L)/2),L])].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(i===x0?"start":i===L?"end":"middle")+'" fill="currentColor">'+fd(days[i])+'</text>'});
+(evs||[]).forEach(e=>{const X=xs(e.i).toFixed(1),rt=xs(e.i)<W*0.72;g+='<line x1="'+X+'" x2="'+X+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".4" stroke-dasharray="4 4"/><text x="'+(+X+(rt?6:-6))+'" y="'+(pt+12)+'" font-size="11.5" font-weight="600" text-anchor="'+(rt?"start":"end")+'" fill="currentColor" opacity=".85">'+esc(e.label)+'</text>'});
+[...new Set((dx?[0,.25,.5,.75,1]:[0,.5,1]).map(f=>Math.round(x0+(L-x0)*f)))].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(i===x0?"start":i===L?"end":"middle")+'" fill="currentColor">'+((dx&&i!==x0&&i!==L)?MN[+dx[i].slice(5,7)-1].slice(0,3)+" '"+dx[i].slice(2,4):fd((dx||days)[i]))+'</text>'});
 g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
-CH[id]={S:S,x0:x0,L:L,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
+CH[id]={S:S,x0:x0,L:L,dx:dx,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
 const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
 return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>'+(TAB==="r"?'<div class="mu">Drag across the chart to measure a period.</div>':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
 }
@@ -1051,6 +1052,20 @@ return h;
 }
 const pct1=v=>v==null?"–":(v>0?"+":"")+(v*100).toFixed(1)+"%";
 const eur2=v=>"€"+(Math.abs(v)<10?v.toFixed(2):v.toFixed(0));
+function extPx(k){
+const x=ser[k],c0=x.cur,pen=c0==="GBp"||c0==="GBX",c=pen?"GBP":c0,fx=(c&&c!=="EUR"&&FX[c])?FX[c]:null,v=[];let j=0,last=fx?fx.v[0]:1;
+for(let i=0;i<x.d.length;i++){const d=x.d[i];if(fx)while(j<fx.d.length&&fx.d[j]<=d){last=fx.v[j];j++}const p=x.cv[i];v.push(fx?p*(pen?0.01:1)/last:p)}
+return {d:x.d,v:v};
+}
+function tfStart(tf,dx,first){
+if(tf==="Max")return dx[0];
+if(tf==="Hold")return first<dx[0]?dx[0]:first;
+const e=new Date(dx[dx.length-1]+"T00:00:00Z");
+if(tf==="YTD")return (e.getUTCFullYear()-1)+"-12-31";
+if(tf==="1D")return dx[Math.max(0,dx.length-2)];
+if(tf==="1W")e.setUTCDate(e.getUTCDate()-7);else e.setUTCMonth(e.getUTCMonth()-({"1M":1,"3M":3,"6M":6,"1Y":12,"3Y":36,"5Y":60}[tf]||0));
+return e.toISOString().slice(0,10);
+}
 function detailView(k){
 const back='<button data-back="1">← Back to overview</button>';
 const T=tx.filter(t=>t.key===k);
@@ -1070,19 +1085,25 @@ const px=o?0:P[k][L],val=o?cost:q*px,un=q>0?val-cost:0;
 const D=DV.filter(e=>e.k===k),dn=D.reduce((a,e)=>a+e.g+e.t,0);
 const row=rows.find(r=>r.k===k),tot=real+un;
 let h='<div class="card">'+back+'<h2 style="margin-top:12px">'+esc(name)+'</h2><p class="mu">'+esc(o?"Derivative or product without price data (carried at cost until sold)":(x&&x.type||"")+" · "+k+" · "+(x&&x.cur||""))+'</p>';
-h+='<div class="sc"><table><tr><th>Shares now</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Unrealised</th><th>Realised (sales)</th><th>Dividends (net)</th><th>Total profit</th></tr><tr><td>'+sh(+q.toFixed(4))+'</td><td>'+(q>0&&!o?"€"+f2(cost/q):"–")+'</td><td>'+(o?"–":"€"+f2(px))+'</td><td>'+eur(val)+'</td>'+pc(un)+pc(real)+pc(dn)+pc(tot+dn)+'</tr></table></div>';
-h+='<p>Money bought in total: <b>'+eur(bought)+'</b>. Result on the money invested: <b>'+(bought>0?pct1(tot/bought):"–")+'</b>'+(D.length?' (<b>'+pct1((tot+dn)/bought)+'</b> with dividends)':'')+'. The time-weighted return in the next table follows the price path, so the two figures can differ.</p>';
+const pv=v=>'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+'</b>',pp=v=>v==null?'<b class="mu">\u2013</b>':'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</b>";
+h+='<div class="dk"><div class="dkh">Position</div><div><span>Shares now</span><b>'+sh(+q.toFixed(4))+'</b></div><div><span>Avg buy</span><b>'+(q>0&&!o?"\u20ac"+f2(cost/q):"\u2013")+'</b></div><div><span>Price now</span><b>'+(o?"\u2013":"\u20ac"+f2(px))+'</b></div><div><span>Value</span><b>'+eur(val)+'</b></div><div class="dkh">Profit</div><div><span>Unrealised</span>'+pv(un)+'</div><div><span>Realised (sales)</span>'+pv(real)+'</div><div><span>Dividends (net)</span>'+pv(dn)+'</div><div><span>Total profit</span>'+pv(tot+dn)+'</div></div>';
+h+='<div class="dk"><div class="dkh">Return on money invested</div><div><span>Invested in total</span><b>'+eur(bought)+'</b></div><div><span>Result'+(D.length?' (incl. dividends)':'')+'</span>'+(bought>0?pp(D.length?(tot+dn)/bought:tot/bought):'<b class="mu">\u2013</b>')+'</div></div>';
 if(row){
-h+='<div class="sc"><table><tr><th></th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr><tr><td>Time-weighted return</td>"+VTs().map(t=>cell(ret(row,t))).join("")+(CU?cell(ret(row,"C")):"")+cell(cagr(row))+"</tr></table></div>";
+h+='<div class="dk dkr"><div class="dkh">Time-weighted return <i class="inf" title="Follows the price path, so it can differ from the result on the money invested.">i</i></div>'+VTs().map(t=>'<div><span>'+t+'</span>'+pp(ret(row,t))+'</div>').join("")+(CU?'<div><span>Custom</span>'+pp(ret(row,"C"))+'</div>':"")+'<div><span>CAGR (all)</span>'+pp(cagr(row))+'</div></div>';
 }
 h+='</div>';
-if(!o&&G.DR[k]){
-let x0=DTF==="Max"?T[0].di:Math.max(0,iStart(DTF));
-if(x0>=L)x0=Math.max(0,L-1);
-const v=[];for(let i=x0;i<=L;i++)v.push(P[k][i]/G.DR[k][i]);
-const marks=T.filter(t=>t.di>=x0).map(t=>({i:t.di,v:t.g/Math.max(1e-9,Math.abs(t.qa)),c:t.q>0?"#16a34a":"#dc2626"}));
-h+='<div class="card"><h2>Price and your trades</h2>'+TFA().map(t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart([{name:"Price (€)",a:x0,v:v}],x0,L,eur2,false,marks)+'<p class="mu"><b style="color:#16a34a">●</b> buys <b style="color:#dc2626">●</b> sells. Prices are euro-converted closes.</p></div>';
+if(!o&&ser[k]&&ser[k].d.length>1){
+const X=extPx(k),dx=X.d,LL=dx.length-1,first=T[0].d,sd=tfStart(DTF,dx,first),di2=d=>{let i=0;for(let j=0;j<dx.length&&dx[j]<=d;j++)i=j;return i};
+let x0=sd?di2(sd):0;if(x0>=LL)x0=Math.max(0,LL-1);
+const v=X.v.slice(x0),marks=T.filter(t=>t.d>=dx[x0]).map(t=>({i:di2(t.d),v:t.g/Math.max(1e-9,Math.abs(t.qa)),c:t.q>0?"#16a34a":"#dc2626"})),evs=[];
+const lim=new Date(dx[LL]+"T00:00:00Z");lim.setUTCFullYear(lim.getUTCFullYear()-10);lim.setUTCDate(lim.getUTCDate()+20);
+const isIpo=dx[0]>lim.toISOString().slice(0,10),fb=di2(first);
+if(isIpo&&x0===0)evs.push({i:0,label:"Listed "+fd(dx[0])});
+if(first>dx[0]&&fb>x0&&fb<LL)evs.push({i:fb,label:"First buy"});
+const tfs=TFS.filter(t=>t==="Max"?true:tfStart(t,dx,first)>=dx[0]),btn=t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>',ho='<button data-dtf="Hold"'+(DTF==="Hold"?' class="on"':"")+'>Holding period</button>';
+h+='<div class="card"><h2>Price and your trades</h2><div class="dtf">'+tfs.filter(t=>t!=="Max").map(btn).join("")+ho+btn("Max")+'</div>'+lineChart([{name:"Price (\u20ac)",a:x0,v:v}],x0,LL,eur2,false,marks,undefined,dx,evs)+'<p class="mu"><b style="color:#16a34a">\u25cf</b> buys <b style="color:#dc2626">\u25cf</b> sells. '+(isIpo?'Listed on '+fd(dx[0])+' (first available price). ':(DTF==="Max"?'Showing up to 10 years of history. ':''))+'Prices are euro-converted closes.</p></div>';
 }
+
 h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
 R.forEach(z=>{
 const t=z.t,buy=t.q>0,fee=isFinite(t.cs)&&isFinite(t.g)?(buy?t.cs-t.g:t.g-t.cs):NaN,qa=o?t.q:t.qa;
@@ -1213,7 +1234,7 @@ try{tx=[...(text?toTx(text):[]),...(textD?toTxD(textD):(textA?toTxA(textA):[]))]
 tx.sort((p,q)=>p.d<q.d?-1:p.d>q.d?1:(p.tm||"")<(q.tm||"")?-1:(p.tm||"")>(q.tm||"")?1:(p.q>0?0:1)-(q.q>0?0:1));
 ls.set("tx",text);ls.set("txd",textD);ls.set("txa",textA);ls.set("bm",$("bm").value);
 BV=$("bv").value;ls.set("bv",BV);
-if(BV!=="all"){tx=tx.filter(t=>t.b===BV);AC=AC.filter(a=>a.b===BV);SXD=SXD.filter(a=>a.b===BV)}
+if(BV&&BV!=="all"){const BS=BV.split(",");tx=tx.filter(t=>BS.includes(t.b));AC=AC.filter(a=>BS.includes(a.b));SXD=SXD.filter(a=>BS.includes(a.b))}
 if(!tx.length){msg("No buy or sell rows found for this view.");return}
 SK=[...new Set(tx.filter(t=>ov[t.s]==="-").map(t=>t.s))];
 tx=tx.filter(t=>!SK.includes(t.s));
@@ -1284,7 +1305,7 @@ syms.filter(isOpt).forEach(s=>{const e=optExp(s);if(e&&e<=last){const i=days.fin
 const q={};tx.forEach(x=>{q[x.s]=(q[x.s]||0)+x.q});
 const neg=Object.keys(q).filter(s=>!isOpt(s)&&q[s]<-1e-9);
 if(neg.length)warn.push("Sells exceed purchases for: "+neg.join(", ")+". Your export may be missing earlier buys or transfers.");
-if($("txtA").value.trim()&&!AC.length)warn.push("The account statement was read, but no dividend or cost rows were found for this view. Check that the View menu is not set to Saxo only.");
+if($("txtA").value.trim()&&!AC.length)warn.push("The account statement was read, but no dividend or cost rows were found for this view. Check that the View menu includes the broker of this statement.");
 try{buildDiv()}catch(e){warn.push("Dividends could not be read: "+e.message)}
 G={syms,keys,bms,ex,warn,DR};
 calc();
@@ -1371,7 +1392,7 @@ const px=c.pl+(i-c.x0)*(c.W-c.pl-c.pr)/(c.L-c.x0),ln=$("cur"+n),tg=$("tg"+n);
 ln.setAttribute("x1",px);ln.setAttribute("x2",px);ln.setAttribute("visibility","visible");
 const ys=v=>c.H-c.pb-(v-c.mn)*(c.H-c.pt-c.pb)/(c.mx-c.mn);
 const L2=c.S.map((s,k)=>({n:s.name.length>30?s.name.slice(0,29)+"…":s.name,t:i>=s.a?c.fmt(s.v[i-s.a]):"–",col:COL[k%COL.length],v:i>=s.a?s.v[i-s.a]:null}));
-const title=fd(days[i]),mc=Math.max(title.length,...L2.map(l=>l.n.length+l.t.length+3));
+const title=fd((c.dx||days)[i]),mc=Math.max(title.length,...L2.map(l=>l.n.length+l.t.length+3));
 const w=Math.min(c.W-20,mc*6.6+32),h=17*(L2.length+1)+8;
 let bx=px+12;if(bx+w>c.W-c.pr)bx=px-w-12;if(bx<c.pl)bx=c.pl;
 let g='<rect x="'+bx.toFixed(1)+'" y="'+(c.pt+4)+'" width="'+w.toFixed(0)+'" height="'+h+'" rx="5" style="fill:var(--card);stroke:var(--bd)" stroke-width=".8"/>';
@@ -1439,13 +1460,33 @@ $("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
 let WT=ls.get("wt")||"val",WMENU=false;
 const WK={"Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
 const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
+/* ---- Show / Type: dropdowns in the top bar (same look as the index picker) ---- */
+function pfHead(on){
+const tools=document.querySelector("header.top .tools"),old=$("pfw");
+if(!on||!tools){if(old)old.remove();return}
+const SH=[["all","All positions"],["open","Open positions"],["closed","Closed positions"]],TY=[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]];
+const chev='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const dd=(attr,lab,cur,L)=>'<div class="pw"><button type="button" class="ixb" data-dd="1"><span class="ixk">'+lab+'</span><span>'+(L.find(z=>z[0]===cur)||L[0])[1]+'</span>'+chev+'</button><div class="pop pfp" hidden><div class="ps">'+lab+'</div>'+L.map(z=>'<button type="button" class="ixo'+(z[0]===cur?" on":"")+'" data-'+attr+'="'+z[0]+'"><span>'+z[1]+'</span></button>').join("")+'</div></div>';
+let w=old;if(!w){w=document.createElement("div");w.id="pfw";w.className="pfw";tools.insertBefore(w,tools.firstChild)}
+w.innerHTML=dd("pf","Show",PF,SH)+dd("pt","Type",PT,TY);
+}
+document.addEventListener("click",e=>{
+const w=e.target.closest&&e.target.closest("#pfw");
+document.querySelectorAll("#pfw .pop").forEach(p=>{if(!w||!p.parentNode.contains(e.target))p.hidden=true});
+if(!w)return;
+const b=e.target.closest("[data-dd]");
+if(b){const p=b.parentNode.querySelector(".pop"),h=!p.hidden;document.querySelectorAll("#pfw .pop").forEach(x=>x.hidden=true);$("ixp").hidden=true;$("apr").hidden=true;p.hidden=h;return}
+const o=e.target.closest("[data-pf],[data-pt]");if(!o)return;
+if(o.hasAttribute("data-pf")){PF=o.getAttribute("data-pf");ls.set("pf",PF)}else{PT=o.getAttribute("data-pt");ls.set("pt",PT)}
+render(G.syms,[],G.warn);
+});
 function layout(){
 const out=$("out");if(!out||!out.firstElementChild)return;
 const kids=[...out.children],kp=kids.find(e=>e.classList.contains("kpis")),tabs=kids.find(e=>e.classList.contains("tabs")),pfc=kids.find(e=>e.classList.contains("tfc")&&e.querySelector("[data-pf]"));
 const side=document.createElement("aside");side.id="side";
 {const sb=document.createElement("button");sb.type="button";sb.className="sbt";sb.id="sbt";const c=document.documentElement.getAttribute("data-sb")==="c";sb.title=c?"Expand sidebar":"Collapse sidebar";sb.setAttribute("aria-label",sb.title);sb.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>';side.appendChild(sb)}
 if(tabs){tabs.querySelectorAll("button").forEach(b=>b.setAttribute("data-i",{r:"\u2197",t:"\u21c4",d:"%",a:"\u25d1",w:"\u221e"}[b.getAttribute("data-tab")]||""));side.appendChild(tabs)}
-if(pfc)side.appendChild(pfc);
+pfHead(!!pfc);
 const view=document.createElement("div");view.id="view";view.className="v-"+(DET?"det":TAB);
 const warn=[];
 kids.forEach(e=>{if(e===kp||e===tabs||e===pfc)return;if(e.classList.contains("card"))view.appendChild(e);else if(e.textContent.trim())warn.push(e.innerHTML)});
@@ -1539,7 +1580,7 @@ $("ixp").addEventListener("click",e=>{const o=e.target.closest&&e.target.closest
 document.addEventListener("click",e=>{if(!e.target.closest("#ixw"))$("ixp").hidden=true});
 $("aprb").addEventListener("click",()=>{$("ixp").hidden=true});
 ixSync(null);
-$("upl").onclick=()=>{$("setup").hidden=false};
+$("upl").onclick=()=>{if(typeof openSetup==="function")openSetup();else $("setup").hidden=false};
 {const tp=document.createElement("div");tp.id="tip";tp.hidden=true;document.body.appendChild(tp);
 const show=e=>{const i=e.target.closest&&e.target.closest(".inf");if(!i)return;tp.textContent=i.getAttribute("data-tip");tp.hidden=false;const r=i.getBoundingClientRect(),w=tp.offsetWidth,h=tp.offsetHeight;tp.style.left=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8)+"px";let y=r.top-h-8;if(y<8)y=r.bottom+8;tp.style.top=y+"px"};
 const hide=e=>{if(e.target.closest&&e.target.closest(".inf")&&(e.type!=="pointerout"||e.pointerType==="mouse"))tp.hidden=true};
@@ -1548,7 +1589,7 @@ $("out").addEventListener("click",e=>{const r=e.target.closest&&e.target.closest
 $("out").addEventListener("pointerleave",()=>{const d=$("dvt");if(d)d.setAttribute("visibility","hidden")});
 $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true;$("bkp").hidden=true;document.querySelectorAll("#pfw .pop").forEach(p=>p.hidden=true)}});
 $("run").addEventListener("click",()=>{$("setup").hidden=true});
 $("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t)return;
 if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}if(USR.some(u=>u.email===em)){msg("That email is already in the list.");return}USR.push({id:Date.now().toString(36),email:em,name:nm,plan:$("upl2").value,status:"Active",joined:new Date().toISOString().slice(0,10)})}
@@ -1752,7 +1793,7 @@ const f=i=>s.v[Math.max(0,i-s.a)],v1=f(Math.max(a,s.a)),v2=f(b);
 const r=pctMode?((1+v2/100)/(1+v1/100)-1)*100:v2-v1;
 return {n:s.name,col:COL[k%COL.length],r:r,t:pctMode?pctf(r):(r>0?"+":"")+c.fmt(r)};
 }).filter(Boolean);
-let h='<div class="mu">'+fd(days[a])+' \u2192 '+fd(days[b])+' \u00b7 '+(b-a)+' days</div>';
+let h='<div class="mu">'+fd((c.dx||days)[a])+' \u2192 '+fd((c.dx||days)[b])+' \u00b7 '+(b-a)+' days</div>';
 L2.forEach(l=>{h+='<div><b style="color:'+l.col+'">\u25CF</b> '+esc(l.n)+' <b class="'+(l.r>=0?"pos":"neg")+'">'+l.t+'</b></div>'});
 if(pctMode&&L2.length===2){const d=L2[0].r-L2[1].r;h+='<div class="mu">'+(d>0?"+":"")+d.toFixed(1)+' pts vs '+esc(L2[1].n)+'</div>'}
 let o=document.getElementById("rsr");
@@ -1786,7 +1827,7 @@ document.addEventListener("pointerup",rsEnd);document.addEventListener("pointerc
 
 /* ---- import: one drop zone, the guide per broker, and a check of every file ---- */
 const GUIDE={
-saxo:{steps:['Log in to <a href="https://www.saxoinvestor.be/login" target="_blank" rel="noopener">Saxo</a>.','Go to <b>\u201cAll accounts\u201d</b> and select the <b>\u201cTransactions\u201d</b> tab.','Select the <b>\u201cAll time\u201d</b> view.','Click the <b>\u201cExport\u201d</b> button, select <b>\u201cInclude details\u201d</b> and click on <b>\u201cExcel\u201d</b>.','Import the downloaded Excel here.'],note:""},
+saxo:{steps:['Log in to <a href="https://www.saxoinvestor.be/login" target="_blank" rel="noopener">Saxo</a>.','Go to <b>\u201cAll accounts\u201d</b> and select the <b>\u201cTransactions\u201d</b> tab.','Select the <b>\u201cAll time\u201d</b> view.','Click the <b>\u201cExport\u201d</b> button, select <b>\u201cInclude details\u201d</b> and click on <b>\u201cExcel\u201d</b>.'],note:""},
 degiro:{steps:['Select your country and log in at <a href="https://www.degiro.com/" target="_blank" rel="noopener">Degiro</a>.','Go to <b>\u201cInbox\u201d</b>.','Select the <b>\u201cAccount Statement\u201d</b> tab and pick the period from or before your first deposit until today. Click the download button to export it as a CSV. It contains your trades, dividends, costs and interest.','(Optional) Select the <b>\u201cTransactions\u201d</b> tab and pick the period from or before your first deposit until today. Click the download button to export it as a CSV. It provides more accurate data for the exchange of each trade.'],note:""}
 };
 var GT=ls.get("gt")||"saxo";
@@ -1824,6 +1865,8 @@ let s=new TextDecoder("utf-8").decode(u);
 if(s.indexOf("\uFFFD")>=0)s=new TextDecoder("windows-1252").decode(u);
 return s;
 }
+/* Saxo "Bookings" sheet: one row per fee/tax/amount of a trade, so it repeats every trade several times. Never read it as trades. */
+function isBookSheet(a){const h=a.slice(0,5).reduce((p,x)=>p.concat(x),[]).map(v=>String(v).toLowerCase().replace(/[\s\u00a0_]+/g," ").trim());return h.some(v=>v==="amount type"||v==="eligible quantity"||v==="dividend per share"||v==="amount type id")}
 function fmtRows(ws){return XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:""}).map(x=>x.map(v=>String(v).replace(/[\t\r\n]+/g," ").replace(/"/g,"'"))).filter(x=>x.some(v=>v.trim()))}
 function readFile(f){
 return new Promise((res,rej)=>{
@@ -1835,7 +1878,7 @@ if(isX){
 if(typeof XLSX==="undefined")throw new Error("The Excel reader failed to load. Refresh the page, or use a CSV file.");
 /* every sheet is read two ways (exact values, and as displayed in Excel); the importer keeps whichever gives the most rows */
 const wb=XLSX.read(r.result,{type:"array",cellNF:true});
-const L=wb.SheetNames.map(n=>{const a=sheetRows(wb.Sheets[n]);return {n:n,a:a,k:a.reduce((p,x)=>p+x.filter(z=>z.trim()).length,0)}}).filter(z=>z.k>0).sort((p,q)=>q.k-p.k).slice(0,3);
+const L=wb.SheetNames.map(n=>{const a=sheetRows(wb.Sheets[n]);return {n:n,a:a,k:a.reduce((p,x)=>p+x.filter(z=>z.trim()).length,0)}}).filter(z=>z.k>0&&!isBookSheet(z.a)).sort((p,q)=>q.k-p.k).slice(0,3);
 const out=[];
 L.forEach(z=>{out.push(z.a.map(x=>x.join("\t")).join("\n"));try{out.push(fmtRows(wb.Sheets[z.n]).map(x=>x.join("\t")).join("\n"))}catch(e){}});
 res(out);
@@ -1872,17 +1915,19 @@ function syncFiles(){
 Object.keys(FK).forEach(k=>{const L=FILES.filter(f=>f.kind===k);document.getElementById(FK[k][0]).value=L.length?L[L.length-1].text:""});
 }
 function recon(){
-const dt=document.getElementById("txtD").value.trim(),ac=document.getElementById("txtA").value.trim();if(!dt||!ac)return "";
-let A,B;try{B=toTxD(dt);A=toTxA(ac)}catch(e){return ""}
+const dt=document.getElementById("txtD").value.trim(),ac=document.getElementById("txtA").value.trim();if(!dt||!ac)return null;
+let A,B;try{B=toTxD(dt);A=toTxA(ac)}catch(e){return null}
 const key=x=>x.d+"|"+x.s+"|"+Math.round(Math.abs(x.q)*1e4),cnt=L=>{const m={};L.forEach(x=>{const k=key(x);m[k]=(m[k]||0)+1});return m};
 const ma=cnt(A),mb=cnt(B),miss=[],extra=[];
 B.forEach(x=>{const k=key(x);if(ma[k]>0)ma[k]--;else miss.push(x)});
 A.forEach(x=>{const k=key(x);if(mb[k]>0)mb[k]--;else extra.push(x)});
 const d0=A.reduce((p,x)=>!p||x.d<p?x.d:p,""),early=miss.filter(x=>d0&&x.d<d0).length,rest=miss.filter(x=>!(d0&&x.d<d0));
-let m="Trades are taken from the Transactions file ("+B.length+"); the account statement ("+A.length+") supplies dividends, costs and interest.";
-if(miss.length)m+=" "+miss.length+" Transactions-file trades are not in the statement"+(early?": "+early+" dated before the statement starts ("+d0+")":"")+(rest.length?(early?", ":": ")+rest.length+" others, for example "+rest.slice(0,3).map(x=>x.d+" "+String(x.n||x.s).slice(0,24)+" "+(x.q>0?"+":"")+x.q).join("; "):"")+".";
-if(extra.length)m+=" "+extra.length+" statement trades are not in the Transactions file.";
-return m;
+let tip="Trades come from the Transactions file ("+B.length+"). The account statement ("+A.length+" trades) supplies dividends, costs and interest.";
+if(early)tip+=" "+early+" trade"+(early>1?"s":"")+" date"+(early>1?"":"s")+" from before the statement starts ("+d0+"); that is normal.";
+if(rest.length)tip+=" "+rest.length+" Transactions-file trade"+(rest.length>1?"s are":" is")+" not in the statement, for example "+rest.slice(0,3).map(x=>x.d+" "+String(x.n||x.s).slice(0,24)+" "+(x.q>0?"+":"")+x.q).join("; ")+".";
+if(extra.length)tip+=" "+extra.length+" statement trade"+(extra.length>1?"s are":" is")+" not in the Transactions file.";
+const warn=rest.length>0||extra.length>0;
+return {warn:warn,s:warn?(rest.length+extra.length)+" trade"+(rest.length+extra.length>1?"s":"")+" differ between the two Degiro files":"Both Degiro files combined: trades from Transactions, dividends and costs from the statement",tip:tip};
 }
 function renderFiles(){
 const out=document.getElementById("gres");if(!out)return;
@@ -1892,8 +1937,9 @@ const sx=document.getElementById("txt").value.trim(),dt=document.getElementById(
 const wn=m=>'<div class="gl warn"><span>!</span><span>'+T_(m)+'</span></div>';
 if(dt&&!ac)html+=wn("Add the Degiro Account statement too to include dividends, costs and interest.");
 if(ac&&!dt){const f=FILES.filter(x=>x.kind==="degiro-acc").pop();if(f&&f.info&&/^0 trades/.test(f.info[0])&&!sx)html+=wn("No trades found in this statement. Check that the period starts at your first deposit.")}
-const rc=recon();if(rc)html+='<div class="gl warn"><span>i</span><span>'+esc(rc)+'</span></div>';
+const rc=recon();if(rc)html+='<div class="gl sm '+(rc.warn?"warn":"info")+'" title="'+esc(rc.tip)+'"><span class="gi">i</span><span>'+esc(rc.s)+'</span></div>';
 out.innerHTML=html;
+if(typeof bkRender==="function")bkRender();
 }
 async function loadFiles(files){
 for(const f of files){
@@ -1926,6 +1972,22 @@ fx.onchange=e=>{loadFiles([...e.target.files]);e.target.value=""};
 dz.addEventListener("drop",e=>loadFiles([...e.dataTransfer.files]));
 document.getElementById("gres").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rm]");if(!b)return;FILES.splice(+b.getAttribute("data-rm"),1);syncFiles();renderFiles()});
 initFiles();
+/* ---- broker view: multi-select dropdown, "All brokers" is the default ---- */
+function bkAvail(){const o=[];FILES.forEach(f=>{if(f.bad)return;const n=f.kind==="saxo"?"Saxo":"Degiro",c=(f.info&&f.info[0])||"";let e=o.find(z=>z.n===n);if(!e)o.push({n:n,c:c});else if(f.kind==="degiro-tx"||!e.c)e.c=c||e.c});if(!o.length)["Saxo","Degiro"].forEach(n=>o.push({n:n,c:""}));return o}
+function bkSel(){const v=$("bv").value;return !v||v==="all"?null:v.split(",").filter(Boolean)}
+function bkRender(){
+const av=bkAvail(),sel=bkSel(),ok=sel?sel.filter(n=>av.some(a=>a.n===n)):[],all=!ok.length;
+const l=$("bkl");if(l)l.textContent=all?"All brokers":ok.join(" + ");
+const p=$("bkp");if(!p)return;
+p.innerHTML='<div class="ps">Brokers</div><button type="button" class="bko'+(all?" on":"")+'" data-bk="all"><span class="cb"></span><span>All brokers</span><i>'+av.length+'</i></button><div class="bks"></div>'+av.map(a=>'<button type="button" class="bko'+(!all&&ok.includes(a.n)?" on":"")+'" data-bk="'+a.n+'"><span class="cb"></span><span>'+a.n+'</span><i>'+esc(a.c)+'</i></button>').join("");
+}
+$("bkb").onclick=()=>{const p=$("bkp");p.hidden=!p.hidden;if(!p.hidden)bkRender()};
+$("bkp").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-bk]");if(!b)return;
+const n=b.getAttribute("data-bk"),av=bkAvail().map(a=>a.n);let sel=(bkSel()||[]).filter(x=>av.includes(x));
+if(n==="all")sel=[];else sel=sel.includes(n)?sel.filter(x=>x!==n):[...sel,n];
+const all=!sel.length||sel.length>=av.length;$("bv").value=all?"all":sel.join(",");ls.set("bv",$("bv").value);bkRender();$("bv").dispatchEvent(new Event("change"))});
+document.addEventListener("click",e=>{if(!e.target.closest("#bkw"))$("bkp").hidden=true});
+function openSetup(){const m=$("setup"),k=document.querySelector("#out .kpis");let t=0;if(k&&k.offsetParent)t=Math.ceil(k.getBoundingClientRect().bottom)+12;m.style.setProperty("--mt",t+"px");m.classList.toggle("under",t>0);m.hidden=false;$("bkp").hidden=true;bkRender()}
 $("out").addEventListener("click",e=>{
 const b=e.target.closest&&e.target.closest("[data-pcm],[data-loc]");if(!b)return;
 if(b.hasAttribute("data-pcm")){MODE=+b.getAttribute("data-pcm");calc()}else setLoc(b.getAttribute("data-loc")==="1");

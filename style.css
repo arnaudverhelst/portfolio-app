@@ -109,7 +109,7 @@ details.note{font-size:.85em}details.note summary{cursor:pointer;color:var(--mu)
 #view.v-d{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"chart"}
 #view.v-a{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"alloc contrib"}
 #view.v-w{grid-template-columns:minmax(420px,480px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"inputs result"}
-#view.v-det{grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr) minmax(0,.9fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"head dchart dchart" "head trades ddiv"}
+#view.v-det{grid-template-columns:minmax(310px,1.1fr) minmax(0,1fr) minmax(0,.8fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"head dchart dchart" "head trades ddiv"}
 html[data-hide] #upl{display:none}.kpis:empty{display:none}
 html[data-kpi=a] .kpis{display:grid;grid-template-columns:repeat(var(--kc,4),minmax(0,1fr));gap:0;background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:10px 0}
 html[data-kpi=a] .kpi{background:none;border:0;border-left:1px solid var(--bd);border-radius:0;box-shadow:none;padding:2px 20px}
@@ -206,3 +206,37 @@ select:hover{border-color:color-mix(in srgb,var(--mu) 45%,transparent)}option{ba
 .kl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 table.fx th{white-space:nowrap}
 @media(max-width:900px){#app{zoom:1;height:auto}.modal .card{zoom:1}}
+
+/* ---- round 9 ---- */
+/* import window: bigger, opens below the top tiles so they stay visible */
+#setup .mcard{width:min(1100px,96vw);padding:26px 32px;font-size:1.06rem}
+#setup .mcard h2{font-size:1.35rem}
+#setup .drop{padding:48px 20px;font-size:1.05rem}
+#setup #gtabs button{padding:8px 18px;font-size:.98rem}
+#setup .gcols{gap:34px}#setup #gsteps{line-height:1.85}
+#setup.under{top:var(--mt,0);background:rgba(5,8,16,.5)}
+#setup.under .mcard{max-height:calc(100vh - var(--mt,0px) - 28px)}
+.gbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
+.gbar #gtabs{margin:0}
+.gact{display:flex;gap:10px;align-items:center;margin-top:22px;padding-left:20px}.gact button{margin:0}
+#bkp{min-width:250px;padding:8px}#bkp .ps{margin:2px 8px 6px}
+.pop .bko{display:flex;align-items:center;gap:10px;width:100%;margin:0;padding:9px 10px;border:0;border-radius:8px;background:none;font-size:.9em;text-align:left}
+.pop .bko:hover{background:var(--hv)}.pop .bko i{margin-left:auto;font-style:normal;color:var(--mu);font-size:.78em}
+.pop .bko .cb{width:16px;height:16px;border:1.5px solid var(--mu);border-radius:4px;flex:none;display:grid;place-items:center}
+.pop .bko.on .cb{background:var(--ac);border-color:var(--ac)}
+.pop .bko.on .cb::after{content:"";width:8px;height:4px;border-left:2px solid var(--onac,#fff);border-bottom:2px solid var(--onac,#fff);transform:rotate(-45deg) translate(1px,-1px)}
+.pop .bks{height:1px;margin:4px 8px;background:var(--bd)}
+/* info chip under the Degiro files */
+.gl.sm{padding:4px 9px;margin-top:6px;font-size:.78rem;align-items:center;gap:7px;cursor:help}
+.gl.info{background:color-mix(in srgb,var(--fg) 7%,transparent);color:var(--mu)}
+.gl .gi{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid currentColor;font-size:.68rem;font-style:italic;font-weight:600;line-height:1;flex:none}
+/* Show / Type dropdowns in the top bar */
+.pfw{display:contents}.pfp{min-width:200px;padding:8px}.pfp .ps{margin:2px 8px 6px}
+/* stock detail: compact stat blocks instead of a wide table */
+.dk{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:10px 0 0;padding:10px 12px;border:1px solid var(--bd);border-radius:10px}
+.dk>div:not(.dkh){display:flex;flex-direction:column;gap:1px;min-width:0}
+.dk span{font-size:.72em;color:var(--mu)}.dk b{font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dkh{grid-column:1/-1;font:500 11px 'DM Sans',Inter,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.dkr{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
+.inf{display:inline-grid;place-items:center;width:14px;height:14px;margin-left:4px;border:1px solid currentColor;border-radius:50%;font-size:.65rem;font-style:italic;text-transform:none;cursor:help;vertical-align:1px}
+.dtf{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 6px}.dtf button{margin:0}

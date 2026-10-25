@@ -15,10 +15,7 @@
 <div id="gtabs"><button data-g="saxo" class="on">Saxo</button><button data-g="degiro">Degiro</button><button disabled title="Coming soon">Keytrade</button><button disabled title="Coming soon">Bolero</button></div>
 <div class="gcols"><div><div class="mu gh">Where to find it</div><ol id="gsteps"></ol><p class="mu" id="gnote"></p></div>
 <div><label class="drop" id="drop" for="fileX"><b>Drop your files here</b><span class="mu">or click to choose. We recognise which file is which.</span></label><input type="file" id="fileX" multiple accept=".csv,.txt,.tsv,.xls,.xlsx" hidden><div id="gres"></div></div></div>
-<details class="adv"><summary>Advanced: paste rows instead</summary>
-<p class="mu">Saxo transactions:</p><textarea id="txt"></textarea>
-<p class="mu">Degiro transactions:</p><textarea id="txtD"></textarea>
-<p class="mu">Degiro account statement:</p><textarea id="txtA"></textarea></details>
+<textarea id="txt" hidden></textarea><textarea id="txtD" hidden></textarea><textarea id="txtA" hidden></textarea>
 <h2 style="margin-top:14px">View</h2>
 <select id="bv"><option value="all">Saxo and Degiro combined</option><option value="Saxo">Saxo only</option><option value="Degiro">Degiro only</option></select>
 <input id="bm" type="hidden" value="IWDA.AS">

@@ -1101,7 +1101,7 @@ const isIpo=dx[0]>lim.toISOString().slice(0,10),fb=di2(first);
 if(isIpo&&x0===0)evs.push({i:0,label:"Listed "+fd(dx[0])});
 if(first>dx[0]&&fb>x0&&fb<LL)evs.push({i:fb,label:"First buy"});
 const tfs=TFS.filter(t=>t==="Max"?true:tfStart(t,dx,first)>=dx[0]),btn=t=>'<button data-dtf="'+t+'"'+(t===DTF?' class="on"':"")+'>'+t+'</button>',ho='<button data-dtf="Hold"'+(DTF==="Hold"?' class="on"':"")+'>Holding period</button>';
-h+='<div class="card"><h2>Price and your trades</h2><div class="dtf">'+tfs.filter(t=>t!=="Max").map(btn).join("")+btn("Max")+ho+'</div>'+lineChart([{name:"Price (\u20ac)",a:x0,v:v}],x0,LL,eur2,false,marks,undefined,dx,evs)+'<p class="mu"><b style="color:#16a34a">\u25cf</b> buys <b style="color:#dc2626">\u25cf</b> sells. '+(isIpo?'Listed on '+fd(dx[0])+' (first available price). ':(DTF==="Max"?'Showing up to 10 years of history. ':''))+'Prices are euro-converted closes.</p></div>';
+h+='<div class="card"><h2>Price and your trades</h2><div class="dtf">'+tfs.filter(t=>t!=="Max").map(btn).join("")+btn("Max")+ho+'</div>'+lineChart([{name:"Price (\u20ac)",a:x0,v:v}],x0,LL,(rg=>z=>"\u20ac"+(rg<5?z.toFixed(2):rg<50?z.toFixed(1):z.toFixed(0)))(Math.max(...v)-Math.min(...v)),false,marks,undefined,dx,evs)+'<p class="mu"><b style="color:#16a34a">\u25cf</b> buys <b style="color:#dc2626">\u25cf</b> sells. '+(isIpo?'Listed on '+fd(dx[0])+' (first available price). ':(DTF==="Max"?'Showing up to 10 years of history. ':''))+'Prices are euro-converted closes.</p></div>';
 }
 
 h+='<div class="card"><h2>Trades</h2><div class="sc"><table><tr><th>Date</th><th>Broker</th><th>Type</th><th>Shares in file</th><th>Shares today</th><th>Price</th><th>Amount (€)</th><th>Costs (€)</th><th>Position after</th><th>Realised (€)</th></tr>';
@@ -1986,7 +1986,7 @@ $("bkb").onclick=()=>{const p=$("bkp");p.hidden=!p.hidden;if(!p.hidden)bkRender(
 $("bkp").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-bk]");if(!b)return;
 const n=b.getAttribute("data-bk"),av=bkAvail().map(a=>a.n);let sel=(bkSel()||[]).filter(x=>av.includes(x));
 if(n==="all")sel=[];else sel=sel.includes(n)?sel.filter(x=>x!==n):[...sel,n];
-const all=!sel.length||sel.length>=av.length;$("bv").value=all?"all":sel.join(",");ls.set("bv",$("bv").value);bkRender();$("bv").dispatchEvent(new Event("change"))});
+const all=!sel.length;$("bv").value=all?"all":sel.join(",");ls.set("bv",$("bv").value);bkRender();$("bv").dispatchEvent(new Event("change"))});
 document.addEventListener("click",e=>{if(!e.target.closest("#bkw"))$("bkp").hidden=true});
 function openSetup(){const m=$("setup"),k=document.querySelector("#out .kpis");let t=0;if(k&&k.offsetParent)t=Math.ceil(k.getBoundingClientRect().bottom)+12;m.style.setProperty("--mt",t+"px");m.classList.toggle("under",t>0);m.hidden=false;$("bkp").hidden=true;bkRender()}
 $("out").addEventListener("click",e=>{

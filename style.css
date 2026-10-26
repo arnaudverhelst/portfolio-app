@@ -215,7 +215,7 @@ table.fx th{white-space:nowrap}
 #setup #gtabs button{padding:8px 18px;font-size:.98rem}
 #setup .gcols{gap:34px}#setup #gsteps{line-height:1.85}
 #setup.under{align-items:flex-start;padding-top:var(--mt,0)}
-#setup.under .mcard{max-height:calc(100vh - var(--mt,0px) - 28px);min-height:min(680px,calc(100vh - var(--mt,0px) - 28px))}
+#setup.under .mcard{max-height:calc(100vh - var(--mt,0px) - 28px);min-height:min(1020px,calc(100vh - var(--mt,0px) - 28px))}
 .gbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
 .gbar #gtabs{margin:0}
 .gact{display:flex;gap:10px;align-items:center;margin-top:auto;padding-top:20px}.gact button{margin:0}
@@ -257,3 +257,9 @@ svg.ico{width:15px;height:15px;flex:none;vertical-align:-3px}
 .tip:hover .tt,.tip:focus .tt,.gl.sm:hover .tt,.gl.sm:focus .tt{display:block}
 .gl.sm{position:relative;padding:5px 10px;gap:8px;outline:0}.gl.sm .ico{color:var(--mu)}.gl.sm .tt{left:0;width:min(420px,100%)}
 html[data-mode=dark] .tt{background:#1b1d22}
+
+.dk{align-content:start;grid-auto-rows:min-content;align-items:start;flex:none;height:auto}
+.dkr>div:not(.dkh){min-width:0}
+#setup .gcols{flex:1}#setup .gcols>div:last-child{display:flex;flex-direction:column}#setup .drop{flex:1;justify-content:center}
+.pop .bko .cb{border-radius:50%;box-sizing:border-box}
+.pop .bko.on .cb{background:none;border:4.5px solid var(--ac)}.pop .bko.on .cb::after{content:none}

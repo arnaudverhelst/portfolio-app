@@ -460,6 +460,11 @@ CH=[];positions();
 $("out").innerHTML=kpis()+tabsHtml()+wealth();
 return;
 }
+if(TAB==="n"&&rows.length&&!bad.length){
+CH=[];positions();
+$("out").innerHTML=tabsHtml()+netWorth();
+return;
+}
 if(TAB==="t"&&rows.length&&!bad.length){
 CH=[];
 $("out").innerHTML=kpis()+tabsHtml()+transactions()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
@@ -626,9 +631,9 @@ T.push(tile("Against "+(bm?esc(bmLab(bm.name)):"index"),ok?(d>=0?"+":"-")+Math.a
 if(bm)T.push(tile("Beta"+sfx,bs==null?"\u2013":bs.beta.toFixed(2),"vs "+bmLab(bm.name)+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")+". "+BETA_TIP));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
-const TABI={r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
+const TABI={r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
 const tabBtn=(k,l)=>'<button data-tab="'+k+'" title="'+l+'"'+(TAB===k?' class="on"':"")+'><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
-const tabsHtml=()=>'<div class="tabs"><div class="sec">Overview</div>'+tabBtn("r","Returns")+tabBtn("p","Positions")+tabBtn("a","Analysis")+'<div class="sec">Activity</div>'+tabBtn("t","Transactions")+tabBtn("d","Dividends")+'<div class="sec">Planning</div>'+tabBtn("w","Wealth builder")+'<div class="sec">Admin</div>'+tabBtn("u","Users")+'</div>'+pfChips();
+const tabsHtml=()=>'<div class="tabs"><div class="sec">Overview</div>'+tabBtn("r","Returns")+tabBtn("p","Positions")+tabBtn("a","Analysis")+'<div class="sec">Activity</div>'+tabBtn("t","Transactions")+tabBtn("d","Dividends")+'<div class="sec">Planning</div>'+tabBtn("w","Wealth builder")+tabBtn("n","Net worth")+'<div class="sec">Admin</div>'+tabBtn("u","Users")+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -932,6 +937,49 @@ h+='<tr><td data-s="'+b.replace("-","")+'">'+(DVM==="m"?MN[+b.slice(5)-1]+" "+b.
 });
 return h+'</table></div>';
 }
+/* ---- Net worth (Planning): investments from the portfolio + items you enter yourself ---- */
+const NWC=[["cash","Cash","#1D9E75",1],["bond","Bonds","#EF9F27",1],["sav","Savings and pension","#7F77DD",1],["re","Real estate","#888780",1],["oth","Other assets","#D4537E",1],["mort","Mortgage","#E24B4A",-1],["loan","Loans","#A32D2D",-1]];
+let NW={m:"o",tf:"Max",items:[]};try{NW.items=JSON.parse(ls.get("nw")||"[]")||[]}catch(e){}
+const nwSave=()=>ls.set("nw",JSON.stringify(NW.items));
+const nwVal=(it,ds)=>{let v=it.h[0].v;for(const p of it.h){if(p.d<=ds)v=p.v;else break}return v};
+const nwSum=(ds,sg)=>NW.items.reduce((a,it)=>{const c=NWC.find(z=>z[0]===it.c);return c&&c[3]===sg?a+nwVal(it,ds):a},0);
+const nwCat=(k,ds)=>NW.items.filter(i=>i.c===k).reduce((a,i)=>a+nwVal(i,ds),0);
+function netWorth(){
+const L=days.length-1,tdy=days[L],inv=POSL.reduce((a,r)=>a+r.val,0),A=nwSum(tdy,1),Dt=nwSum(tdy,-1),assets=inv+A,net=assets-Dt;
+let h='<div class="card"><h2>Net worth</h2><button data-nwm="o"'+(NW.m==="o"?' class="on"':"")+'>Overview</button><button data-nwm="t"'+(NW.m==="t"?' class="on"':"")+'>Over time</button>';
+if(NW.m==="t"){
+const st0=tx[0].di;let x0=NW.tf==="Max"?st0:Math.max(st0,iStart(NW.tf));if(x0>=L)x0=st0;
+const a=[],b=[];for(let i=x0;i<=L;i++){const iv=valueAt(i);b.push(iv);a.push(iv+nwSum(days[i],1)-nwSum(days[i],-1))}
+h+=' &nbsp; '+TFA().map(t=>'<button data-nwtf="'+t+'"'+(t===NW.tf?' class="on"':"")+'>'+t+'</button>').join("")+lineChart([{name:"Net worth",a:x0,v:a},{name:"Investments",a:x0,v:b}],x0,L,eur,false)
++'<p class="mu">Investments follow your portfolio. Everything else uses the values you entered, kept at the last value you gave until you update it.'+(NW.items.length?"":" Add items on the overview to see more than your investments.")+'</p></div>';
+return h;
+}
+h+='<div class="nwt"><span class="mu">Net worth</span><b>'+eur(net)+'</b></div>';
+const seg=[{l:"Investments",c:"#378ADD",v:inv}].concat(NWC.filter(c=>c[3]>0).map(c=>({l:c[1],c:c[2],v:nwCat(c[0],tdy)}))).filter(x=>x.v>0);
+h+='<div class="nwbar">'+seg.map(x=>'<span title="'+esc(x.l)+'" style="flex:'+x.v+';background:'+x.c+'"></span>').join("")+'</div>';
+const pc=v=>assets>0?Math.round(v/assets*100)+"%":"";
+const row=(l,c,v,extra,pcv)=>'<div class="nwr"><i style="background:'+c+'"></i><span>'+l+'</span>'+(extra||"")+'<span class="pc">'+(pcv||"")+'</span><b>'+eur(v)+'</b></div>';
+h+=row("Investments","#378ADD",inv,'<span class="chip">from your portfolio</span>',pc(inv));
+NWC.forEach(c=>{const its=NW.items.filter(i=>i.c===c[0]);if(!its.length)return;
+const tot=nwCat(c[0],tdy);
+h+=c[3]<0?row(c[1],c[2],-tot,"",""):row(c[1],c[2],tot,"",pc(tot));
+its.forEach(i=>{h+='<div class="nwr sub"><span class="mu">'+esc(i.n)+'</span><span class="pc"></span><input class="nwin" type="'+(HIDE?"password":"number")+'" step="any" min="0" data-nwv="'+i.id+'" value="'+nwVal(i,tdy)+'"><button class="nwx" data-nwd="'+i.id+'" title="Remove" aria-label="Remove">\u2715</button></div>'});
+});
+h+='<div class="nwr tot"><span>Total assets</span><span class="pc"></span><b>'+eur(assets)+'</b></div>'+(Dt?'<div class="nwr tot"><span>Total liabilities</span><span class="pc"></span><b class="neg">'+eur(-Dt)+'</b></div>':'');
+h+='<div class="nwf"><select id="nwc">'+NWC.map(c=>'<option value="'+c[0]+'">'+c[1]+'</option>').join("")+'</select><input id="nwn" placeholder="Name (for example ING savings)"><input id="nwa" type="number" step="any" min="0" placeholder="Amount (\u20ac)"><input id="nwd" type="date" title="Since (optional)"><button data-nwadd="1">Add</button></div>';
+return h+'<p class="mu">Cash, bonds, savings and other items are entered by hand for now. Edit an amount any time and the history is kept for the chart.</p></div>';
+}
+$("out").addEventListener("click",e=>{
+const t=e.target.closest&&e.target.closest("[data-nwm],[data-nwtf],[data-nwd],[data-nwadd]");if(!t)return;
+if(t.hasAttribute("data-nwm"))NW.m=t.getAttribute("data-nwm");
+else if(t.hasAttribute("data-nwtf"))NW.tf=t.getAttribute("data-nwtf");
+else if(t.hasAttribute("data-nwd")){NW.items=NW.items.filter(i=>i.id!==t.getAttribute("data-nwd"));nwSave()}
+else{const n=$("nwn").value.trim(),v=parseFloat($("nwa").value);if(!n||!isFinite(v)||v<0){$("nwn").focus();return}
+const d=$("nwd").value||new Date().toISOString().slice(0,10);NW.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:n,c:$("nwc").value,h:[{d:d,v:v}]});nwSave()}
+render(G.syms,[],G.warn)});
+$("out").addEventListener("change",e=>{const t=e.target,id=t.getAttribute&&t.getAttribute("data-nwv");if(!id)return;
+const it=NW.items.find(i=>i.id===id),v=parseFloat(t.value);if(!it||!isFinite(v)||v<0)return;
+const d=new Date().toISOString().slice(0,10);it.h=it.h.filter(p=>p.d!==d);it.h.push({d:d,v:v});it.h.sort((a,b)=>a.d<b.d?-1:1);nwSave();render(G.syms,[],G.warn)});
 function wealth(){
 if(WB.start==null)WB.start=Math.round(POSL.reduce((a,r)=>a+r.val,0));
 const inf=infoI,f=(k,l,t)=>'<label class="wf"><span>'+l+(t?inf(t):"")+'</span><input type="'+(HIDE&&["start","monthly","income"].includes(k)?"password":"number")+'" step="any" data-w="'+k+'" value="'+WB[k]+'"></label>',age=WB.mode==="age";
@@ -1052,6 +1100,19 @@ return h;
 }
 const pct1=v=>v==null?"–":(v>0?"+":"")+(v*100).toFixed(1)+"%";
 const eur2=v=>"€"+(Math.abs(v)<10?v.toFixed(2):v.toFixed(0));
+function posCagr(R,D,val,today){
+const ms=d=>Date.parse(d+"T00:00:00Z"),F=[];
+R.forEach(z=>{const t=z.t,c=isFinite(t.cs)?t.cs:t.g,a=t.opt?t.q:t.qa;F.push({t:ms(t.d),v:a>0?-c:c})});
+D.forEach(e=>F.push({t:ms(e.d),v:e.g+e.t}));
+if(val>0)F.push({t:ms(today),v:val});
+if(F.length<2)return null;
+const t0=Math.min(...F.map(x=>x.t)),span=(Math.max(...F.map(x=>x.t))-t0)/864e5;
+if(span<90||!F.some(x=>x.v<0)||!F.some(x=>x.v>0))return null;
+const f=r=>F.reduce((a,x)=>a+x.v/Math.pow(1+r,(x.t-t0)/864e5/365),0);
+let lo=-0.95,hi=50;if(f(lo)*f(hi)>0)return null;
+for(let k=0;k<100;k++){const m=(lo+hi)/2;if(f(lo)*f(m)<=0)hi=m;else lo=m}
+return (lo+hi)/2;
+}
 function extPx(k){
 const x=ser[k],c0=x.cur,pen=c0==="GBp"||c0==="GBX",c=pen?"GBP":c0,fx=(c&&c!=="EUR"&&FX[c])?FX[c]:null,v=[];let j=0,last=fx?fx.v[0]:1;
 for(let i=0;i<x.d.length;i++){const d=x.d[i];if(fx)while(j<fx.d.length&&fx.d[j]<=d){last=fx.v[j];j++}const p=x.cv[i];v.push(fx?p*(pen?0.01:1)/last:p)}
@@ -1098,15 +1159,13 @@ const px=o?0:P[k][L],val=o?cost:q*px,un=q>0?val-cost:0;
 const D=DV.filter(e=>e.k===k),dn=D.reduce((a,e)=>a+e.g+e.t,0);
 const row=rows.find(r=>r.k===k),tot=real+un;
 let h='<div class="card">'+back+'<h2 style="margin-top:12px">'+esc(name)+'</h2><p class="mu">'+esc(o?"Derivative or product without price data (carried at cost until sold)":(x&&x.type||"")+" · "+k+" · "+(x&&x.cur||""))+'</p>';
+const cgTip='<span class="tip" tabindex="0">'+INFO_SVG+'<span class="tt">Yearly growth rate of the money you put in, using the dates of every buy, sell and dividend (money-weighted). Needs at least 3 months of history.</span></span>';
 const pv=v=>'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+'</b>',pp=v=>v==null?'<b class="mu">\u2013</b>':'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</b>";
 h+='<div class="dk"><div class="dkh">Position</div><div><span>Shares now</span><b>'+sh(+q.toFixed(4))+'</b></div><div><span>Avg buy</span><b>'+(q>0&&!o?"\u20ac"+f2(cost/q):"\u2013")+'</b></div><div><span>Price now</span><b>'+(o?"\u2013":"\u20ac"+f2(px))+'</b></div><div><span>Value</span><b>'+eur(val)+'</b></div><div class="dkh">Profit</div><div><span>Unrealised</span>'+pv(un)+'</div><div><span>Realised (sales)</span>'+pv(real)+'</div><div><span>Dividends (net)</span>'+pv(dn)+'</div><div><span>Total profit</span>'+pv(tot+dn)+'</div></div>';
-h+='<div class="dk"><div class="dkh">Return on money invested</div><div><span>Invested in total</span><b>'+eur(bought)+'</b></div><div><span>Result'+(D.length?' (incl. dividends)':'')+'</span>'+(bought>0?pp(D.length?(tot+dn)/bought:tot/bought):'<b class="mu">\u2013</b>')+'</div></div>';
+h+='<div class="dk"><div class="dkh">Return on money invested</div><div><span>Invested in total</span><b>'+eur(bought)+'</b></div><div><span>Result'+(D.length?' (incl. dividends)':'')+'</span>'+(bought>0?pp(D.length?(tot+dn)/bought:tot/bought):'<b class="mu">\u2013</b>')+'</div><div><span>CAGR (per year)'+cgTip+'</span>'+pp(posCagr(R,D,val,days[L]))+'</div></div>';
 {const E=ser[k]&&ser[k].d.length>1?extPx(k).v.slice(-252):null;
 h+='<div class="dk dkv" id="valk" data-k="'+esc(k)+'"><div class="dkh">Valuation</div>'+(E?'<div><span>52-week high</span><b>\u20ac'+f2(Math.max(...E))+'</b></div><div><span>52-week low</span><b>\u20ac'+f2(Math.min(...E))+'</b></div><div><span>From 52-week high</span>'+pp(E[E.length-1]/Math.max(...E)-1)+'</div>':'')+'</div>';
 setTimeout(()=>valLoad(k),0)}
-if(row){
-h+='<div class="dk dkr"><div class="dkh">Time-weighted return <span class="tip" tabindex="0"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span class="tt">Time-weighted return follows the price path and ignores when you added money, so it can differ from the result on the money invested. CAGR (all) is the same return as a yearly rate since your first buy.</span></span></div>'+VTs().map(t=>'<div><span>'+t+'</span>'+pp(ret(row,t))+'</div>').join("")+(CU?'<div><span>Custom</span>'+pp(ret(row,"C"))+'</div>':"")+'<div><span>CAGR (all)</span>'+pp(cagr(row))+'</div></div>';
-}
 h+='</div>';
 if(!o&&ser[k]&&ser[k].d.length>1){
 const X=extPx(k),dx=X.d,LL=dx.length-1,first=T[0].d,sd=tfStart(DTF,dx,first),di2=d=>{let i=0;for(let j=0;j<dx.length&&dx[j]<=d;j++)i=j;return i};
@@ -1474,7 +1533,7 @@ if(rows.length)render(G.syms,[],G.warn);
 }
 $("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
 let WT=ls.get("wt")||"val",WMENU=false;
-const WK={"Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
+const WK={"Net worth":"nw","Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
 const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
 /* ---- Show / Type: dropdowns in the top bar (same look as the index picker) ---- */
 function pfHead(on){
@@ -1501,7 +1560,7 @@ const out=$("out");if(!out||!out.firstElementChild)return;
 const kids=[...out.children],kp=kids.find(e=>e.classList.contains("kpis")),tabs=kids.find(e=>e.classList.contains("tabs")),pfc=kids.find(e=>e.classList.contains("tfc")&&e.querySelector("[data-pf]"));
 const side=document.createElement("aside");side.id="side";
 {const sb=document.createElement("button");sb.type="button";sb.className="sbt";sb.id="sbt";const c=document.documentElement.getAttribute("data-sb")==="c";sb.title=c?"Expand sidebar":"Collapse sidebar";sb.setAttribute("aria-label",sb.title);sb.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>';side.appendChild(sb)}
-if(tabs){tabs.querySelectorAll("button").forEach(b=>b.setAttribute("data-i",{r:"\u2197",t:"\u21c4",d:"%",a:"\u25d1",w:"\u221e"}[b.getAttribute("data-tab")]||""));side.appendChild(tabs)}
+if(tabs){tabs.querySelectorAll("button").forEach(b=>b.setAttribute("data-i",{r:"\u2197",t:"\u21c4",d:"%",a:"\u25d1",w:"\u221e",n:"\u03a3"}[b.getAttribute("data-tab")]||""));side.appendChild(tabs)}
 pfHead(!!pfc);
 const view=document.createElement("div");view.id="view";view.className="v-"+(DET?"det":TAB);
 const warn=[];

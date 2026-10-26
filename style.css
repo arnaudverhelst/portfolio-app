@@ -266,3 +266,15 @@ html[data-mode=dark] .tt{background:#1b1d22}
 
 #gsteps li.opt{opacity:.5;transition:opacity .15s}#gsteps li.opt:hover{opacity:.9}#gsteps li.opt::marker{color:var(--mu)}
 .dkv .wide{grid-column:1/-1}.dkv .vn span{font-size:.78em}.dkv .vx{display:none}
+#view.v-n{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"nw"}
+#view.v-n>.card{overflow:auto}
+.nwt{display:flex;flex-direction:column;margin:16px 0 4px}.nwt b{font-size:2.1rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.nwbar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:12px 0 8px}
+.nwr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--bd);font-size:.95rem;font-variant-numeric:tabular-nums}
+.nwr i{width:10px;height:10px;border-radius:50%;flex:none}
+.nwr .pc{margin-left:auto;color:var(--mu);width:44px;text-align:right;font-size:.85em}
+.nwr b{width:120px;text-align:right;font-weight:500}.nwr.tot{font-weight:600}
+.nwr.sub{padding:5px 0 5px 20px;font-size:.88rem;border-top:0}.nwr.sub input{width:120px;margin:0;text-align:right;padding:5px 8px}
+.nwr .chip{font-size:.72rem;padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--ac) 18%,transparent)}
+.nwx{margin:0;padding:2px 8px;border:0;background:none;color:var(--mu)}.nwx:hover{color:var(--neg)}
+.nwf{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.nwf input,.nwf select{margin:0}.nwf #nwn{flex:1;min-width:180px}.nwf #nwa{width:130px}

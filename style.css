@@ -99,7 +99,7 @@ details.note{font-size:.85em}details.note summary{cursor:pointer;color:var(--mu)
 #out>.kpis{grid-column:2;grid-row:1;margin:0}
 #view{grid-column:2;grid-row:2;min-height:0;min-width:0;display:grid;gap:12px;overflow:auto;grid-auto-rows:minmax(220px,auto)}
 #view>.card{margin:0;padding:12px 14px;min-height:0;min-width:0;overflow:hidden}
-#view svg:not(.ic){display:block}
+#view svg:not(.ic):not(.ico){display:block}
 #view .sc{overflow:auto}.sc th{position:sticky;top:0;z-index:1;background:var(--card)}
 #view td:first-child{min-width:0;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #view .tfc{margin:0 0 4px}
@@ -215,7 +215,7 @@ table.fx th{white-space:nowrap}
 #setup #gtabs button{padding:8px 18px;font-size:.98rem}
 #setup .gcols{gap:34px}#setup #gsteps{line-height:1.85}
 #setup.under{align-items:flex-start;padding-top:var(--mt,0)}
-#setup.under .mcard{max-height:calc(100vh - var(--mt,0px) - 28px);min-height:min(1020px,calc(100vh - var(--mt,0px) - 28px))}
+#setup.under .mcard{max-height:calc((100vh - var(--mt,0px) - 28px)/var(--z,1));min-height:min(1020px,calc((100vh - var(--mt,0px) - 28px)/var(--z,1)))}
 .gbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
 .gbar #gtabs{margin:0}
 .gact{display:flex;gap:10px;align-items:center;margin-top:auto;padding-top:20px}.gact button{margin:0}
@@ -263,3 +263,6 @@ html[data-mode=dark] .tt{background:#1b1d22}
 #setup .gcols{flex:1}#setup .gcols>div:last-child{display:flex;flex-direction:column}#setup .drop{flex:1;justify-content:center}
 .pop .bko .cb{border-radius:50%;box-sizing:border-box}
 .pop .bko.on .cb{background:none;border:4.5px solid var(--ac)}.pop .bko.on .cb::after{content:none}
+
+#gsteps li.opt{opacity:.5;transition:opacity .15s}#gsteps li.opt:hover{opacity:.9}#gsteps li.opt::marker{color:var(--mu)}
+.dkv .wide{grid-column:1/-1}.dkv .vn span{font-size:.78em}.dkv .vx{display:none}

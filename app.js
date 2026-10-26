@@ -1066,6 +1066,19 @@ if(tf==="1D")return dx[Math.max(0,dx.length-2)];
 if(tf==="1W")e.setUTCDate(e.getUTCDate()-7);else e.setUTCMonth(e.getUTCMonth()-({"1M":1,"3M":3,"6M":6,"1Y":12,"3Y":36,"5Y":60}[tf]||0));
 return e.toISOString().slice(0,10);
 }
+/* fundamentals (market cap, P/E, ...) come from the price proxy: GET /?quote=SYMBOL, see the worker snippet */
+const VAL={};
+function bigNum(v){if(v==null||!isFinite(v))return"\u2013";const a=Math.abs(v);return a>=1e12?(v/1e12).toFixed(2)+"T":a>=1e9?(v/1e9).toFixed(2)+"B":a>=1e6?(v/1e6).toFixed(1)+"M":v.toFixed(0)}
+async function valLoad(k){
+let d=VAL[k];
+if(d===undefined){try{const r=await fetch(PROXY+"/?quote="+encodeURIComponent(k));d=r.ok?await r.json():null}catch(e){d=null}VAL[k]=d}
+const el=document.getElementById("valk");if(!el||el.getAttribute("data-k")!==k||el.querySelector(".vx"))return;
+const c=(l,v)=>'<div><span>'+l+'</span><b>'+v+'</b></div>',n=(v,dg)=>v==null||!isFinite(v)?"\u2013":(+v).toFixed(dg==null?1:dg);
+let h='';
+if(d&&typeof d==="object"&&(d.marketCap!=null||d.trailingPE!=null||d.forwardPE!=null||d.eps!=null))h=c("Market cap",d.marketCap==null?"\u2013":bigNum(d.marketCap)+" "+(d.currency||""))+c("P/E (trailing)",n(d.trailingPE))+c("P/E (forward)",n(d.forwardPE))+c("EPS (trailing)",n(d.eps,2))+c("Dividend yield",d.dividendYield==null?"\u2013":(d.dividendYield*(d.dividendYield<1?100:1)).toFixed(2)+"%")+c("Beta",n(d.beta,2))+(d.sector?'<div class="wide"><span>Sector</span><b>'+esc(d.sector)+(d.industry?" \u00b7 "+esc(d.industry):"")+'</b></div>':"");
+else h='<div class="wide vn"><span>Market cap, P/E and other fundamentals are not available from the price service yet.</span></div>';
+el.insertAdjacentHTML("beforeend",h+'<i class="vx"></i>');
+}
 function detailView(k){
 const back='<button data-back="1">← Back to overview</button>';
 const T=tx.filter(t=>t.key===k);
@@ -1088,6 +1101,9 @@ let h='<div class="card">'+back+'<h2 style="margin-top:12px">'+esc(name)+'</h2><
 const pv=v=>'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+eur(v)+'</b>',pp=v=>v==null?'<b class="mu">\u2013</b>':'<b class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</b>";
 h+='<div class="dk"><div class="dkh">Position</div><div><span>Shares now</span><b>'+sh(+q.toFixed(4))+'</b></div><div><span>Avg buy</span><b>'+(q>0&&!o?"\u20ac"+f2(cost/q):"\u2013")+'</b></div><div><span>Price now</span><b>'+(o?"\u2013":"\u20ac"+f2(px))+'</b></div><div><span>Value</span><b>'+eur(val)+'</b></div><div class="dkh">Profit</div><div><span>Unrealised</span>'+pv(un)+'</div><div><span>Realised (sales)</span>'+pv(real)+'</div><div><span>Dividends (net)</span>'+pv(dn)+'</div><div><span>Total profit</span>'+pv(tot+dn)+'</div></div>';
 h+='<div class="dk"><div class="dkh">Return on money invested</div><div><span>Invested in total</span><b>'+eur(bought)+'</b></div><div><span>Result'+(D.length?' (incl. dividends)':'')+'</span>'+(bought>0?pp(D.length?(tot+dn)/bought:tot/bought):'<b class="mu">\u2013</b>')+'</div></div>';
+{const E=ser[k]&&ser[k].d.length>1?extPx(k).v.slice(-252):null;
+h+='<div class="dk dkv" id="valk" data-k="'+esc(k)+'"><div class="dkh">Valuation</div>'+(E?'<div><span>52-week high</span><b>\u20ac'+f2(Math.max(...E))+'</b></div><div><span>52-week low</span><b>\u20ac'+f2(Math.min(...E))+'</b></div><div><span>From 52-week high</span>'+pp(E[E.length-1]/Math.max(...E)-1)+'</div>':'')+'</div>';
+setTimeout(()=>valLoad(k),0)}
 if(row){
 h+='<div class="dk dkr"><div class="dkh">Time-weighted return <span class="tip" tabindex="0"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span class="tt">Time-weighted return follows the price path and ignores when you added money, so it can differ from the result on the money invested. CAGR (all) is the same return as a yearly rate since your first buy.</span></span></div>'+VTs().map(t=>'<div><span>'+t+'</span>'+pp(ret(row,t))+'</div>').join("")+(CU?'<div><span>Custom</span>'+pp(ret(row,"C"))+'</div>':"")+'<div><span>CAGR (all)</span>'+pp(cagr(row))+'</div></div>';
 }
@@ -1527,7 +1543,7 @@ const v=$("view");if(!v)return;
 const small=window.innerWidth<=900;
 v.querySelectorAll(":scope>.card").forEach(c=>{
 const b=c.firstElementChild;if(!b||!b.classList.contains("wbody"))return;
-const fl=[...b.querySelectorAll("svg:not(.ic),.sc")];
+const fl=[...b.querySelectorAll("svg:not(.ic):not(.ico),.sc")];
 if(small){fl.forEach(e=>{e.style.height="";e.style.maxHeight=""});return}
 fl.forEach(e=>{if(e.tagName==="svg")e.style.height="0px";else e.style.maxHeight="0px"});
 const cs=getComputedStyle(c),free=c.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-b.offsetHeight,h=Math.max(50,Math.floor(free));
@@ -1835,7 +1851,7 @@ function renderGuide(){
 const st=document.getElementById("gsteps");if(!st)return;
 document.querySelectorAll("#gtabs button[data-g]").forEach(b=>b.classList.toggle("on",b.getAttribute("data-g")===GT));
 const g=GUIDE[GT];
-st.innerHTML=g.steps.map(s=>"<li>"+T_(s)+"</li>").join("");
+st.innerHTML=g.steps.map(s=>"<li"+(/^\(Optional\)/.test(s)?' class="opt"':"")+">"+T_(s)+"</li>").join("");
 document.getElementById("gnote").textContent=g.note?T_(g.note):"";
 }
 function sheetRows(ws){
@@ -1985,8 +2001,8 @@ p.innerHTML='<div class="ps">Brokers</div><button type="button" class="bko'+(all
 $("bkb").onclick=()=>{const p=$("bkp");p.hidden=!p.hidden;if(!p.hidden)bkRender()};
 $("bkp").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-bk]");if(!b)return;
 const n=b.getAttribute("data-bk"),av=bkAvail().map(a=>a.n);let sel=(bkSel()||[]).filter(x=>av.includes(x));
-if(n==="all")sel=[];else sel=sel.includes(n)?sel.filter(x=>x!==n):[...sel,n];
-const all=!sel.length;$("bv").value=all?"all":sel.join(",");ls.set("bv",$("bv").value);bkRender();$("bv").dispatchEvent(new Event("change"))});
+sel=n==="all"?[]:[n];
+const all=!sel.length;$("bv").value=all?"all":sel.join(",");ls.set("bv",$("bv").value);bkRender();$("bkp").hidden=true;$("bv").dispatchEvent(new Event("change"))});
 document.addEventListener("click",e=>{if(!e.target.closest("#bkw"))$("bkp").hidden=true});
 function openSetup(){const m=$("setup"),k=document.querySelector("#out .kpis");let t=0;if(k&&k.offsetParent)t=Math.ceil(k.getBoundingClientRect().bottom)+12;m.style.setProperty("--mt",t+"px");m.classList.toggle("under",t>0);m.hidden=false;$("bkp").hidden=true;bkRender()}
 $("out").addEventListener("click",e=>{

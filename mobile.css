@@ -167,3 +167,8 @@ html.m #m .two{display:flex;gap:10px}
 html.m #m .two .sgc{flex:1}
 html.m #m .two .sgc button{font-size:.88rem;padding:0 4px}
 html.m #m #rsr .mu{color:var(--mu)}
+
+/* global costs control in the header */
+html.m #m .mh h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html.m #m .mcs{display:inline-flex;align-items:center;gap:2px;height:44px;padding:0 10px 0 12px;border-radius:14px;border:1px solid var(--bd);background:transparent;color:var(--fg);font-size:.82rem;font-weight:500;white-space:nowrap}
+html.m #m .mcs svg{width:16px;height:16px}

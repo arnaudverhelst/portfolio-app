@@ -360,7 +360,7 @@ out.push({k:s,n:(o?by[s][0].n:ser[k].name),q:q,avg:q>0?cost/q:(qb>0?bg/qb:0),qb:
 }
 POSL=out;OPS=new Set(out.filter(r=>r.q>0).map(r=>r.k));const vis=out.filter(r=>pf(r.k));
 const tv=vis.reduce((a,r)=>a+r.val,0);
-let h='<div class="card"><div class="ph"><h2>Positions</h2><div class="seg">'+[["1","Costs included"],["0","Costs excluded"]].map(z=>'<button data-pcm="'+z[0]+'"'+(String(MODE)===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div></div><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>% unrealised'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>% realised'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>% dividends'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>% total'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
+let h='<div class="card"><div class="ph"><h2>Positions</h2></div><div class="sc"><table><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th><th>Unrealised</th><th>% unrealised'+infoI("Unrealised gain as a percentage of what the shares you still hold cost you (value now divided by cost, minus 1).")+'</th><th>Realised (sales)</th><th>% realised'+infoI("Profit or loss on shares you sold, as a percentage of what those sold shares cost you.")+'</th><th>Dividends</th><th>% dividends'+infoI("Net dividends received as a percentage of everything you ever bought of this holding.")+'</th><th>Total</th><th>% total'+infoI("Unrealised plus realised plus dividends, as a percentage of everything you ever bought of this holding.")+'</th></tr>';
 ["ETF","Stock","Derivative"].forEach(ty=>{
 const g=vis.filter(r=>r.typ===ty).sort((a,b)=>byName(a.n,b.n));
 if(!g.length)return;
@@ -489,7 +489,7 @@ CH=[];
 let h="";
 if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
 if(rows.length){
-h+='<div class="card"><h2>'+(PB==="stock"?"Stock performance":"My performance (TWRR)")+'</h2><p class="mu">Costs: <select id="mode"><option value="1"'+(MODE?" selected":"")+'>included</option><option value="0"'+(MODE?"":" selected")+'>excluded</option></select></p><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div><div class="tfc"><span class="mu">Basis: </span>'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+h+='<div class="card"><h2>'+(PB==="stock"?"Stock performance":"My performance (TWRR)")+'</h2><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div><div class="tfc"><span class="mu">Basis: </span>'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
 const NC=VTs().length+(CU?1:0)+2;
 const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.kind==="b"?bmLab(r.name):r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+VTs().map(t=>cell(rt(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
 (PF==="all"&&PT==="all"?rows.filter(r=>!r.k&&(r.kind!=="b"||r===actB())):[subRow()].concat([actB()]).filter(Boolean)).forEach(r=>{h+=line(r)});
@@ -811,7 +811,7 @@ let h='<div class="card"><h2>Transactions</h2><div class="dvc"><div><span class=
 if(!days.length)return h+'<p class="mu">No data to show yet.</p></div>';
 const y0=+days[0].slice(0,4),y1=+days[days.length-1].slice(0,4),R=txRows(),Y=[],RY={},by={};
 tx.forEach(t=>{(by[t.key]=by[t.key]||[]).push(t)});
-for(const k in by){const o=isOpt(k);let q=0,cost=0;by[k].forEach(t=>{const a=o?t.q:t.qa,c=isFinite(t.cs)?t.cs:t.g,yy=String(t.d).slice(0,4);let r=0;
+for(const k in by){const o=isOpt(k);let q=0,cost=0;by[k].forEach(t=>{const a=o?t.q:t.qa,c=MODE&&isFinite(t.cs)?t.cs:t.g,yy=String(t.d).slice(0,4);let r=0;
 if(a>0){q+=a;cost+=c}else if(q>0){const f=Math.min(1,-a/q);r=c-cost*f;cost-=cost*f;q+=a}else r=c;
 if(isFinite(r))RY[yy]=(RY[yy]||0)+r})}
 for(let y=y0;y<=y1;y++){
@@ -1147,7 +1147,7 @@ if(!T.length)return '<div class="card">'+back+'<p>No trades found for this instr
 const o=!!T[0].opt,x=ser[k],name=x?x.name:T[0].n,L=days.length-1;
 let q=0,cost=0,real=0,bought=0;const R=[];
 T.forEach(t=>{
-const a=o?t.q:t.qa,c=isFinite(t.cs)?t.cs:t.g;let r=null;
+const a=o?t.q:t.qa,c=MODE&&isFinite(t.cs)?t.cs:t.g;let r=null;
 if(a>0){q+=a;cost+=c;bought+=c}
 else if(q>0){const f=Math.min(1,-a/q);r=c-cost*f;real+=r;cost-=cost*f;q+=a}
 else{r=c;real+=c}
@@ -1538,12 +1538,12 @@ const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"
 /* ---- Show / Type: dropdowns in the top bar (same look as the index picker) ---- */
 function pfHead(on){
 const tools=document.querySelector("header.top .tools"),old=$("pfw");
-if(!on||!tools){if(old)old.remove();return}
+if(!tools){if(old)old.remove();return}
 const SH=[["all","All positions"],["open","Open positions"],["closed","Closed positions"]],TY=[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]];
 const chev='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const dd=(attr,lab,cur,L)=>'<div class="pw"><button type="button" class="ixb" data-dd="1"><span class="ixk">'+lab+'</span><span>'+(L.find(z=>z[0]===cur)||L[0])[1]+'</span>'+chev+'</button><div class="pop pfp" hidden><div class="ps">'+lab+'</div>'+L.map(z=>'<button type="button" class="ixo'+(z[0]===cur?" on":"")+'" data-'+attr+'="'+z[0]+'"><span>'+z[1]+'</span></button>').join("")+'</div></div>';
 let w=old;if(!w){w=document.createElement("div");w.id="pfw";w.className="pfw";tools.insertBefore(w,tools.firstChild)}
-w.innerHTML=dd("pf","Show",PF,SH)+dd("pt","Type",PT,TY);
+w.innerHTML=(on?dd("pf","Show",PF,SH)+dd("pt","Type",PT,TY):"")+dd("cm","Costs",String(MODE),[["1","Included"],["0","Excluded"]]);
 }
 document.addEventListener("click",e=>{
 const w=e.target.closest&&e.target.closest("#pfw");
@@ -1551,7 +1551,8 @@ document.querySelectorAll("#pfw .pop").forEach(p=>{if(!w||!p.parentNode.contains
 if(!w)return;
 const b=e.target.closest("[data-dd]");
 if(b){const p=b.parentNode.querySelector(".pop"),h=!p.hidden;document.querySelectorAll("#pfw .pop").forEach(x=>x.hidden=true);$("ixp").hidden=true;$("apr").hidden=true;p.hidden=h;return}
-const o=e.target.closest("[data-pf],[data-pt]");if(!o)return;
+const o=e.target.closest("[data-pf],[data-pt],[data-cm]");if(!o)return;
+if(o.hasAttribute("data-cm")){MODE=+o.getAttribute("data-cm");calc();return}
 if(o.hasAttribute("data-pf")){PF=o.getAttribute("data-pf");ls.set("pf",PF)}else{PT=o.getAttribute("data-pt");ls.set("pt",PT)}
 render(G.syms,[],G.warn);
 });

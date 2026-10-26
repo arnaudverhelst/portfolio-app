@@ -134,7 +134,7 @@ function vRetList() {
     var grp = rows.filter(function (r) { return r.k && r.typ === ty && (PT === "all" || r.typ === PT) && (PF === "all" || (PF === "open") === !!r.open); }).sort(function (a, b) { return byName(a.name, b.name); });
     if (grp.length) h += '<div class="grp">' + TYPS[ty] + "</div>" + grp.map(one).join("");
   });
-  return '<section class="card"><div class="ch-h"><h2>Returns \u00B7 ' + per + '</h2><button type="button" class="mixb" data-a="costs">Costs ' + (MODE ? "included" : "excluded") + " " + ic(I_DOWN) + '</button></div><div class="plist">' + h + '</div><p class="note">The period follows the chart. Tap a row for all periods and CAGR. A dash means it was not held in that period. Dividends count as reinvested.</p></section>';
+  return '<section class="card"><div class="ch-h"><h2>Returns \u00B7 ' + per + '</h2></div><div class="plist">' + h + '</div><p class="note">The period follows the chart. Tap a row for all periods and CAGR. A dash means it was not held in that period. Dividends count as reinvested.</p></section>';
 }
 function vReturns() {
   return vTiles() +
@@ -180,7 +180,7 @@ function vPositions() {
     });
   });
   if (!h) h = '<p class="mu pad">No positions in this selection.</p>';
-  var two = '<div class="two">' + seg("pcm", String(MODE), [["1", "Incl. costs"], ["0", "Excl."]]) + "</div>";
+  var two = "";
   return seg("pf", PF, [["all", "All"], ["open", "Open"], ["closed", "Closed"]]) + two +
     chips("pt", PT, [["all", "All types"], ["ETF", "ETFs"], ["Stock", "Stocks"], ["Derivative", "Derivatives"]]) +
     '<div class="plist">' + h + "</div>" + (LOC ? '<p class="note">Each position is shown in the currency it trades in. Totals stay in \u20AC.</p>' : "");
@@ -466,6 +466,8 @@ function vEmpty() {
 
 /* ---------- sheet (index picker) ---------- */
 function vSheet() {
+  if (S.sheet === "cm") return '<div class="sheet" data-a="close"><div class="sh" data-a="noop"><div class="sht">Costs</div>' +
+    [["1", "Included"], ["0", "Excluded"]].map(function (p) { return '<button type="button" class="so' + (String(MODE) === p[0] ? " on" : "") + '" data-a="cmpick" data-v="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div></div>";
   if (S.sheet !== "ix") return "";
   var cur = ixCur();
   var ex = rows.filter(function (r) { return r.kind === "b"; }).map(function (r) { return r.name; })
@@ -486,7 +488,8 @@ function nav() {
 function head() {
   var eye = '<button type="button" class="mib" data-a="hide" title="' + (HIDE ? "Show amounts" : "Hide amounts") + '" aria-label="' + (HIDE ? "Show amounts" : "Hide amounts") + '">' + (HIDE ? EYE_OFF : EYE) + "</button>";
   var up = '<button type="button" class="mib" data-a="upload" title="Load data and settings" aria-label="Load data and settings">' + ic(I_UP) + "</button>";
-  return '<header class="mh"><h1>' + TITLES[S.scr] + '</h1><div class="mt">' + eye + up + "</div></header>";
+  var cs = '<button type="button" class="mcs" data-a="cm" aria-label="Costs">Costs ' + (MODE ? "incl." : "excl.") + " " + ic(I_DOWN) + "</button>";
+  return '<header class="mh"><h1>' + TITLES[S.scr] + '</h1><div class="mt">' + cs + eye + up + "</div></header>";
 }
 
 function mRender() {
@@ -550,7 +553,8 @@ M.addEventListener("click", function (e) {
   else if (a === "pt") { PT = v; ls.set("pt", PT); mRender(); }
   else if (a === "tf") { TF = v; mRender(); }
   else if (a === "vm") { VM = v; mRender(); }
-  else if (a === "costs") { MODE = MODE ? 0 : 1; calc(); }
+  else if (a === "cm") { S.sheet = "cm"; mRender(); }
+  else if (a === "cmpick") { S.sheet = null; MODE = +v; calc(); }
   else if (a === "alsub") { S.al = v; mRender(); }
   else if (a === "ctf") { CTF = v; mRender(); }
   else if (a === "txv") { TXV = v; S.txN = 80; mRender(); }

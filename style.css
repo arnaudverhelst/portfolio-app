@@ -309,3 +309,26 @@ svg.txs{width:100%;height:auto;color:var(--mu);margin-top:8px}
 .rd-r{padding:7px 0;border-top:1px solid var(--bd)}
 .rd-t,.rd-up{margin-top:12px}
 @media(max-width:700px){.rd-g{grid-template-columns:1fr}.rd-wk{grid-template-columns:repeat(7,minmax(46px,1fr));overflow-x:auto}}
+
+/* round 11: journal dropdowns, tax tabs, radar scrolling */
+.jr-f .pw{position:relative;min-width:0}
+.jr-f .ixb{width:100%;height:40px;justify-content:flex-start}
+.jr-f .ixb .jv{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jr-f .ixb svg.ic{margin-left:auto;flex:none}
+.jr-f .pop{left:0;right:auto;top:46px;width:100%;min-width:min(300px,86vw);max-height:320px;overflow:auto;padding:8px}
+.jr-f .pw:nth-child(2) .pop{left:auto;right:0}
+.jr-f .pop .ps{margin:8px 8px 4px}.jr-f .pop .ps:first-child{margin-top:2px}
+.jr-f .pop .ixo{margin:0}
+.jr-f .pop .ixo i{max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jr-f .jr-q{width:100%;margin:0 0 4px;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--fg);font:inherit;font-size:.9em;box-sizing:border-box}
+.jr-sm{padding:6px 10px;font-size:.85em}
+.tx-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+.rd-rc{min-width:0}
+.rd-i.on,.rd-i.on b{color:var(--fg)}
+@media(min-width:901px){
+#view.v-x>.card,#view.v-j>.card{overflow:auto}
+#view.v-o>.card{display:flex;flex-direction:column;overflow:hidden}
+#view.v-o .rd-wk,#view.v-o>.card>h2{flex:none}
+#view.v-o .rd-g{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+#view.v-o .rd-l,#view.v-o .rd-rc{min-height:0;overflow:auto;padding-right:4px}
+}

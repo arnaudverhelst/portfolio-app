@@ -520,7 +520,6 @@ function mRender() {
   ["tiles:dots", "dtiles:ddots", "utiles:udots"].forEach(function (z) { var p = z.split(":"); bindDots(p[0], p[1]); });
   if (S.scr === "w" && rows.length) wbRefresh();
   if (S.scr === "o" && rows.length) radInit();
-  if (S.scr === "x" && rows.length) taxSim(0);
   window.scrollTo(0, S.top ? 0 : y);
   S.top = false;
 }

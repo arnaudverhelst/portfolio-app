@@ -446,7 +446,7 @@ function vUsers() {
 /* ---------- More ---------- */
 function vMore() {
   var li = function (a, v, l, sub) { return '<button type="button" class="li" data-a="' + a + '" data-v="' + v + '"><span>' + l + "<small>" + sub + "</small></span>" + ic(I_RIGHT) + "</button>"; };
-  return '<div class="list">' + li("scr", "w", "Wealth builder", "Retirement age and future value") + li("scr", "u", "Users", "Plans and access (admin)") + li("upload", "", "Data and settings", "Load files, clear saved data") + "</div>" +
+  return '<div class="list">' + li("scr", "o", "Radar", "Earnings calendar and industry trends") + li("scr", "j", "Journal", "Why you bought or sold, and was it right") + li("scr", "x", "Tax", "Capital gains tax (meerwaardebelasting)") + li("scr", "w", "Wealth builder", "Retirement age and future value") + li("scr", "u", "Users", "Plans and access (admin)") + li("upload", "", "Data and settings", "Load files, clear saved data") + "</div>" +
     '<div class="lab">Appearance</div>' + seg("mode", MODEV, [["light", "Light"], ["dark", "Dark"]]) +
     '<div class="lab">Language</div>' + seg("lang", LANG, [["en", "English"], ["fr", "Fran\u00E7ais"], ["nl", "Nederlands"]]) +
     '<div class="lab">Currency</div>' + seg("loc", LOC ? "1" : "0", [["0", "\u20AC (EUR)"], ["1", "Local currency"]]) +
@@ -479,9 +479,9 @@ function vSheet() {
 }
 
 /* ---------- shell ---------- */
-var TITLES = { r: "My Portfolio", p: "Positions", t: "Transactions", d: "Dividends", m: "More", a: "Allocation", w: "Wealth builder", u: "Users" };
+var TITLES = { r: "My Portfolio", p: "Positions", t: "Transactions", d: "Dividends", m: "More", a: "Allocation", w: "Wealth builder", u: "Users", j: "Journal", x: "Tax", o: "Radar" };
 function nav() {
-  var on = function (k) { return S.scr === k || (k === "m" && (S.scr === "w" || S.scr === "u")); };
+  var on = function (k) { return S.scr === k || (k === "m" && (S.scr === "w" || S.scr === "u" || S.scr === "j" || S.scr === "x" || S.scr === "o")); };
   var b = function (k, l, p) { return '<button type="button" data-a="scr" data-v="' + k + '"' + (on(k) ? ' class="on" aria-current="page"' : "") + ">" + ic(p) + "<span>" + l + "</span></button>"; };
   return '<nav class="mb">' + b("r", "Returns", TABI.r) + b("p", "Positions", TABI.p) + b("a", "Allocation", TABI.a) + b("t", "Transactions", TABI.t) + b("d", "Dividends", TABI.d) + b("m", "More", I_MORE) + "</nav>";
 }
@@ -507,6 +507,7 @@ function mRender() {
     else if (S.scr === "t") body = vTx();
     else if (S.scr === "d") body = vDiv();
     else if (S.scr === "w") body = vWealth();
+    else if (S.scr === "j" || S.scr === "x" || S.scr === "o") { positions(); body = '<div class="xa">' + (S.scr === "j" ? journal() : S.scr === "x" ? taxView() : radar()) + "</div>"; }
     else body = vSoon(TITLES[S.scr]);
   } catch (e) {
     body = '<section class="card empty"><h2>Something went wrong</h2><p class="mu">' + esc(e && e.message || e) + "</p></section>";
@@ -518,6 +519,8 @@ function mRender() {
   if (t2) { t2.scrollLeft = tx0; }
   ["tiles:dots", "dtiles:ddots", "utiles:udots"].forEach(function (z) { var p = z.split(":"); bindDots(p[0], p[1]); });
   if (S.scr === "w" && rows.length) wbRefresh();
+  if (S.scr === "o" && rows.length) radInit();
+  if (S.scr === "x" && rows.length) taxSim(0);
   window.scrollTo(0, S.top ? 0 : y);
   S.top = false;
 }
@@ -544,6 +547,7 @@ root.classList.add("m");
 window.DVFIT_NOSUM = true; /* the phone shows the chart summary as a line above the chart */
 
 M.addEventListener("click", function (e) {
+  if (window.xaClick && window.xaClick(e)) return;
   var b = e.target.closest && e.target.closest("[data-a]");
   if (!b) return;
   var a = b.getAttribute("data-a"), v = b.getAttribute("data-v");

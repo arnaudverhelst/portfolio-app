@@ -172,3 +172,11 @@ html.m #m #rsr .mu{color:var(--mu)}
 html.m #m .mh h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html.m #m .mcs{display:inline-flex;align-items:center;gap:2px;height:44px;padding:0 10px 0 12px;border-radius:14px;border:1px solid var(--bd);background:transparent;color:var(--fg);font-size:.82rem;font-weight:500;white-space:nowrap}
 html.m #m .mcs svg{width:16px;height:16px}
+
+/* Journal, Tax, Radar (builders shared with the PC view) */
+html.m #m .xa .kpis{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+html.m #m .xa .kpi{padding:12px 14px;border:1px solid var(--bd);border-radius:14px}
+html.m #m .xa .sc{overflow-x:auto}
+html.m #m .xa .seg{display:flex;flex-wrap:wrap;gap:4px}
+html.m #m .xa .seg button{min-height:38px}
+html.m #m .xa svg.txs{width:100%}

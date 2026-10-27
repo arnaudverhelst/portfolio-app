@@ -363,3 +363,12 @@ svg.txs{touch-action:pan-y;cursor:crosshair}
 
 /* one font everywhere */
 *,*::before,*::after{font-family:Inter,sans-serif!important}
+
+svg.txs *{pointer-events:none}
+.tx-g h3{margin:16px 0 6px;font-size:.95rem;font-weight:600}.tx-g ul{margin:0 0 6px 18px;padding:0}.tx-g li{margin:5px 0;line-height:1.5}
+.jr-bk{display:flex;gap:8px;margin-top:12px}
+.rd-g{grid-template-columns:minmax(300px,1fr) minmax(0,1.6fr)}
+.rd-l{gap:10px}.rd-ll{display:flex;flex-direction:column;gap:6px}
+.rd-mh{display:flex;justify-content:space-between;align-items:center}
+.rd-l .rd-cal{margin-top:0}.rd-l .rd-cd{min-height:42px;padding:3px}.rd-l .rd-cd .jp{font-size:.62rem;padding:0 4px}
+@media(max-width:700px){.rd-g{grid-template-columns:1fr}}

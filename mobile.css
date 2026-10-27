@@ -4,7 +4,7 @@
 /* hide the PC interface; the PC view comes back only for the fallback (html.m-fb) */
 html.m:not(.m-fb) #app{display:none!important}
 html.m.m-fb #m,html.m.m-fb #mst{display:none!important}
-html.m body{max-width:none;margin:0;padding:0;font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%;overflow-x:hidden}
+html.m body{max-width:none;margin:0;padding:0;font-family:Inter,sans-serif;-webkit-text-size-adjust:100%;overflow-x:hidden}
 html.m.m-fb body{padding:var(--gap) 16px 40px}
 
 html.m #m{--mp:16px;display:block;min-height:100dvh;color:var(--fg);background:var(--bg)}
@@ -15,7 +15,7 @@ html.m #m svg.mi,html.m #m svg.ic{width:22px;height:22px;flex:none}
 
 /* header */
 html.m #m .mh{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px var(--mp) 10px;background:var(--bg)}
-html.m #m .mh h1{margin:0;font:500 1.5rem/1.2 "DM Sans",Inter,system-ui,sans-serif;letter-spacing:-.01em}
+html.m #m .mh h1{margin:0;font:500 1.5rem/1.2 Inter,sans-serif;letter-spacing:-.01em}
 html.m #m .mt{display:flex;gap:10px}
 html.m #m .mib{width:44px;height:44px;padding:0;border-radius:14px;border:1px solid var(--bd);background:transparent;color:var(--fg);display:grid;place-items:center}
 html.m #m .mib.on{background:var(--ac);color:var(--onac)}
@@ -23,7 +23,7 @@ html.m #m .mib.on{background:var(--ac);color:var(--onac)}
 /* page */
 html.m #m .mv{padding:4px var(--mp) calc(96px + env(safe-area-inset-bottom))}
 html.m #m .card{margin:0;padding:16px;border-radius:18px}
-html.m #m .card h2{margin:0;font:500 1.15rem/1.3 "DM Sans",Inter,system-ui,sans-serif}
+html.m #m .card h2{margin:0;font:500 1.15rem/1.3 Inter,sans-serif}
 html.m #m .pad{padding:8px 0;margin:0}
 html.m #m .mu{color:var(--mu);font-size:.9rem}
 html.m #m .pos{color:var(--pos)}html.m #m .neg{color:var(--neg)}
@@ -33,7 +33,7 @@ html.m #m .tiles{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandat
 html.m #m .tiles::-webkit-scrollbar{display:none}
 html.m #m .tile{flex:0 0 78%;scroll-snap-align:start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px 18px;min-height:112px}
 html.m #m .tl{color:var(--mu);font-size:.9rem}
-html.m #m .tv{font-size:2rem;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:6px 0 4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+html.m #m .tv{font-size:2.5rem;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:6px 0 4px;font-variant-numeric:tabular-nums;white-space:nowrap}
 html.m #m .ts{color:var(--mu);font-size:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 html.m #m .dots{display:flex;justify-content:center;gap:7px;margin-top:10px}
 html.m #m .dots i{width:6px;height:6px;border-radius:50%;background:var(--bd);transition:background .2s,width .2s}
@@ -56,7 +56,7 @@ html.m #m .mixb svg{width:16px;height:16px}
 html.m #m .chw{margin-top:12px}
 html.m #m svg.ch{width:100%;touch-action:pan-y;cursor:default;color:var(--mu)}
 html.m #m svg.ch text{opacity:.75}
-html.m #m svg.ch polyline.ln{fill:none;stroke-width:2}
+html.m #m svg.ch polyline.ln{fill:none;stroke-width:1.4;vector-effect:non-scaling-stroke}
 html.m #m .mlg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:.92rem}
 html.m #m .mlg i{font-style:normal;font-weight:600}
 

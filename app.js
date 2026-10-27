@@ -283,7 +283,7 @@ S.forEach((s,k)=>{g+='<polyline class="ln" stroke="'+COL[k%COL.length]+'" stroke
 g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
 CH[id]={S:S,x0:x0,L:L,dx:dx,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
 const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
-return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>'+(TAB==="r"?'<div class="mu">Drag across the chart to measure a period.</div>':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
+return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>'+(TAB==="r"?'':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
 }
 function chart(){
 const L=days.length-1,i0=Math.max(iStart(TF),0);
@@ -462,7 +462,7 @@ return;
 }
 if(TAB==="n"&&rows.length&&!bad.length){
 CH=[];positions();
-$("out").innerHTML=tabsHtml()+netWorth();
+$("out").innerHTML=kpis()+tabsHtml()+netWorth();
 return;
 }
 if(TAB==="t"&&rows.length&&!bad.length){
@@ -480,8 +480,8 @@ CH=[];
 $("out").innerHTML=kpis()+tabsHtml()+positions()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
 return;
 }
-if((TAB==="j"||TAB==="x"||TAB==="o")&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+(TAB==="j"?journal():TAB==="x"?taxView():radar());if(TAB==="o")radInit();return}
-if(TAB==="u"){CH=[];$("out").innerHTML=tabsHtml()+users();return}
+if((TAB==="j"||TAB==="x"||TAB==="o")&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=kpis()+tabsHtml()+(TAB==="j"?journal():TAB==="x"?taxView():radar());if(TAB==="o")radInit();return}
+if(TAB==="u"){CH=[];$("out").innerHTML=(rows.length?kpis():"")+tabsHtml()+users();return}
 renderR(syms,bad,warn);
 if(rows.length)$("out").innerHTML=kpis()+tabsHtml()+$("out").innerHTML;
 }
@@ -490,7 +490,7 @@ CH=[];
 let h="";
 if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
 if(rows.length){
-h+='<div class="card"><h2>'+(PB==="stock"?"Stock performance":"My performance (TWRR)")+'</h2><div class="tfc"><span class="mu">Periods shown: </span>'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div><div class="tfc"><span class="mu">Basis: </span>'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+h+='<div class="card"><h2>'+(PB==="stock"?"Stock performance":"My performance (TWRR)")+'</h2><div class="tfc">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div><div class="tfc">'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
 const NC=VTs().length+(CU?1:0)+2;
 const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.kind==="b"?bmLab(r.name):r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+VTs().map(t=>cell(rt(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
 (PF==="all"&&PT==="all"?rows.filter(r=>!r.k&&(r.kind!=="b"||r===actB())):[subRow()].concat([actB()]).filter(Boolean)).forEach(r=>{h+=line(r)});
@@ -700,7 +700,7 @@ if(need.length&&!SECL){SECL=true;loadSectors().finally(()=>{SECL=false})}
 else if(ALV==="c")items=grp(x=>x.cur);
 else{const m={};it.forEach(x=>{for(const b in x.br)m[b]=(m[b]||0)+x.br[b]});items=Object.keys(m).map(k=>({name:k,val:m[k]})).sort((a,b)=>b.val-a.val)}
 const B=[["h","Holdings"],["t","Type"],["s","Sector"],["c","Currency"],["b","Broker"]].map(z=>'<button data-alv="'+z[0]+'"'+(ALV===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("");
-return '<div class="card"><h2>Allocation</h2>'+B+'<p class="mu">Current value of what you hold, in euro. Currency is the currency the instrument is listed in. Derivatives are valued at cost.'+(ALV==="s"?' Sectors come from Yahoo Finance for stocks. ETFs are shown as broad funds unless their name is clearly one sector (technology, defence, private equity), because a look-through into the fund\'s holdings is not available.':'')+'</p>'+pie(items)+'</div>';
+return '<div class="card"><h2>Allocation</h2>'+B+(ALV==="s"?'<p class="mu">Sectors come from Yahoo Finance for stocks. ETFs are shown as broad funds unless their name is clearly one sector (technology, defence, private equity), because a look-through into the fund\'s holdings is not available.</p>':'')+pie(items)+'</div>';
 }
 function contrib(a){
 const T=rows[0].idx,base=a<0?100:T[a],C={},pos={},bas={},pvk={};let k=0;
@@ -983,7 +983,7 @@ const it=NW.items.find(i=>i.id===id),v=parseFloat(t.value);if(!it||!isFinite(v)|
 const d=new Date().toISOString().slice(0,10);it.h=it.h.filter(p=>p.d!==d);it.h.push({d:d,v:v});it.h.sort((a,b)=>a.d<b.d?-1:1);nwSave();render(G.syms,[],G.warn)});
 /* ---- Journal, Tax and Radar tabs ---- */
 const X=(e,n,f)=>LANG==="nl"?n:LANG==="fr"?f:e;
-let JRN=[],JRFIL="all",TAXY=null,TAXT="o",JK={k:"",n:""},JA="b",JPX={},JQT=null,RWATCH=null,RSEL=null,RAD={},RSEC={},TXQ={net:0,E:10000};
+let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",JK={k:"",n:""},JA="b",JPX={},JQT=null,RWATCH=null,RSEL=null,RAD={},RSEC={},TXQ={net:0,E:10000};
 try{JRN=JSON.parse(ls.get("jr")||"[]")}catch(e){JRN=[]}
 try{RWATCH=JSON.parse(ls.get("rw")||"null")}catch(e){RWATCH=null}
 const jrSave=()=>ls.set("jr",JSON.stringify(JRN)),rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
@@ -1037,10 +1037,12 @@ return '<div class="card"><h2>'+X("Investment journal","Beleggingsdagboek","Jour
 +'<div class="jr-f">'+jrDD("jri",X("Instrument","Instrument","Instrument"),JK.n||"\u2013",jrInstInner())+jrDD("jra",X("Action","Actie","Action"),jrAct()[JA],jrActInner())+'<input type="date" id="jrd" value="'+todayS()+'"><input type="number" step="any" id="jrl" placeholder="'+X("Buy below € (optional)","Kopen onder € (optioneel)","Acheter sous € (facultatif)")+'"><textarea id="jrn" rows="3" placeholder="'+X("Why did you buy or sell, or when do you want to?","Waarom kocht of verkocht je, of wanneer wil je dat doen?","Pourquoi avez-vous acheté ou vendu, ou quand voulez-vous le faire ?")+'"></textarea><button class="go" data-xa="jr-add">'+X("Save note","Notitie bewaren","Enregistrer")+'</button></div>'
 +'<div id="jrlist">'+jrList()+'</div></div>'}
 const todayS=()=>new Date().toISOString().slice(0,10);
+const eu2=x=>HIDE?"\u20ac\u2022\u2022\u2022":(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const rawAt=(k,i)=>{const d=G&&G.DR&&G.DR[k]?G.DR[k][i]:1;return P[k][i]/(d>0?d:1)};
 function taxCalc(){
 const by={},ev=[];tx.forEach(t=>{(by[t.key]=by[t.key]||[]).push(t)});
 let i25=-1;for(let j=0;j<days.length&&days[j]<="2025-12-31";j++)i25=j;
-for(const k in by){const o=isOpt(k),p25=!o&&P[k]&&i25>=0?P[k][i25]:null,lots=[];
+for(const k in by){const o=isOpt(k),p25=!o&&P[k]&&i25>=0?rawAt(k,i25):null,lots=[];
 by[k].slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0).forEach(t=>{const a=o?t.q:t.qa,c=isFinite(t.cs)?t.cs:t.g;
 if(a>0)lots.push({q:a,c:c,pre:t.d<"2026-01-01"});
 else if(a<0){const tot=-a;let need=tot;
@@ -1055,24 +1057,44 @@ let rem=Math.min(pool,Math.max(0,net));const nc=[];cv.forEach(c=>{const u=Math.m
 const un=1000-Math.min(1000,Math.max(0,net));if(un>0)nc.push({y:yr,amt:un});carry=nc;
 y[yr]={ev:E1,net:net,gains:gains,loss:loss,E:E,pool:pool,taxable:taxable,tax:taxable*.1}}
 return{y:y}}
+function txHover(e){
+const sv=e.target&&e.target.closest?e.target.closest("svg.txs"):null;
+document.querySelectorAll("svg.txs .txh").forEach(h=>{if(!sv||!sv.contains(h))h.style.display="none"});
+if(!sv||!TXK)return;const C=TXK,h=sv.querySelector(".txh");if(!h)return;
+const b=sv.getBoundingClientRect(),x=Math.min(Math.max((e.clientX-b.left)/b.width*C.W,C.pl),C.W-C.pr),t=Math.min(C.y0+(x-C.pl)/(C.W-C.pl-C.pr)*(C.y1-C.y0),C.now);
+let v=0;for(const p of C.pts){if(p[0]<=t)v=p[1];else break}
+const X1=C.pl+(t-C.y0)/(C.y1-C.y0)*(C.W-C.pl-C.pr),Y1=C.pt+(C.mx-v)*(C.H-C.pt-C.pb)/(C.mx-C.mn),iso=new Date(t).toISOString().slice(0,10),sd=C.ev.filter(z=>z.d===iso);
+const sg=n=>(n<0?"\u2212":"+")+eu2(Math.abs(n)),left=C.E-v,L=[new Date(t).toLocaleDateString(C.loc,{day:"numeric",month:"short",year:"numeric"}),X("Net gain to date ","Netto meerwaarde tot nu ","Plus-value nette à ce jour ")+sg(v),left>=0?X("Exemption left ","Nog vrij ","Exonération restante ")+eu2(left):X("Over exemption ","Boven vrijstelling ","Au-dessus exonération ")+eu2(-left)];
+sd.forEach(z=>L.push(X("Sold ","Verkocht ","Vendu ")+C.nm(z.k)+" "+sg(z.g)));
+const bw=232,bh=14+L.length*16,bx=X1>C.W/2?X1-bw-12:X1+12,by=Math.max(C.pt,Math.min(Y1-bh/2,C.H-C.pb-bh));
+h.style.display="";const ln=h.querySelector(".txl");ln.setAttribute("x1",X1.toFixed(1));ln.setAttribute("x2",X1.toFixed(1));
+const c=h.querySelector(".txc");c.setAttribute("cx",X1.toFixed(1));c.setAttribute("cy",Y1.toFixed(1));
+h.querySelector(".txp").innerHTML='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw+'" height="'+bh+'" rx="8" style="fill:var(--card);stroke:var(--bd)"/>'+L.map((l,i)=>'<text x="'+(bx+10).toFixed(1)+'" y="'+(by+18+i*16).toFixed(1)+'" font-size="11.5"'+(i===0?' style="fill:var(--mu)"':' style="fill:var(--fg)"')+'>'+esc(l)+'</text>').join("");
+}
+document.addEventListener("pointermove",txHover);document.addEventListener("pointerdown",txHover);
 function taxView(){
 const R=taxCalc(),ys=Object.keys(R.y).map(Number);if(TAXY==null||!R.y[TAXY])TAXY=ys[ys.length-1];
 const r=R.y[TAXY],left=r.E-r.net,nm=k=>{const z=POSL.find(z=>z.k===k);return z?z.n:k};TXQ={net:r.net,E:r.E};
-const W=700,H=250,pl=56,pr=12,pt=22,pb=26,y0=new Date(TAXY+"-01-01T00:00:00Z").getTime(),y1=new Date(TAXY+"-12-31T00:00:00Z").getTime(),now=Math.min(Date.now(),y1),xs=t=>pl+(Math.max(y0,Math.min(y1,t))-y0)/(y1-y0)*(W-pl-pr);
+const W=700,H=290,pl=58,pr=16,pt=26,pb=28,y0=new Date(TAXY+"-01-01T00:00:00Z").getTime(),y1=new Date(TAXY+"-12-31T00:00:00Z").getTime(),now=Math.min(Date.now(),y1),xs=t=>pl+(Math.max(y0,Math.min(y1,t))-y0)/(y1-y0)*(W-pl-pr);
 let cum=0;const pts=[[y0,0]];r.ev.forEach(e=>{const t=new Date(e.d+"T00:00:00Z").getTime();pts.push([t,cum]);cum+=e.g;pts.push([t,cum])});pts.push([now,cum]);
 const mn=Math.min(0,...pts.map(p=>p[1])),mx=Math.max(r.E*1.15,...pts.map(p=>p[1])),ys2=v=>pt+(mx-v)*(H-pt-pb)/(mx-mn);
 let g="";const st=Math.pow(10,Math.floor(Math.log10((mx-mn)/4)))*(((mx-mn)/4/Math.pow(10,Math.floor(Math.log10((mx-mn)/4))))<=2?2:5);
 for(let v=Math.ceil(mn/st)*st;v<=mx;v+=st)g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+ys2(v).toFixed(1)+'" y2="'+ys2(v).toFixed(1)+'" stroke="currentColor" opacity="'+(v===0?".35":".08")+'"/><text x="'+(pl-7)+'" y="'+(ys2(v)+4).toFixed(1)+'" font-size="11" text-anchor="end" fill="currentColor">'+(HIDE?"":(v<0?"\u2212":"")+"€"+(Math.abs(v)>=1000?Math.round(Math.abs(v)/1000)+"k":Math.abs(v)))+'</text>';
-const ex=ys2(r.E).toFixed(1);
-g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+ex+'" y2="'+ex+'" stroke="var(--neg)" stroke-dasharray="6 4" stroke-width="1.5"/><text x="'+(pl+6)+'" y="'+(ex-6)+'" font-size="11" style="fill:var(--neg)">'+X("Exemption","Vrijstelling","Exonération")+' '+(HIDE?"":"€"+Math.round(r.E).toLocaleString("en-US"))+'</text>';
-g+='<polyline points="'+pts.map(p=>xs(p[0]).toFixed(1)+","+ys2(p[1]).toFixed(1)).join(" ")+'" fill="none" style="stroke:var(--ac)" stroke-width="2.5" stroke-linejoin="round"/><circle cx="'+xs(now).toFixed(1)+'" cy="'+ys2(cum).toFixed(1)+'" r="4.5" style="fill:var(--ac)"/>';
+const ex=+ys2(r.E).toFixed(1),yb=ys2(0),loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",px=pts.map(p=>xs(p[0]).toFixed(1)+","+ys2(p[1]).toFixed(1)).join(" "),xe=xs(now).toFixed(1);
+g='<defs><linearGradient id="txg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ac);stop-opacity:.30"/><stop offset="1" style="stop-color:var(--ac);stop-opacity:0"/></linearGradient></defs>'+g;
+if(ex>pt)g+='<rect x="'+pl+'" y="'+pt+'" width="'+(W-pl-pr)+'" height="'+(ex-pt)+'" style="fill:var(--neg);opacity:.07"/><text x="'+(W-pr-6)+'" y="'+(pt+14)+'" font-size="10.5" text-anchor="end" style="fill:var(--neg);opacity:.9">'+X("Taxable zone","Belastbaar","Zone imposable")+'</text>';
+g+='<path d="M'+xs(y0).toFixed(1)+','+yb.toFixed(1)+' L'+px.split(" ").join(" L")+' L'+xe+','+yb.toFixed(1)+' Z" fill="url(#txg)"/>';
+g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+ex+'" y2="'+ex+'" style="stroke:var(--neg)" stroke-dasharray="5 4" stroke-width="1.4"/><text x="'+(pl+6)+'" y="'+(ex-6)+'" font-size="11" style="fill:var(--neg)">'+X("Exemption","Vrijstelling","Exonération")+' '+(HIDE?"":"€"+Math.round(r.E).toLocaleString("en-US"))+'</text>';
+g+='<polyline points="'+px+'" fill="none" style="stroke:var(--ac)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+xe+'" cy="'+ys2(cum).toFixed(1)+'" r="7" style="fill:var(--ac);opacity:.22"/><circle cx="'+xe+'" cy="'+ys2(cum).toFixed(1)+'" r="3.8" style="fill:var(--ac);stroke:var(--card)" stroke-width="1.5"/>';
 const mn2=X("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec","jan feb mrt apr mei jun jul aug sep okt nov dec","janv févr mars avr mai juin juil août sept oct nov déc").split(" ");
-for(let m=0;m<12;m++)g+='<text x="'+xs(Date.UTC(TAXY,m,15)).toFixed(1)+'" y="'+(H-8)+'" font-size="10.5" text-anchor="middle" fill="currentColor">'+mn2[m]+'</text>';
-const rowsH=r.ev.slice().reverse().map(e=>'<tr><td>'+e.d+'</td><td>'+esc(nm(e.k))+'</td><td>'+eur(e.pr)+'</td><td>'+eur(e.b)+'</td><td class="'+(e.g>=0?"pos":"neg")+'">'+(e.g>=0?"+":"")+eur(e.g)+'</td></tr>').join("");
+for(let m=0;m<12;m++)g+='<text x="'+xs(Date.UTC(TAXY,m,15)).toFixed(1)+'" y="'+(H-9)+'" font-size="10.5" text-anchor="middle" fill="currentColor">'+mn2[m]+'</text>';
+g+='<g class="txh" style="display:none;pointer-events:none"><line class="txl" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".35" stroke-dasharray="3 3"/><circle class="txc" r="4.5" style="fill:var(--ac);stroke:var(--card)" stroke-width="2"/><g class="txp"></g></g>';
+TXK={W:W,H:H,pl:pl,pr:pr,pt:pt,pb:pb,y0:y0,y1:y1,now:now,mn:mn,mx:mx,E:r.E,pts:pts,ev:r.ev,nm:nm,loc:loc};
+const rowsH=r.ev.slice().reverse().map(e=>'<tr><td>'+e.d+'</td><td>'+esc(nm(e.k))+'</td><td>'+eu2(e.b)+'</td><td>'+eu2(e.pr)+'</td><td class="'+(e.g>=0?"pos":"neg")+'">'+(e.g>=0?"+":"-")+eu2(Math.abs(e.g))+'</td></tr>').join("");
 const sh={};tx.forEach(t=>{if(isOpt(t.key)||t.d>"2025-12-31")return;sh[t.key]=(sh[t.key]||0)+(isFinite(t.qa)?t.qa:0)});
 let i25=-1;for(let j=0;j<days.length&&days[j]<="2025-12-31";j++)i25=j;
-const sr=Object.keys(sh).filter(k=>sh[k]>1e-6&&P[k]&&i25>=0&&isFinite(P[k][i25])).map(k=>({k:k,q:sh[k],p:P[k][i25],v:sh[k]*P[k][i25]})).sort((a,b)=>b.v-a.v),stot=sr.reduce((a,x)=>a+x.v,0);
-const SN=sr.length?'<p class="mu">'+X("Value of what you held on 31/12/2025. Shares bought before 2026 start counting from this price (or your real purchase price if that is higher), so only gains after this date are taxed.","Waarde van wat je op 31/12/2025 bezat. Aandelen gekocht voor 2026 starten vanaf deze koers (of je werkelijke aankoopprijs als die hoger is), zodat enkel winst na deze datum belast wordt.","Valeur de ce que vous déteniez au 31/12/2025. Les titres achetés avant 2026 comptent à partir de ce cours (ou de votre prix réel s’il est plus élevé), seules les plus-values après cette date sont taxées.")+'</p><div class="sc"><table><tr><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Shares","Aantal","Quantité")+'</th><th>'+X("Price 31/12/2025","Koers 31/12/2025","Cours 31/12/2025")+'</th><th>'+X("Value","Waarde","Valeur")+'</th></tr>'+sr.map(x=>'<tr><td>'+esc(nm(x.k))+'</td><td>'+(Math.round(x.q*1e4)/1e4)+'</td><td>€'+f2(x.p)+'</td><td>'+eur(x.v)+'</td></tr>').join("")+'<tr><td><b>Total</b></td><td></td><td></td><td><b>'+eur(stot)+'</b></td></tr></table></div>':'<p class="mu">'+X("Nothing held on 31/12/2025.","Niets in bezit op 31/12/2025.","Rien détenu au 31/12/2025.")+'</p>';
+const sr=Object.keys(sh).filter(k=>sh[k]>1e-6&&P[k]&&i25>=0&&isFinite(P[k][i25])).map(k=>({k:k,q:sh[k],p:rawAt(k,i25),v:sh[k]*rawAt(k,i25)})).sort((a,b)=>b.v-a.v),stot=sr.reduce((a,x)=>a+x.v,0);
+const SN=sr.length?'<p class="mu">'+X("Value of what you held on 31/12/2025. Shares bought before 2026 start counting from this price (or your real purchase price if that is higher), so only gains after this date are taxed.","Waarde van wat je op 31/12/2025 bezat. Aandelen gekocht voor 2026 starten vanaf deze koers (of je werkelijke aankoopprijs als die hoger is), zodat enkel winst na deze datum belast wordt.","Valeur de ce que vous déteniez au 31/12/2025. Les titres achetés avant 2026 comptent à partir de ce cours (ou de votre prix réel s’il est plus élevé), seules les plus-values après cette date sont taxées.")+'</p><div class="sc"><table class="txt"><tr><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Shares","Aantal","Quantité")+'</th><th>'+X("Close 31/12/2025","Slotkoers 31/12/2025","Clôture 31/12/2025")+infoI(X("Official closing price of that day, not adjusted for later dividends.","Officiële slotkoers van die dag, niet aangepast voor latere dividenden.","Cours de clôture officiel de ce jour, non ajusté pour les dividendes ultérieurs."))+'</th><th>'+X("Value","Waarde","Valeur")+'</th></tr>'+sr.map(x=>'<tr><td>'+esc(nm(x.k))+'</td><td>'+(Math.round(x.q*1e4)/1e4)+'</td><td>'+eu2(x.p)+'</td><td>'+eu2(x.v)+'</td></tr>').join("")+'<tr><td><b>Total</b></td><td></td><td></td><td><b>'+eu2(stot)+'</b></td></tr></table></div>':'<p class="mu">'+X("Nothing held on 31/12/2025.","Niets in bezit op 31/12/2025.","Rien détenu au 31/12/2025.")+'</p>';
 const TT=[["o",X("Overview","Overzicht","Aperçu")],["s",X("Sales","Verkopen","Ventes")],["p",X("Snapshot 31/12/2025","Momentopname 31/12/2025","Instantané 31/12/2025")]];
 return '<div class="card"><h2>'+X("Capital gains tax","Meerwaardebelasting","Taxe sur les plus-values")+'</h2><div class="tx-bar"><div class="seg">'+ys.map(y=>'<button data-xa="tx-y" data-v="'+y+'"'+(y===TAXY?' class="on"':"")+'>'+y+'</button>').join("")+'</div><div class="seg">'+TT.map(z=>'<button data-xa="tx-t" data-v="'+z[0]+'"'+(z[0]===TAXT?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div></div>'
 +(TAXT==="o"?'<div class="kpis">'
@@ -1080,7 +1102,7 @@ return '<div class="card"><h2>'+X("Capital gains tax","Meerwaardebelasting","Tax
 +xTile(left>=0?X("Exemption left","Nog vrij","Exonération restante"):X("Over the exemption","Boven de vrijstelling","Au-dessus de l’exonération"),eur(Math.abs(left)).replace("-",""),X("of ","van ","sur ")+eur(r.E)+(r.pool>0?" ("+X("incl. carried over ","incl. overgedragen ","dont reporté ")+eur(r.pool)+")":""),X("Per person, the first €10,000 of net gains per year is tax free (indexed later). Up to €1,000 of an unused first tranche carries over to next year, for max. 5 years (so max. €15,000).","Per persoon is de eerste €10.000 netto meerwaarde per jaar belastingvrij (later geïndexeerd). Van een niet gebruikte eerste schijf kan max. €1.000 naar het volgende jaar worden overgedragen, max. 5 jaar (dus max. €15.000).","Par personne, les premiers 10 000 € de plus-values nettes par an sont exonérés (indexés ensuite). Jusqu’à 1 000 € non utilisés sont reportables l’année suivante, 5 ans max. (soit 15 000 € max.)."))
 +xTile(X("Tax due","Te betalen belasting","Impôt dû"),eur(r.tax),"10% "+X("of ","van ","de ")+eur(r.taxable),X("10% on the part above the exemption. If your broker does not withhold it, you declare it in your tax return.","10% op het deel boven de vrijstelling. Houdt je broker het niet in, dan geef je het aan in je belastingaangifte.","10 % sur la part au-dessus de l’exonération. Si votre courtier ne la retient pas, vous la déclarez dans votre déclaration."))
 +'</div><svg class="txs" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'
-+'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div>':TAXT==="s"?(rowsH?'<div class="sc"><table><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):SN)
++'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div>':TAXT==="s"?(rowsH?'<div class="sc"><table class="txt"><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+infoI(X("Net proceeds: the sale amount minus trading costs.","Netto-opbrengst: het verkoopbedrag min transactiekosten.","Produit net : le montant de la vente moins les frais."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):SN)
 +'<p class="mu">'+X("Indicative, not tax advice. Uses FIFO, trading costs included, a 10% rate and a fixed €10,000 exemption. Losses only offset gains of the same year. Dividends are not part of this.","Indicatief, geen belastingadvies. Gebruikt FIFO, inclusief kosten, 10% tarief en een vaste vrijstelling van €10.000. Minderwaarden worden enkel met meerwaarden van hetzelfde jaar verrekend. Dividenden zitten hier niet in.","Indicatif, pas un conseil fiscal. Utilise FIFO, frais inclus, taux de 10 % et exonération fixe de 10 000 €. Les moins-values ne compensent que les plus-values de la même année. Les dividendes n’en font pas partie.")+'</p></div>'}
 const RSECMAP={"Technology":"XLK","Communication Services":"XLC","Consumer Cyclical":"XLY","Consumer Defensive":"XLP","Energy":"XLE","Financial Services":"XLF","Healthcare":"XLV","Industrials":"XLI","Basic Materials":"XLB","Real Estate":"XLRE","Utilities":"XLU"};
 const rwList=()=>RWATCH||POSL.filter(r=>!r.o&&r.typ==="Stock"&&r.q>0).map(r=>r.k);
@@ -1092,6 +1114,31 @@ if(e&&RSEC[e]===undefined){RSEC[e]=null;try{const r=await fetch(PROXY+"/?symbol=
 radPaint()}
 function radInit(){rwList().forEach(k=>radFetch(k))}
 function radPaint(){const el=document.getElementById("rdbox");if(el)el.innerHTML=radarInner()}
+const rdLoc=()=>LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB";
+const rdHist=d=>((d&&d.hist)||[]).filter(h=>h&&h.sp!=null&&isFinite(h.sp));
+function rdStats(d,n,loc){
+const H=rdHist(d),beat=H.filter(h=>h.sp>0).length,avg=H.length?H.reduce((a,h)=>a+h.sp,0)/H.length:null,dl=t=>t?Math.ceil((t*1000-Date.now())/864e5):null,dt=t=>new Date(t*1000).toLocaleDateString(loc,{day:"numeric",month:"short"});
+const sub=k=>k==null?"":k<0?X("reported","gerapporteerd","publié"):k===0?X("today","vandaag","aujourd’hui"):X("in "+k+" days","over "+k+" dagen","dans "+k+" j");
+const T=(l,v,s,c)=>'<div class="rd-s"><span class="mu">'+l+'</span><b'+(c?' class="'+c+'"':"")+'>'+v+'</b><small class="mu">'+s+'</small></div>';
+const ex=d.exDiv?T(X("Ex-dividend","Ex-dividend","Ex-dividende"),dt(d.exDiv),sub(dl(d.exDiv))):T(X("Vs analyst target","Vs koersdoel","Vs objectif"),d.target&&d.price?pc1(d.target/d.price-1):"\u2013",X("upside","potentieel","potentiel"),d.target&&d.price&&d.target<d.price?"neg":"pos");
+return '<div class="rd-st">'+T(X("Next report","Volgend rapport","Prochain rapport"),d.earnings?dt(d.earnings):"\u2013",d.earnings?sub(n):"")
++T(X("Beat estimates","Boven schatting","Au-dessus estim."),H.length?beat+" "+X("of","van","sur")+" "+H.length:"\u2013",X("past quarters","voorbije kwartalen","trimestres passés"))
++T(X("Average surprise","Gem. verrassing","Surprise moyenne"),avg==null?"\u2013":pc1(avg),X("actual vs estimate","werkelijk vs schatting","réel vs estimation"),avg==null?"":avg>=0?"pos":"neg")+ex+'</div>'}
+function radEv(){const ev=[];rwList().forEach(k=>{const d=RAD[k];if(!d)return;if(d.earnings)ev.push({t:d.earnings*1000,k:k,ty:"e"});if(d.exDiv)ev.push({t:d.exDiv*1000,k:k,ty:"x"})});return ev}
+function radCalHtml(){
+const loc=rdLoc(),y=RCAL.getFullYear(),m=RCAL.getMonth(),off=(new Date(y,m,1).getDay()+6)%7,dim=new Date(y,m+1,0).getDate(),ev=radEv(),td=new Date().toDateString();
+let c="";for(let i=0;i<7;i++)c+='<div class="rd-ch">'+new Date(2024,0,1+i).toLocaleDateString(loc,{weekday:"short"})+'</div>';
+for(let i=0;i<off;i++)c+='<div class="rd-cd o"></div>';
+for(let dd=1;dd<=dim;dd++){const D=new Date(y,m,dd),es=ev.filter(e=>new Date(e.t).toDateString()===D.toDateString());
+c+='<div class="rd-cd'+(D.toDateString()===td?" today":"")+'"><span class="mu">'+dd+'</span>'+es.map(e=>'<button type="button" class="jp '+(e.ty==="e"?"b":"g")+'" data-rc="s" data-k="'+esc(e.k)+'">'+esc(e.k.split(".")[0])+(e.ty==="x"?" ex":"")+'</button>').join("")+'</div>'}
+return '<div class="card mcard"><div class="mhead"><h2>'+RCAL.toLocaleDateString(loc,{month:"long",year:"numeric"})+'</h2><div><button type="button" class="ib" data-rc="p" aria-label="Previous">\u2039</button><button type="button" class="ib" data-rc="n" aria-label="Next">\u203a</button><button type="button" class="ib" data-rc="x" aria-label="Close">\u2715</button></div></div><div class="rd-cal">'+c+'</div><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Earnings","Resultaten","Résultats")+'</span><span><b style="color:var(--pos)">\u25cf</b> '+X("Ex-dividend (ex)","Ex-dividend (ex)","Ex-dividende (ex)")+'</span></div></div>'}
+function radCalShow(){let m=document.getElementById("rdcal");if(!m){m=document.createElement("div");m.id="rdcal";m.className="modal";document.body.appendChild(m)}m.innerHTML=radCalHtml();m.hidden=false}
+document.addEventListener("click",e=>{const m=document.getElementById("rdcal");if(!m||m.hidden||!m.contains(e.target))return;
+const b=e.target.closest("[data-rc]"),a=b&&b.getAttribute("data-rc");
+if(e.target===m||a==="x"){m.hidden=true;return}
+if(a==="p"||a==="n"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="n"?1:-1),1);m.innerHTML=radCalHtml()}
+else if(a==="s"){RSEL=b.getAttribute("data-k");m.hidden=true;radPaint()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){const m=document.getElementById("rdcal");if(m)m.hidden=true}});
 function radar(){return '<div class="card" id="rdbox">'+radarInner()+'</div>'}
 function radarInner(){
 const L=rwList(),now=Date.now(),loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB";if(RSEL==null||!L.includes(RSEL))RSEL=L[0];
@@ -1109,16 +1156,15 @@ else if(d==null)hub='<p class="mu">'+X("Loading…","Laden…","Chargement…")+
 else if(d===false)hub='<p class="mu">'+X("No data from the price service. Update the price-proxy worker first.","Geen data van de koersdienst. Update eerst de price-proxy worker.","Pas de données du service de cours. Mettez d’abord à jour le worker price-proxy.")+'</p>';
 else{const n=dd(RSEL),cur=d.currency||"",sc=d.sector&&RSEC[RSECMAP[d.sector]],pct=v=>v==null||!isFinite(v)?"\u2013":pc1(v),arrow=d.revNext!=null&&d.revG!=null?(d.revNext>d.revG+.01?"\u25b2":d.revNext<d.revG-.01?"\u25bc":"\u25ba"):"";
 hub='<div class="rd-h"><b>'+esc(nmOf(RSEL))+'</b>'+(d.earnings?' · '+X("reports","rapporteert","publie")+' '+new Date(d.earnings*1000).toLocaleDateString(loc,{day:"numeric",month:"short"})+(n!=null&&n>=0?' ('+X("in "+n+" days","over "+n+" dagen","dans "+n+" j")+')':""):"")+'<button class="jr-x" data-xa="rd-del" data-k="'+esc(RSEL)+'" title="Remove">\u2715</button></div>'
-+'<div class="mu">'+X("Last quarters vs estimate","Laatste kwartalen vs schatting","Derniers trimestres vs estimation")+'</div><div class="rd-b">'+((d.hist||[]).filter(h=>h&&h.sp!=null&&isFinite(h.sp)).map(h=>'<div class="rd-q"><i style="height:'+(18+Math.min(Math.abs(h.sp||0)*100,25)*2)+'px;background:var(--'+(h.sp>=0?"pos":"neg")+')"></i><span>'+pc1(h.sp||0)+'</span></div>').join("")||'<span class="mu">'+X("No estimate data available for this stock","Geen schattingsdata beschikbaar voor dit aandeel","Pas d’estimations disponibles pour cette action")+'</span>')+'</div>'
++rdStats(d,n,loc)+'<div class="rd-bt"><b>'+X("Earnings vs estimate","Resultaten vs schatting","Résultats vs estimation")+'</b>'+infoI(X("Each bar is one past quarter. It shows how far the company’s actual earnings per share (EPS) landed above (green) or below (red) what analysts expected, in %. A company that keeps beating estimates is often guided conservatively.","Elke balk is één voorbij kwartaal. Hij toont hoeveel de winst per aandeel (EPS) hoger (groen) of lager (rood) uitkwam dan analisten verwachtten, in %. Een bedrijf dat blijft overtreffen, geeft vaak voorzichtige verwachtingen.","Chaque barre est un trimestre passé. Elle montre de combien le bénéfice par action (BPA) a dépassé (vert) ou manqué (rouge) les attentes des analystes, en %. Une entreprise qui dépasse souvent les attentes les guide souvent prudemment."))+'</div><div class="rd-b">'+(rdHist(d).map(h=>'<div class="rd-q"><span class="'+(h.sp>=0?"pos":"neg")+'">'+pc1(h.sp)+'</span><i style="height:'+(18+Math.min(Math.abs(h.sp)*100,25)*2)+'px;background:var(--'+(h.sp>=0?"pos":"neg")+')"></i></div>').join("")||'<span class="mu">'+X("No estimate data available for this stock","Geen schattingsdata beschikbaar voor dit aandeel","Pas d’estimations disponibles pour cette action")+'</span>')+'</div><p class="mu rd-bc">'+X("Each bar = one past quarter: earnings per share vs analyst estimate. Green beat, red miss.","Elke balk = één voorbij kwartaal: winst per aandeel vs schatting van analisten. Groen = beter, rood = slechter.","Chaque barre = un trimestre passé : bénéfice par action vs estimation. Vert = dépassé, rouge = manqué.")+'</p>'
 +'<div class="rd-r"><span class="mu">'+X("Analyst target","Koersdoel analisten","Objectif des analystes")+'</span><b>'+(d.target?cur+" "+f2(d.target)+(d.price?" ("+pc1(d.target/d.price-1)+")":""):"\u2013")+'</b></div>'
 +'<div class="rd-r"><span class="mu">'+X("Sector this week","Sector deze week","Secteur cette semaine")+(d.sector?" · "+esc(d.sector):"")+'</span><b class="'+(sc&&sc.w<0?"neg":"pos")+'">'+(sc?pct(sc.w):"\u2013")+'</b></div>'
 +'<div class="rd-r"><span class="mu">'+X("Industry","Industrie","Industrie")+'</span><span>'+esc(d.industry||"\u2013")+'</span></div>'
-+'<div class="rd-t"><b>'+X("Industry trend","Sectortrend","Tendance du secteur")+infoI(X("Now: the company’s revenue growth and its sector ETF over 1 month. Next year: analysts’ revenue and earnings growth estimates. The arrow compares the two.","Nu: de omzetgroei van het bedrijf en de sector-ETF over 1 maand. Volgend jaar: schattingen van analisten voor omzet- en winstgroei. De pijl vergelijkt beide.","Maintenant : la croissance du chiffre d’affaires et l’ETF du secteur sur 1 mois. L’an prochain : estimations des analystes. La flèche compare les deux."))+'</b>'
-+'<div class="rd-r"><span class="mu">'+X("Now","Nu","Maintenant")+'</span><span>'+X("Revenue ","Omzet ","CA ")+pct(d.revG)+' · '+X("sector 1M ","sector 1M ","secteur 1M ")+(sc?pct(sc.m):"\u2013")+'</span></div>'
++'<div class="rd-t"><b>'+X("Industry trend","Sectortrend","Tendance du secteur")+infoI(X("Now: the company’s latest yearly revenue growth, and the price change of its sector ETF over the past month (about 21 trading days). Next year: analysts’ estimates for revenue and earnings growth. The arrow compares next year’s revenue growth with now: up means growth is expected to speed up.","Nu: de laatste jaarlijkse omzetgroei van het bedrijf en de koersverandering van de sector-ETF over de afgelopen maand (ongeveer 21 beursdagen). Volgend jaar: schattingen van analisten voor omzet- en winstgroei. De pijl vergelijkt de omzetgroei van volgend jaar met nu: omhoog betekent versnelling.","Maintenant : la croissance annuelle récente du chiffre d’affaires et la variation de l’ETF du secteur sur le dernier mois (environ 21 séances). L’an prochain : estimations des analystes. La flèche compare la croissance du CA de l’an prochain à l’actuelle : vers le haut = accélération."))+'</b>'
++'<div class="rd-r"><span class="mu">'+X("Now","Nu","Maintenant")+'</span><span>'+X("Revenue ","Omzet ","CA ")+pct(d.revG)+' · '+X("sector ETF, past month ","sector-ETF, afgelopen maand ","ETF du secteur, dernier mois ")+(sc?pct(sc.m):"\u2013")+'</span></div>'
 +'<div class="rd-r"><span class="mu">'+X("Next year","Volgend jaar","L’an prochain")+'</span><span>'+X("Revenue ","Omzet ","CA ")+pct(d.revNext)+' · '+X("earnings ","winst ","bénéfice ")+pct(d.epsNext)+' '+arrow+'</span></div></div>'}
-const up=ev.filter(e=>e.t>=t0.getTime()&&e.t<=t0.getTime()+45*864e5).map(e=>'<div class="rd-r"><span><button class="jp '+(e.ty==="e"?"b":"g")+'" data-xa="rd-s" data-k="'+esc(e.k)+'">'+(e.ty==="e"?X("Earnings","Resultaten","Résultats"):X("Ex-dividend","Ex-dividend","Ex-dividende"))+'</button> '+esc(e.k.split(".")[0])+'</span><span class="mu">'+new Date(e.t).toLocaleDateString(loc,{day:"numeric",month:"short"})+'</span></div>').join("");
-return '<h2>Radar<button class="jr-x" data-xa="rd-add" title="'+X("Add company","Bedrijf toevoegen","Ajouter")+'">+ '+X("Add","Toevoegen","Ajouter")+'</button></h2>'+wk+'<div class="rd-g"><div class="rd-l">'+list+'</div><div class="rd-rc">'+hub
-+'<div class="rd-up"><b>'+X("Coming up (45 days)","Binnenkort (45 dagen)","À venir (45 jours)")+'</b>'+(up||'<p class="mu">'+X("Nothing scheduled.","Niets gepland.","Rien de prévu.")+'</p>')+'</div><p class="mu">'+X("Your watchlist starts with the stocks you hold. Data from Yahoo Finance, so it can be incomplete.","Je kijklijst start met de aandelen die je bezit. Data van Yahoo Finance, dus mogelijk onvolledig.","Votre liste commence par les actions détenues. Données Yahoo Finance, possiblement incomplètes.")+'</p></div></div>'}
+return '<h2>Radar<button class="jr-x" data-xa="rd-add" title="'+X("Add company","Bedrijf toevoegen","Ajouter")+'">+ '+X("Add","Toevoegen","Ajouter")+'</button><button class="jr-x rd-ag" data-xa="rd-cal">'+X("Month view","Maandoverzicht","Vue mensuelle")+'</button></h2>'+wk+'<div class="rd-g"><div class="rd-l">'+list+'</div><div class="rd-rc">'+hub
++'<p class="mu">'+X("Your watchlist starts with the stocks you hold. Data from Yahoo Finance, so it can be incomplete.","Je kijklijst start met de aandelen die je bezit. Data van Yahoo Finance, dus mogelijk onvolledig.","Votre liste commence par les actions détenues. Données Yahoo Finance, possiblement incomplètes.")+'</p></div></div>'}
 function xaClick(e){
 const t=e.target.closest&&e.target.closest("[data-xa]");if(!t)return false;
 const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("data-k");
@@ -1132,16 +1178,28 @@ if(!JK.k||!n){alert(X("Pick an instrument and write a note first.","Kies een ins
 JRN.push({id:Date.now(),d:g("jrd").value||todayS(),k:JK.k,a:JA,n:n,lv:lv>0?lv:null,nm:JK.n});jrSave();rr()}
 else if(a==="tx-y"){TAXY=+v;rr()}
 else if(a==="tx-t"){TAXT=v;rr()}
+else if(a==="wb-use"){WB.ret=+v;ls.set("wb",JSON.stringify(WB));rr()}
+else if(a==="rd-cal"){const n=new Date();RCAL=new Date(n.getFullYear(),n.getMonth(),1);radCalShow()}
 else if(a==="rd-s"){RSEL=k;radPaint()}
 else if(a==="rd-add"){const s=(prompt(X("Yahoo Finance symbol (for example ASML.AS)","Yahoo Finance-symbool (bv. ASML.AS)","Symbole Yahoo Finance (ex. ASML.AS)"))||"").trim();if(s){const L=rwList().slice();if(!L.includes(s))L.push(s);RWATCH=L;ls.set("rw",JSON.stringify(L));RSEL=s;radFetch(s);radPaint()}}
 else if(a==="rd-del"){RWATCH=rwList().filter(x=>x!==k);ls.set("rw",JSON.stringify(RWATCH));RSEL=null;radPaint()}
 return true}
+function wbCagrInner(){
+const r=rows&&rows[0];if(!r||r.name!=="Total portfolio")return "";
+const cg=cagr(r),e=days.length-1,y=(new Date(days[e])-new Date(days[Math.max(0,r.st)]))/864e5/365.25,mo=Math.max(1,Math.round(y*12)),span=mo<24?mo+" months":(Math.round(y*10)/10)+" years",since=new Date(days[Math.max(0,r.st)]+"T00:00:00Z").toLocaleDateString("en-GB",{month:"short",year:"numeric"});
+if(cg==null||!isFinite(cg))return '<p class="mu wb-e">Your actual return (CAGR) shows up once you have about a year of data. So far: '+span+'.</p>';
+const c=cg*100,pl=+WB.ret||0,df=c-pl,up=Math.abs(df)>=0.05,short=mo<36;
+return '<div class="wb-c"><div><span>Your actual return (CAGR)'+infoI("Compound annual growth rate of your portfolio since your first investment, based on the time-weighted return (TWRR), so your own deposits and withdrawals do not count as performance.")+'</span><b class="'+(c>=0?"pos":"neg")+'">'+(c>=0?"+":"")+c.toFixed(1)+'%</b></div><div><span>Plan assumes</span><b>'+pl+'%</b></div></div>'
++'<div class="wb-ch">'+(up?'<span class="jp '+(df>0?"g":"r")+'">'+(df>0?"+":"\u2212")+Math.abs(df).toFixed(1)+' pts vs plan</span>':'<span class="jp n">in line with plan</span>')+'<span class="jp '+(short?"a":"n")+'">'+(short?"only ":"")+span+' of data</span></div>'
++'<p class="mu wb-e">Your portfolio grew '+c.toFixed(1)+'% per year on average since '+since+(up?', '+(df>0?"ahead of":"behind")+' the '+pl+'% this plan assumes':'')+'. '+(short?'That is a short track record: one strong or weak year moves the average a lot, so don\u2019t change the plan return from this alone.':'That is long enough to be a fair guide, but past returns don\u2019t guarantee future ones.')+'</p>'
++(up?'<button type="button" class="go wb-use" data-xa="wb-use" data-v="'+c.toFixed(1)+'">Use '+c.toFixed(1)+'% as expected return</button>':"")}
 function wealth(){
 if(WB.start==null)WB.start=Math.round(POSL.reduce((a,r)=>a+r.val,0));
 const inf=infoI,f=(k,l,t)=>'<label class="wf"><span>'+l+(t?inf(t):"")+'</span><input type="'+(HIDE&&["start","monthly","income"].includes(k)?"password":"number")+'" step="any" data-w="'+k+'" value="'+WB[k]+'"></label>',age=WB.mode==="age";
 let h='<div class="card"><h2>Wealth builder</h2><button data-wm="age"'+(age?' class="on"':"")+'>Retirement age</button><button data-wm="years"'+(age?"":' class="on"')+'>Future value</button>';
 h+='<div class="wg">'+f("age","Current age")+f("start","Starting capital (\u20ac)")+f("monthly","Monthly contribution (\u20ac)")+f("grow","Annual contribution increase (%)")+f("ret","Expected annual return (%)")+f("infl","Annual inflation (%)")
 +(age?f("income","Target monthly income (today\u2019s \u20ac)"):'<label class="wf"><span>Investment horizon: <b id="wby">'+WB.years+'</b> years</span><input type="range" min="1" max="50" step="1" data-w="years" value="'+WB.years+'"></label>')+f("wr","Withdrawal rate (%)","The share of your capital you withdraw each year once retired. At 4%, a capital of \u20ac1,000,000 pays \u20ac40,000 per year (about \u20ac3,333 per month). Your target capital is your wanted yearly income divided by this rate: a lower rate is safer but needs more capital, a higher rate lets you retire sooner but risks running out.")+'</div>';
+h+='<div id="wbc">'+wbCagrInner()+'</div>';
 h+='<p><label><input type="checkbox" data-w="real"'+(WB.real?" checked":"")+'> Show in today\u2019s euros (inflation-adjusted)</label>'+inf("Prices rise over time, so \u20ac100,000 in 25 years buys less than \u20ac100,000 today. Ticked: every amount is converted to today\u2019s purchasing power using the inflation rate above, which makes results easier to compare with your wanted income. Unticked: nominal euros, the actual amounts you would see at that date.")+'</p>';
 return h+'<p class="mu">Starting capital is prefilled with your current portfolio value. The estimate assumes a constant yearly return, monthly contributions, no taxes or fees, and that retirement means your capital reaches the amount where the withdrawal rate gives your wanted income. From that moment contributions stop (there is no income left to invest) and you withdraw your target income every month, rising with inflation; the chart shows the capital running down. Real markets fluctuate; this is an illustration, not advice.</p></div><div class="card"><h2>Projection</h2><div id="wbo"></div></div>';
 }
@@ -1160,6 +1218,7 @@ if(mo%12===0){pts.push({bal:bal,con:con,wd:wd,wdr:wdr});if(!retired)m*=1+WB.grow
 return {pts:pts,hit:hit,hb:hb,hc:hc,tg:tg};
 }
 function wbUpdate(){
+const cb=$("wbc");if(cb)cb.innerHTML=wbCagrInner();
 const el=$("wbo");if(!el||!POSL)return;
 const age=WB.mode==="age",inf=WB.infl/100,wr=Math.max(0.1,WB.wr)/100,inc=WB.income*12,a0=Math.round(WB.age);
 const T=age?Math.max(1,Math.min(70,100-a0)):Math.max(1,Math.min(60,Math.round(WB.years)));

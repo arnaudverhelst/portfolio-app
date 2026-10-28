@@ -732,7 +732,8 @@ return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
 const TABI={q:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 114 2c-.9.6-1.6 1.1-1.6 2.1M12 17h.01"/>',f:'<path d="M5 20V12M12 20V5M19 20v-5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
 const tabBtn=(k,l,g)=>'<button data-tab="'+k+'" title="'+l+'" class="sb'+(g||"B")+(TAB===k?" on":"")+'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
-const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbB">Planning</div>'+tabBtn("w","Wealth builder","B")+tabBtn("n","Net worth","B")+tabBtn("j","Journal","B")+'<div class="sec sbB">Help</div>'+tabBtn("q","FAQ","B")+'<div class="sec sbB">Admin</div>'+tabBtn("u","Users","B")+'</div>'+pfChips();
+let ME={admin:false,users:[]};
+const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbB">Planning</div>'+tabBtn("w","Wealth builder","B")+tabBtn("n","Net worth","B")+tabBtn("j","Journal","B")+'<div class="sec sbB">Help</div>'+tabBtn("q","FAQ","B")+(ME.admin?'<div class="sec sbB">Admin</div>'+tabBtn("u","Users","B"):"")+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -959,17 +960,17 @@ h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="p
 });
 return h+'</table></div></div>';
 }
-let USR=[];try{USR=JSON.parse(ls.get("users")||"[]")}catch(e){}
-const saveUsers=()=>ls.set("users",JSON.stringify(USR));
+async function meCall(b){try{const r=await fetch("/api/users",b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{cache:"no-store"}),j=r.ok?await r.json():null;if(!j){if(b)msg("Could not save.");return}if(j.suspended){document.body.innerHTML='<div style="font:16px Inter,sans-serif;padding:48px;text-align:center">Your access is paused. Contact the administrator.</div>';return}ME=j;if(!ME.users)ME.users=[];try{if(G&&G.syms)rr()}catch(e){}}catch(e){}}
 function users(){
-const n=USR.length,pro=USR.filter(u=>u.plan==="Pro").length,act=USR.filter(u=>u.status==="Active").length;
+if(!ME.admin)return"";
+const U=ME.users||[],n=U.length,pro=U.filter(u=>u.plan==="Pro").length,act=U.filter(u=>u.status!=="Suspended").length;
 const tile=(l,v,t)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv">'+v+'</div><div class="ks">'+t+'</div></div>';
-const sel=(o,v,id,f)=>'<select data-uid="'+id+'" data-uf="'+f+'">'+o.map(x=>'<option'+(x===v?" selected":"")+'>'+x+'</option>').join("")+'</select>';
-let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:4">'+tile("Total users",n,"In this browser")+tile("Free",n-pro,"Basic access")+tile("Pro",pro,"Paid plan")+tile("Active",act,"Not suspended")+'</div>';
+const sel=(o,v,id,f)=>'<select data-uid="'+esc(id)+'" data-uf="'+f+'">'+o.map(x=>'<option'+(x===v?" selected":"")+'>'+x+'</option>').join("")+'</select>';
+let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:4">'+tile("Total users",n,"Registered")+tile("Free",n-pro,"Basic access")+tile("Pro",pro,"Paid plan")+tile("Active",act,"Not suspended")+'</div>';
 h+='<div class="uf"><input id="uem" type="email" placeholder="name@company.com" autocomplete="off"><input id="unm" placeholder="Name" autocomplete="off"><select id="upl2"><option>Free</option><option>Pro</option></select><button class="go" data-ua="1">Add user</button></div>';
-h+='<div class="sc"><table><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th></th></tr>';
-if(!n)h+='<tr><td colspan="6" class="mu" style="text-align:left">No users yet. Add a test user to see how plans and statuses will look.</td></tr>';
-USR.forEach(u=>{h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td style="text-align:left">'+esc(u.email)+'</td><td>'+sel(["Free","Pro"],u.plan,u.id,"plan")+'</td><td>'+sel(["Active","Suspended"],u.status,u.id,"status")+'</td><td>'+fd(u.joined)+'</td><td><button class="ib" data-ud="'+u.id+'" title="Remove user" aria-label="Remove user">&#10005;</button></td></tr>'});
+h+='<div class="sc"><table><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last seen</th><th></th></tr>';
+if(!n)h+='<tr><td colspan="7" class="mu" style="text-align:left">No users yet.</td></tr>';
+U.forEach(u=>{const me=u.email===ME.email;h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td style="text-align:left">'+esc(u.email)+'</td><td>'+sel(["Free","Pro"],u.plan,u.email,"plan")+'</td><td>'+(me?"Admin":sel(["Active","Suspended"],u.status,u.email,"status"))+'</td><td>'+fd(u.joined)+'</td><td>'+(u.last?fd(u.last):"\u2013")+'</td><td>'+(me?"":'<button class="ib" data-ud="'+esc(u.email)+'" title="Remove user" aria-label="Remove user">&#10005;</button>')+'</td></tr>'});
 return h+'</table></div></div>';
 }
 function dvEvents(){
@@ -2034,11 +2035,10 @@ $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true;$("bkp").hidden=true;document.querySelectorAll("#pfw .pop").forEach(p=>p.hidden=true)}});
 $("run").addEventListener("click",()=>{$("setup").hidden=true});
-$("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t)return;
-if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}if(USR.some(u=>u.email===em)){msg("That email is already in the list.");return}USR.push({id:Date.now().toString(36),email:em,name:nm,plan:$("upl2").value,status:"Active",joined:new Date().toISOString().slice(0,10)})}
-else USR=USR.filter(u=>u.id!==t.getAttribute("data-ud"));
-saveUsers();render(G.syms,[],G.warn)});
-$("out").addEventListener("change",e=>{const el=e.target,id=el.getAttribute&&el.getAttribute("data-uid");if(!id)return;const u=USR.find(x=>x.id===id);if(!u)return;if(el.getAttribute("data-uf")==="plan")u.plan=el.value;else u.status=el.value;saveUsers();render(G.syms,[],G.warn)});
+$("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t||!ME.admin)return;
+if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}if((ME.users||[]).some(u=>u.email===em)){msg("That email is already in the list.");return}meCall({op:"add",email:em,name:nm,plan:$("upl2").value})}
+else meCall({op:"del",email:t.getAttribute("data-ud")})});
+$("out").addEventListener("change",e=>{const el=e.target,id=el.getAttribute&&el.getAttribute("data-uid");if(!id||!ME.admin)return;const f=el.getAttribute("data-uf"),b={op:"set",email:id};b[f]=el.value;meCall(b)});
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#sbt");if(!b)return;const R=document.documentElement,c=R.getAttribute("data-sb")==="c";if(c)R.removeAttribute("data-sb");else R.setAttribute("data-sb","c");ls.set("sb",c?"":"c");b.title=c?"Collapse sidebar":"Expand sidebar";b.setAttribute("aria-label",b.title);setTimeout(fit,0)});
 if(ls.get("sb")==="c")document.documentElement.setAttribute("data-sb","c");
 document.documentElement.setAttribute("data-kpi","a");
@@ -2436,6 +2436,6 @@ $("out").addEventListener("click",e=>{
 const b=e.target.closest&&e.target.closest("[data-pcm],[data-loc]");if(!b)return;
 if(b.hasAttribute("data-pcm")){MODE=+b.getAttribute("data-pcm");calc()}else setLoc(b.getAttribute("data-loc")==="1");
 });
-renderGuide();syncPrefs();
+renderGuide();syncPrefs();meCall();
 document.documentElement.lang=LANG;
 if(LANG!=="en"){TUSED=true;TBUSY=true;try{trNode(document.body)}finally{TMO.takeRecords();TBUSY=false}}

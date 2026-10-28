@@ -1084,10 +1084,10 @@ const X=(e,n,f)=>LANG==="nl"?n:LANG==="fr"?f:e;
 let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",JK={k:"",n:""},JA="b",JPX={},JQT=null,RWATCH=null,RSEL=null,RAD={},RSEC={},TXQ={net:0,E:10000};
 try{JRN=JSON.parse(ls.get("jr")||"[]")}catch(e){JRN=[]}
 try{RWATCH=JSON.parse(ls.get("rw")||"null")}catch(e){RWATCH=null}
-jrIDB("get").then(s=>{if(!s)return;try{const A=JSON.parse(s),m=new Map(JRN.map(x=>[String(x.id),x])),n=m.size;A.forEach(x=>{if(x&&x.id!=null&&x.d&&!m.has(String(x.id)))m.set(String(x.id),x)});if(m.size>n){JRN=[...m.values()];ls.set("jr",JSON.stringify(JRN));if(typeof jrPaint==="function")jrPaint()}}catch(e){}});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const jrIDB=(m,v)=>new Promise(res=>{try{const q=indexedDB.open("pf-jr",1);q.onupgradeneeded=()=>q.result.createObjectStore("k");q.onerror=()=>res(null);q.onsuccess=()=>{try{const s=q.result.transaction("k",m==="get"?"readonly":"readwrite").objectStore("k"),r=m==="get"?s.get("jr"):s.put(v,"jr");r.onsuccess=()=>res(m==="get"?r.result:true);r.onerror=()=>res(null)}catch(e){res(null)}}}catch(e){res(null)}});
 const jrSave=()=>{const s=JSON.stringify(JRN);ls.set("jr",s);jrIDB("put",s)},rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
+jrIDB("get").then(s=>{if(!s)return;try{const A=JSON.parse(s),m=new Map(JRN.map(x=>[String(x.id),x])),n=m.size;A.forEach(x=>{if(x&&x.id!=null&&x.d&&!m.has(String(x.id)))m.set(String(x.id),x)});if(m.size>n){JRN=[...m.values()];ls.set("jr",JSON.stringify(JRN));if(typeof jrPaint==="function")jrPaint()}}catch(e){}});
 const xTile=(l,v,s,i)=>'<div class="kpi"><div class="kl">'+l+(i?infoI(i):"")+'</div><div class="kv">'+v+'</div><div class="ks">'+s+'</div></div>';
 function pxAt(k,d){if(!P[k])return null;let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i<0?null:{i:i,p:P[k][i]}}
 function jrOut(e){const s=JPX[e.k];if(!s||!s.d)return null;let i=-1;for(let j=0;j<s.d.length&&s.d[j]<=e.d;j++)i=j;if(i<0)i=0;return {p:s.cv[i],now:s.cv[s.cv.length-1],cur:s.cur}}

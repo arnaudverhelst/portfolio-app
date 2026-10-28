@@ -238,7 +238,8 @@ table.fx th{white-space:nowrap}
 .dk span{font-size:.72em;color:var(--mu)}.dk b{font-size:1rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dkh{grid-column:1/-1;font:500 11px Inter,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
 .dkr{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}
-.inf{display:inline-grid;place-items:center;width:14px;height:14px;margin-left:4px;border:1px solid currentColor;border-radius:50%;font-size:.65rem;font-style:italic;text-transform:none;cursor:help;vertical-align:1px}
+.inf{display:inline-block;width:15px;height:15px;margin-left:5px;border:0;border-radius:0;font-size:0;background:currentColor;opacity:.7;cursor:help;vertical-align:-2px;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 11v5.2'/%3E%3Ccircle cx='12' cy='7.8' r='.7' fill='black' stroke='none'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9.2'/%3E%3Cpath d='M12 11v5.2'/%3E%3Ccircle cx='12' cy='7.8' r='.7' fill='black' stroke='none'/%3E%3C/svg%3E") center/contain no-repeat}
+.inf::before{content:none}.inf:hover,.inf:focus{opacity:1;outline:0}
 .dtf{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 6px}.dtf button{margin:0}
 
 #setup .mcard{display:flex;flex-direction:column}
@@ -382,3 +383,9 @@ html[data-mode=dark]{--sbc:#8FB8FF}html[data-mode=light]{--sbc:var(--ac)}
 #side .tabs button.sbC.on{background:color-mix(in srgb,var(--sbc) 14%,transparent);color:var(--sbc);font-weight:600;box-shadow:none}
 #side .tabs button.sbC.on svg{color:var(--sbc)}
 .wb-sc{margin:8px 0}
+
+#view.v-r{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"charts"}
+.pft-sel{gap:10px}.pft-sel .seg button:disabled{opacity:.4;cursor:default}.pft-tf{margin:6px 0 4px}
+.pft th{font-size:12px;font-weight:500;text-align:right}.pft th:first-child{text-align:left}
+.pft td{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.pft td:first-child{text-align:left}
+.pft tr.pfb td:first-child{font-weight:600}.pft tr.pfd td{font-size:12px}

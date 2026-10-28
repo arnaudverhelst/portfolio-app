@@ -261,15 +261,24 @@ let mn=zero?0:1e18,mx=zero?0:-1e18;
 S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
 (marks||[]).forEach(m=>{if(m.v<mn)mn=m.v;if(m.v>mx)mx=m.v});
 if(mx===mn){mx+=1;mn-=1}
-const raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+let raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
+const pcA=fmt===pctf;if(pcA){step=Math.max(1,step);if(step%1)step=Math.floor(step)}
 mn=Math.floor(mn/step+1e-9)*step;mx=Math.ceil(mx/step-1e-9)*step;
 const xs=i=>pl+(i-x0)*(W-pl-pr)/(L-x0),ys=v=>H-pb-(v-mn)*(H-pt-pb)/(mx-mn);
 let g="";
 const n=Math.round((mx-mn)/step);
 for(let k=0;k<=n;k++){
 const v=mn+k*step,z=Math.abs(v)<step/1000,y=ys(v).toFixed(1);
-g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl" stroke="currentColor" opacity="'+(z?".5":".09")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+fmt(z?0:v)+'</text>';
+g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl" stroke="currentColor" opacity="'+(z?".5":".09")+'"'+(z?' stroke-dasharray="5 4"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+(pcA?(z?0:Math.round(v))+"%":fmt(z?0:v))+'</text>';
 }
+{const D=dx||days,tk=[];let pm=null;
+for(let i=x0;i<=L;i++){const m=D[i].slice(0,7);if(m!==pm){tk.push({i:i,y:+m.slice(0,4),m:+m.slice(5,7)-1});pm=m}}
+const sp=tk.length>1?(tk[tk.length-1].y*12+tk[tk.length-1].m)-(tk[0].y*12+tk[0].m)+1:1,stp=sp<=8?1:sp<=16?2:sp<=26?3:sp<=50?6:12;
+const lab=t=>MN[t.m].slice(0,3)+" "+String(t.y).slice(2);
+let sel=tk.filter((t,k)=>k===0||stp===1||t.m%stp===0);
+if(sel.length<2){const e=D[L],t={i:L,y:+e.slice(0,4),m:+e.slice(5,7)-1};if(!sel.length||lab(t)!==lab(sel[0]))sel.push(t)}
+const kp=[];sel.forEach(t=>{const p=kp[kp.length-1];if(!p||xs(t.i)-xs(p.i)>=46)kp.push(t)});
+kp.forEach(t=>{const X=xs(t.i),nl=X-pl<22,nr=W-pr-X<22;if(X-pl>2)g+='<line x1="'+X.toFixed(1)+'" x2="'+X.toFixed(1)+'" y1="'+pt+'" y2="'+(H-pb)+'" class="gl" stroke="currentColor" opacity=".09"/>';g+='<text x="'+X.toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(nl?"start":nr?"end":"middle")+'" fill="currentColor">'+lab(t)+'</text>'})}
 if(S.length<=2&&S[0].v.length>1){
 const s0=S[0],by=ys(zero?0:mn).toFixed(1);let d="M"+xs(s0.a).toFixed(1)+","+by;
 s0.v.forEach((v,j)=>{d+="L"+xs(s0.a+j).toFixed(1)+","+ys(v).toFixed(1)});
@@ -279,7 +288,6 @@ g+='<defs><linearGradient id="ag'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset
 S.forEach((s,k)=>{g+='<polyline class="ln" stroke="'+COL[k%COL.length]+'" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/><circle cx="'+xs(s.a+s.v.length-1).toFixed(1)+'" cy="'+ys(s.v[s.v.length-1]).toFixed(1)+'" r="3.5" fill="'+COL[k%COL.length]+'" style="stroke:var(--card)" stroke-width="1.5"/>'});
 (marks||[]).forEach(m=>{g+='<circle cx="'+xs(m.i).toFixed(1)+'" cy="'+ys(m.v).toFixed(1)+'" r="5" fill="'+m.c+'" style="stroke:var(--card)" stroke-width="2"/>'});
 (evs||[]).forEach(e=>{const X=xs(e.i).toFixed(1),rt=xs(e.i)<W*0.72;g+='<line x1="'+X+'" x2="'+X+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".4" stroke-dasharray="4 4"/><text x="'+(+X+(rt?6:-6))+'" y="'+(pt+12)+'" font-size="11.5" font-weight="600" text-anchor="'+(rt?"start":"end")+'" fill="currentColor" opacity=".85">'+esc(e.label)+'</text>'});
-[...new Set((dx?[0,.25,.5,.75,1]:[0,.5,1]).map(f=>Math.round(x0+(L-x0)*f)))].forEach((i,k)=>{g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(i===x0?"start":i===L?"end":"middle")+'" fill="currentColor">'+((dx&&i!==x0&&i!==L)?MN[+dx[i].slice(5,7)-1].slice(0,3)+" '"+dx[i].slice(2,4):fd((dx||days)[i]))+'</text>'});
 g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
 CH[id]={S:S,x0:x0,L:L,dx:dx,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
 const lg=S.map((s,k)=>'<span><b style="color:'+COL[k%COL.length]+'">●</b> '+esc(s.name)+'</span>').join("");
@@ -490,15 +498,6 @@ CH=[];
 let h="";
 if(SK.length)warn=warn.concat(["Skipped by your choice: "+SK.join(", ")]);
 if(rows.length){
-h+='<div class="card"><h2>'+(PB==="stock"?"Stock performance":"My performance (TWRR)")+'</h2><div class="tfc">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div><div class="tfc">'+[["me","My performance (TWRR)"],["stock","Stock performance"]].map(z=>'<button data-pb="'+z[0]+'"'+(PB===z[0]?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div><div class="sc"><table><tr><th>Instrument</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
-const NC=VTs().length+(CU?1:0)+2;
-const line=r=>"<tr><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.kind==="b"?bmLab(r.name):r.name))+(r.kind==="b"?" (benchmark)":"")+"</td>"+VTs().map(t=>cell(rt(r,t))).join("")+(CU?cell(ret(r,"C")):"")+cell(cagr(r))+"</tr>";
-(PF==="all"&&PT==="all"?rows.filter(r=>!r.k&&(r.kind!=="b"||r===actB())):[subRow()].concat([actB()]).filter(Boolean)).forEach(r=>{h+=line(r)});
-["ETF","Stock","Derivative"].forEach(ty=>{
-const g=rows.filter(r=>r.k&&r.typ===ty&&(PT==="all"||r.typ===PT)&&(PF==="all"||(PF==="open")===!!r.open)).sort((x,y)=>byName(x.name,y.name));
-if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
-});
-h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. For closed positions, a period shows the return while the position was held. Basis: "My performance" is time-weighted, so it ignores when you added money and equals the stock\'s own return over the time you held it; "Stock performance" is the price return over the whole period, whether or not you held it (dividends reinvested). Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"")+'</div>';
 h+='<div class="card"><h2>Comparison</h2>'+TFA().map(t=>'<button data-tf="'+t+'"'+(t===TF?' class="on"':"")+">"+t+"</button>").join("")+chart()+"</div>";
 }
 if(rows.length)h+=valueCard();
@@ -620,28 +619,57 @@ function mwrr(ty,tv){const F=mwFl(ty);if(!F.length)return null;F.push({d:days[da
 function mwBm(ty,bm){if(!bm||!bm.idx)return null;const L=days.length-1,ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i};let u=0;const F=[];
 mwFl(ty).filter(f=>f.t==="x").forEach(f=>{let i=ia(f.d);if(i<0)i=0;const p=bm.idx[i];if(!isFinite(p)||p<=0)return;u=Math.max(0,u-f.a/p);F.push({d:f.d,a:f.a})});
 if(!F.length)return null;F.push({d:days[L],a:u*bm.idx[L]});return xirr(F)}
-let PFA="t";
+let PFA="t",PM=ls.get("pm")||"t";
+const pChips=()=>'<div class="tfc pft-tf">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div>';
+function perSpan(t,r){const L=days.length-1;if(t==="C")return(new Date(CT)-new Date(CF))/864e5;const i0=t==="Max"?(r&&r.st>=0?r.st:0):iStart(t);if(i0<0)return 0;return(new Date(days[L])-new Date(days[i0]))/864e5}
+const annV=(v,t,r)=>{if(v==null||PFA!=="a")return v;const d=perSpan(t,r);return d>=365?Math.pow(1+v,365/d)-1:v};
+function twrrTbl(){let h="";
+h+=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+const NC=VTs().length+(CU?1:0)+2;
+const val=(r,t)=>annV(t==="C"?ret(r,"C"):rt(r,t),t,r);
+const line=r=>"<tr"+(r.k?"":' class="pfb"')+"><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.kind==="b"?bmLab(r.name):r.name==="Total portfolio"?"My portfolio":r.name))+"</td>"+VTs().map(t=>cell(val(r,t))).join("")+(CU?cell(val(r,"C")):"")+cell(cagr(r))+"</tr>";
+const tops=(PF==="all"&&PT==="all"?rows.filter(r=>!r.k&&(r.kind!=="b"||r===actB())):[subRow()].concat([actB()]).filter(Boolean));
+tops.forEach(r=>{h+=line(r)});
+{const a0=tops[0],bb=tops.find(r=>r.kind==="b");if(a0&&bb&&a0!==bb){const dc=v=>v==null?'<td class="mu">\u2013</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+" pts</td>";h+='<tr class="pfd"><td class="mu">'+X("Difference vs index","Verschil met index","\u00c9cart vs indice")+"</td>"+VTs().map(t=>dc(val(a0,t)!=null&&val(bb,t)!=null?val(a0,t)-val(bb,t):null)).join("")+(CU?dc(val(a0,"C")!=null&&val(bb,"C")!=null?val(a0,"C")-val(bb,"C"):null):"")+'<td class="mu">\u2013</td></tr>'}}
+["ETF","Stock","Derivative"].forEach(ty=>{
+const g=rows.filter(r=>r.k&&r.typ===ty&&(PT==="all"||r.typ===PT)&&(PF==="all"||(PF==="open")===!!r.open)).sort((x,y)=>byName(x.name,y.name));
+if(g.length){h+='<tr><td colspan="'+NC+'" class="grp">'+TYPN[ty]+'</td></tr>';g.forEach(r=>{h+=line(r)})}
+});
+h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. For closed positions, a period shows the return while the position was held. Basis: "My performance" is time-weighted, so it ignores when you added money and equals the stock\'s own return over the time you held it; "Stock performance" is the price return over the whole period, whether or not you held it (dividends reinvested). Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"");
+return h}
+function mwP(ty,t,bm){
+const L=days.length-1;let i0,i1=L;
+if(t==="Max")i0=-1;else if(t==="C"){i0=dayIdx(CF);i1=dayIdx(CT)}else i0=iStart(t);
+if(t!=="Max"&&(i0<0||i1<=i0))return null;
+if(bm&&!bm.idx)return null;
+const ks=ty==="all"?null:new Set(G.keys.filter(k=>typOf(k)===ty)),d0=i0>=0?days[i0]:null,d1=days[i1];
+let F=mwFl(ty).filter(f=>f.d<=d1&&(!d0||f.d>d0)),V0=i0>=0?valueAt(i0,ks):0,V1;
+if(!bm)V1=valueAt(i1,ks);
+else{let u=i0>=0?V0/bm.idx[i0]:0;const kept=[];F.filter(f=>f.t==="x").forEach(f=>{let j=dayIdx(f.d);if(j<0)j=0;const p=bm.idx[j];if(!isFinite(p)||p<=0)return;u=Math.max(0,u-f.a/p);kept.push(f)});V1=u*bm.idx[i1];F=kept}
+if(!F.length&&!(V0>0))return null;
+const t0=d0||F[0].d,T=(new Date(d1)-new Date(t0))/864e5;if(!(T>0))return null;
+const FF=[];if(V0>0)FF.push({d:t0,a:-V0});F.forEach(f=>FF.push({d:f.d,a:f.a}));FF.push({d:d1,a:V1});
+if(PFA==="a"&&T>=365){const r=xirr(FF);if(r!=null)return r}
+let sc=0,sw=0;F.forEach(f=>{const c=-f.a;sc+=c;sw+=c*((new Date(d1)-new Date(f.d))/864e5)/T});
+const den=V0+sw;if(!(den>0))return null;
+const tot=(V1-V0-sc)/den;return PFA==="a"&&T>=365?Math.pow(1+tot,365/T)-1:tot}
+function mwrrTbl(){
+const bm=actB(),E=[["all","My portfolio"],["Stock",X("Stocks","Aandelen","Actions")],["ETF","ETFs"]].filter(e=>PT==="all"?(e[0]==="all"||G.keys.some(k=>typOf(k)===e[0])):e[0]===PT),tfs=[...VTs(),...(CU?["C"]:[])];
+let h=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"</tr>";
+E.forEach(e=>{h+="<tr"+(e[0]==="all"?' class="pfb"':"")+"><td>"+e[1]+"</td>"+tfs.map(t=>cell(mwP(e[0],t))).join("")+"</tr>"});
+if(bm)h+='<tr class="pfb"><td>'+esc(bmLab(bm.name))+infoI(X("What you would have earned if every one of your buys and sells had gone into the index on the same day.","Wat je zou verdiend hebben als elke aan- en verkoop op dezelfde dag in de index was gegaan.","Ce que vous auriez gagn\u00e9 si chacun de vos achats et ventes avait \u00e9t\u00e9 plac\u00e9 dans l\u2019indice le m\u00eame jour."))+"</td>"+tfs.map(t=>cell(mwP("all",t,bm))).join("")+"</tr>";
+return h+"</table></div>"}
 function perfView(){
-const bm=actB(),tvOf=ty=>POSL.filter(r=>ty==="all"||r.typ===ty).reduce((a,r)=>a+r.val,0),
-mk=ty=>{if(ty==="all")return rows[0];const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(!ks.size)return null;const q=twrr(ks,MODE);return{idx:q.idx,st:q.st,held:q.held}};
-const E=[["all",X("Total portfolio","Totale portefeuille","Portefeuille total")],["Stock",X("Stocks","Aandelen","Actions")],["ETF","ETFs","ETFs"]],Pd=["1M","YTD","1Y","Max"],an=PFA==="a",
-g=(o,p)=>!o?null:p==="Max"&&an?cagr(o):ret(o,p),bv=Pd.map(p=>g(bm,p)),
-pc=v=>v==null?'<td class="mu">\u2013</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+" pts</td>",
-nul='<td class="mu">\u2013</td>';
+const bm=actB(),an=PFA==="a",mw=PM==="m"&&PB!=="stock",pb=mw?"me":PB;
 if(!bm)return '<div class="card"><h2>Performance</h2><p class="mu">Pick an index in the top bar to compare with.</p></div>';
-let r1="",r2="";
-E.forEach(e=>{const o=mk(e[0]),v=Pd.map(p=>g(o,p)),mw=mwrr(e[0],tvOf(e[0])),mb=mwBm(e[0],bm);
-r1+='<tr><td>'+e[1]+'</td>'+v.map(cell).join("")+cell(mw)+cell(mb)+pc(mw!=null&&mb!=null?mw-mb:null)+'</tr>';
-r2+='<tr><td>'+e[1]+'</td>'+v.map((x,i)=>pc(x!=null&&bv[i]!=null?x-bv[i]:null)).join("")+'</tr>'});
-const hd='<th>'+Pd.map(p=>p==="Max"&&an?"Max / yr":p).join('</th><th>')+'</th>',
-tw=infoI(X("How much would \u20ac1 have grown if it had been invested throughout the entire period, regardless of when you added money? Use this to compare your portfolio with the index.","Hoeveel zou \u20ac1 gegroeid zijn als het de hele periode belegd was, ongeacht wanneer je geld toevoegde? Gebruik dit om je portefeuille met de index te vergelijken.","De combien \u20ac1 aurait-il progress\u00e9 s\u2019il avait \u00e9t\u00e9 investi sur toute la p\u00e9riode, quel que soit le moment de vos versements ? Pour comparer avec l\u2019indice.")),
-mt=infoI(X("What annualised return did you actually earn on the money you contributed, considering when each contribution was made? Also known as the money-weighted rate of return or IRR.","Welk jaarlijks rendement behaalde je echt op het geld dat je inlegde, rekening houdend met wanneer je het inlegde? Ook gekend als money-weighted rendement of IRR.","Quel rendement annualis\u00e9 avez-vous r\u00e9ellement obtenu sur l\u2019argent vers\u00e9, selon la date de chaque versement ? Aussi appel\u00e9 taux de rendement pond\u00e9r\u00e9 par les flux ou TRI.")),
-mi=infoI(X("What you would have earned if every one of your buys and sells had gone into the index on the same day.","Wat je zou verdiend hebben als elke aan- en verkoop op dezelfde dag in de index was gegaan.","Ce que vous auriez gagn\u00e9 si chacun de vos achats et ventes avait \u00e9t\u00e9 plac\u00e9 dans l\u2019indice le m\u00eame jour."));
-return '<div class="card"><h2>Performance</h2><div class="tx-bar"><div class="seg"><button data-xa="pf-a" data-v="t"'+(an?"":' class="on"')+'>'+X("Total","Totaal","Total")+'</button><button data-xa="pf-a" data-v="a"'+(an?' class="on"':"")+'>'+X("Annualised","Per jaar","Annualis\u00e9")+'</button></div></div>'
-+'<div class="sc"><table class="txt"><tr><th></th><th colspan="4">TWRR '+X("(investment performance)","(beleggingsrendement)","(performance de l\u2019investissement)")+tw+'</th><th colspan="3">MWRR '+X("annualised (your performance)","per jaar (jouw rendement)","annualis\u00e9 (votre performance)")+mt+'</th></tr>'
-+'<tr><th></th>'+hd+'<th>'+X("You","Jij","Vous")+'</th><th>'+X("Index, same flows","Index, zelfde stromen","Indice, m\u00eames flux")+mi+'</th><th>'+X("Difference","Verschil","\u00c9cart")+'</th></tr>'
-+r1+'<tr><td><b>'+esc(bmLab(bm.name))+'</b></td>'+bv.map(cell).join("")+nul+nul+nul+'</tr></table></div>'
-+'<h2 style="margin-top:18px">'+X("Versus benchmark","Tegenover benchmark","Face \u00e0 l\u2019indice")+'</h2><div class="sc"><table class="txt"><tr><th></th>'+hd+'</tr>'+r2+'</table></div></div>'}
+const sg=(at,L)=>'<div class="seg">'+L.map(z=>'<button '+at+'="'+z[0]+'"'+(z[2]?' class="on"':"")+(z[3]?" disabled":"")+'>'+z[1]+'</button>').join("")+'</div>',
+tw=infoI(mw?X("What annualised return did you actually earn on the money you contributed, considering when each contribution was made? Also known as the money-weighted rate of return or IRR.","Welk jaarlijks rendement behaalde je echt op het geld dat je inlegde, rekening houdend met wanneer je het inlegde? Ook gekend als money-weighted rendement of IRR.","Quel rendement annualis\u00e9 avez-vous r\u00e9ellement obtenu sur l\u2019argent vers\u00e9, selon la date de chaque versement ? Aussi appel\u00e9 taux de rendement pond\u00e9r\u00e9 par les flux ou TRI."):X("How much would \u20ac1 have grown if it had been invested throughout the entire period, regardless of when you added money? Use this to compare your portfolio with the index.","Hoeveel zou \u20ac1 gegroeid zijn als het de hele periode belegd was, ongeacht wanneer je geld toevoegde? Gebruik dit om je portefeuille met de index te vergelijken.","De combien \u20ac1 aurait-il progress\u00e9 s\u2019il avait \u00e9t\u00e9 investi sur toute la p\u00e9riode, quel que soit le moment de vos versements ? Pour comparer avec l\u2019indice."));
+return '<div class="card"><h2>Performance</h2><div class="tx-bar pft-sel">'
++sg("data-pb",[["me",X("My performance","Mijn prestatie","Ma performance"),pb==="me"],["stock",X("Stock performance","Prestatie aandelen","Performance des actions"),pb==="stock",mw]])
++sg('data-xa="pf-a" data-v',[["t",X("Total","Totaal","Total"),!an],["a",X("Annualised","Per jaar","Annualis\u00e9"),an]])
++sg('data-xa="pf-m" data-v',[["t","TWRR",!mw],["m","MWRR",mw,PB==="stock"]])+tw+'</div>'
++(mw?mwrrTbl():twrrTbl())
++(an?'<p class="mu">'+X("Annualised applies to periods of a year or longer; shorter periods show the return over that period.","Per jaar geldt voor periodes van een jaar of langer; kortere periodes tonen het rendement over die periode.","Annualis\u00e9 s\u2019applique aux p\u00e9riodes d\u2019un an ou plus ; les p\u00e9riodes plus courtes montrent le rendement sur la p\u00e9riode.")+'</p>':'')+'</div>'}
 function kpis(){
 positions();
 const ty=TAB==="r"||TAB==="p"?PT:"all",pl=ty==="all"?POSL:POSL.filter(r=>r.typ===ty),sfx=ty==="all"?"":" \u00b7 "+TYPS[ty];
@@ -664,7 +692,7 @@ return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
 const TABI={f:'<path d="M5 20V12M12 20V5M19 20v-5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
 const tabBtn=(k,l,g)=>'<button data-tab="'+k+'" title="'+l+'" class="sb'+(g||"B")+(TAB===k?" on":"")+'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
-const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbC">Planning</div>'+tabBtn("w","Wealth builder","C")+tabBtn("n","Net worth","C")+tabBtn("j","Journal","C")+'<div class="sec sbC">Admin</div>'+tabBtn("u","Users","C")+'</div>'+pfChips();
+const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbB">Planning</div>'+tabBtn("w","Wealth builder","B")+tabBtn("n","Net worth","B")+tabBtn("j","Journal","B")+'<div class="sec sbB">Admin</div>'+tabBtn("u","Users","B")+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -1211,6 +1239,7 @@ const t=e.target.closest&&e.target.closest("[data-xa]");if(!t)return false;
 const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("data-k");
 if(a==="jr-f"){JRFIL=v;jrPaint()}
 else if(a==="pf-a"){PFA=v;rr()}
+else if(a==="pf-m"){PM=v;ls.set("pm",PM);rr()}
 else if(a==="rd-mp"||a==="rd-mn"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="rd-mn"?1:-1),1);radPaint()}
 else if(a==="jr-exp"){const u=URL.createObjectURL(new Blob([JSON.stringify(JRN)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download="journal.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1e3)}
 else if(a==="jr-imp"){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const A=JSON.parse(r.result),m=new Map(JRN.map(x=>[String(x.id),x]));A.forEach(x=>{if(x&&x.id!=null&&x.d)m.set(String(x.id),x)});JRN=[...m.values()];jrSave();jrPaint()}catch(x){}};r.readAsText(f)};i.click()}
@@ -1807,9 +1836,9 @@ const tools=document.querySelector("header.top .tools"),old=$("pfw");
 if(!tools){if(old)old.remove();return}
 const SH=[["all","All positions"],["open","Open positions"],["closed","Closed positions"]],TY=[["all","All types"],["ETF","ETFs"],["Stock","Stocks"],["Derivative","Derivatives"]];
 const chev='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-const dd=(attr,lab,cur,L)=>'<div class="pw"><button type="button" class="ixb" data-dd="1"><span class="ixk">'+lab+'</span><span>'+(L.find(z=>z[0]===cur)||L[0])[1]+'</span>'+chev+'</button><div class="pop pfp" hidden><div class="ps">'+lab+'</div>'+L.map(z=>'<button type="button" class="ixo'+(z[0]===cur?" on":"")+'" data-'+attr+'="'+z[0]+'"><span>'+z[1]+'</span></button>').join("")+'</div></div>';
+const dd=(attr,lab,cur,L)=>'<div class="pw"><button type="button" class="ixb" data-dd="1"><span>'+(L.find(z=>z[0]===cur)||L[0])[1]+'</span>'+chev+'</button><div class="pop pfp" hidden><div class="ps">'+lab+'</div>'+L.map(z=>'<button type="button" class="ixo'+(z[0]===cur?" on":"")+'" data-'+attr+'="'+z[0]+'"><span>'+z[1]+'</span></button>').join("")+'</div></div>';
 let w=old;if(!w){w=document.createElement("div");w.id="pfw";w.className="pfw";tools.insertBefore(w,tools.firstChild)}
-w.innerHTML=(on?dd("pf","Show",PF,SH)+dd("pt","Type",PT,TY):"")+dd("cm","Costs",String(MODE),[["1","Included"],["0","Excluded"]]);
+w.innerHTML=dd("pf","Show",PF,SH)+dd("pt","Type",PT,TY)+dd("cm","Costs",String(MODE),[["1","Costs included"],["0","Costs excluded"]]);
 }
 document.addEventListener("click",e=>{
 const w=e.target.closest&&e.target.closest("#pfw");
@@ -2256,7 +2285,7 @@ info.n=n;return info;
 function syncFiles(){
 Object.keys(FK).forEach(k=>{const L=FILES.filter(f=>f.kind===k);document.getElementById(FK[k][0]).value=L.length?L[L.length-1].text:""});
 }
-const INFO_SVG='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
+const INFO_SVG='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.2"/><circle cx="12" cy="7.8" r=".7" fill="currentColor" stroke="none"/></svg>';
 function recon(){
 const dt=document.getElementById("txtD").value.trim(),ac=document.getElementById("txtA").value.trim();if(!dt||!ac)return null;
 let A,B;try{B=toTxD(dt);A=toTxA(ac)}catch(e){return null}

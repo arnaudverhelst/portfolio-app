@@ -417,3 +417,14 @@ html[data-mode=dark]{--sbc:#8FB8FF}html[data-mode=light]{--sbc:var(--ac)}
 /* dividends per year (tax) */
 .dy{margin:0 0 18px}.dy h3{margin:0 0 8px;font-size:1em}.dy-do{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--ac) 8%,transparent);font-size:.9em;line-height:1.5}
 .dy-do ol{margin:6px 0 0;padding-left:20px}.dy-do li{margin:3px 0}
+.rd-hm-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+.rd-hm{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;color:#fff;min-width:0;font-size:.82rem;font-weight:500}
+.rd-hm b{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums}
+.rd-main{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.rd-main.sel{grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr)}
+.rd-tb{min-width:0}
+.rd-tr{cursor:pointer}.rd-tr:hover td{background:var(--hv)}.rd-tr.on td{background:color-mix(in srgb,var(--ac) 14%,transparent)}
+.rd-mq{display:inline-flex;align-items:flex-end;gap:3px;height:24px;vertical-align:middle}.rd-mq i{display:block;width:7px;border-radius:2px}
+.rd-mq i.b{background:var(--k)}.rd-mq i.m{background:color-mix(in srgb,var(--mu) 45%,transparent)}
+@media(min-width:901px){#view.v-o .rd-main{flex:1;min-height:0}#view.v-o .rd-tb,#view.v-o .rd-main .rd-rc{min-height:0;overflow:auto}}
+@media(max-width:700px){.rd-hm-g{grid-template-columns:repeat(2,minmax(0,1fr))}.rd-main.sel{grid-template-columns:minmax(0,1fr)}}

@@ -5,17 +5,18 @@ const b64u=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");s+="=".repeat((4-s.length
 const today=()=>new Date().toISOString().slice(0,10);
 let CERTS=null,CT=0;
 async function who(req,env){
-  const t=req.headers.get("Cf-Access-Jwt-Assertion");
-  if(!t||!env.TEAM_DOMAIN||!env.POLICY_AUD)return null;
+  const t=req.headers.get("Cf-Access-Jwt-Assertion"),TD=String(env.TEAM_DOMAIN||"").replace(/^https?:\/\//,"").replace(/\/+$/,"").trim(),AUD=String(env.POLICY_AUD||"").trim();
+  if(!t)return {why:"no-login-header (site not behind Access, or you opened a URL Access does not cover)"};
+  if(!TD||!AUD)return {why:"TEAM_DOMAIN or POLICY_AUD missing in Pages variables"};
   try{
     const [h,p,s]=t.split("."),hd=JSON.parse(new TextDecoder().decode(b64u(h))),pl=JSON.parse(new TextDecoder().decode(b64u(p)));
-    if(pl.exp*1000<Date.now()||pl.iss!=="https://"+env.TEAM_DOMAIN||![].concat(pl.aud).includes(env.POLICY_AUD))return null;
-    if(!CERTS||Date.now()-CT>36e5){CERTS=await (await fetch("https://"+env.TEAM_DOMAIN+"/cdn-cgi/access/certs")).json();CT=Date.now()}
-    const k=CERTS.keys.find(x=>x.kid===hd.kid);if(!k)return null;
+    if(pl.exp*1000<Date.now()||pl.iss!=="https://"+TD||![].concat(pl.aud).includes(AUD))return {why:"TEAM_DOMAIN or POLICY_AUD does not match this Access application"};
+    if(!CERTS||Date.now()-CT>36e5){CERTS=await (await fetch("https://"+TD+"/cdn-cgi/access/certs")).json();CT=Date.now()}
+    const k=CERTS.keys.find(x=>x.kid===hd.kid);if(!k)return {why:"signing key not found"};
     const key=await crypto.subtle.importKey("jwk",k,{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["verify"]);
     const ok=await crypto.subtle.verify("RSASSA-PKCS1-v1_5",key,b64u(s),new TextEncoder().encode(h+"."+p));
-    return ok&&pl.email?pl.email.toLowerCase():null;
-  }catch(e){return null}
+    return ok&&pl.email?{email:pl.email.toLowerCase()}:{why:"token check failed"};
+  }catch(e){return {why:"error: "+e.message}}
 }
 async function list(env){
   const l=await env.USERS.list(),o=[];
@@ -23,7 +24,9 @@ async function list(env){
   return o.sort((a,b)=>a.joined<b.joined?-1:a.joined>b.joined?1:0);
 }
 export async function onRequestGet({request,env}){
-  const em=await who(request,env);if(!em)return J({admin:false});
+  const w=await who(request,env);if(!w.email)return J({admin:false,why:w.why});
+  const em=w.email;
+  if(!env.USERS)return J({admin:false,why:"KV binding USERS missing"});
   const adm=em===(env.ADMIN_EMAIL||"").toLowerCase();
   let u=await env.USERS.get(em,"json")||{email:em,name:"",plan:"Free",status:"Active",joined:today()};
   u.last=today();await env.USERS.put(em,JSON.stringify(u));
@@ -31,7 +34,7 @@ export async function onRequestGet({request,env}){
   return J({email:em,admin:adm,users:adm?await list(env):undefined});
 }
 export async function onRequestPost({request,env}){
-  const em=await who(request,env);
+  const em=(await who(request,env)).email;
   if(!em||em!==(env.ADMIN_EMAIL||"").toLowerCase())return J({error:"forbidden"},403);
   const b=await request.json().catch(()=>({})),t=String(b.email||"").trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t))return J({error:"email"},400);

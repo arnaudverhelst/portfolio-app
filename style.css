@@ -372,3 +372,13 @@ svg.txs *{pointer-events:none}
 .rd-mh{display:flex;justify-content:space-between;align-items:center}
 .rd-l .rd-cal{margin-top:0}.rd-l .rd-cd{min-height:42px;padding:3px}.rd-l .rd-cd .jp{font-size:.62rem;padding:0 4px}
 @media(max-width:700px){.rd-g{grid-template-columns:1fr}}
+
+#side .tabs .sec.sbB,#side .tabs .sec.sbC{color:color-mix(in srgb,var(--mu) 75%,transparent)}
+html[data-mode=dark]{--sbc:#8FB8FF}html[data-mode=light]{--sbc:var(--ac)}
+#side .tabs button.sbB:hover{color:var(--fg)}
+#side .tabs button.sbB.on{background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--fg);font-weight:600;box-shadow:inset 3px 0 0 var(--ac)}
+#side .tabs button.sbB.on svg{color:var(--fg)}
+#side .tabs button.sbC svg{color:color-mix(in srgb,var(--sbc) 70%,var(--mu))}
+#side .tabs button.sbC.on{background:color-mix(in srgb,var(--sbc) 14%,transparent);color:var(--sbc);font-weight:600;box-shadow:none}
+#side .tabs button.sbC.on svg{color:var(--sbc)}
+.wb-sc{margin:8px 0}

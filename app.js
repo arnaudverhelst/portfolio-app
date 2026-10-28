@@ -3,8 +3,8 @@ const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct
 const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL",xtsx:".V",xtse:".TO",xasx:".AX",xhkg:".HK"};
 const TFS=["1D","1W","1M","3M","6M","YTD","1Y","3Y","5Y","Max"];
 const PALS={
-light:["#1d4ed8","#ea580c","#059669","#7c3aed","#0891b2","#db2777","#ca8a04","#475569","#65a30d","#dc2626","#0d9488","#9333ea","#a8a29e"],
-dark:["#4f8cff","#ef6a4c","#3fd0a0","#a78bfa","#6fd6e0","#f472b6","#f2b84b","#9aa5bd","#b5e04f","#ff9a6b","#2dd4bf","#c9b6ff","#d9d2c3"]};
+light:["#3F6FD8","#C9962F","#2E9E88","#A94F68","#7B6FC6","#64707E","#ca8a04","#475569","#65a30d","#dc2626","#0d9488","#9333ea","#a8a29e"],
+dark:["#5B8DEF","#E0B15A","#4FB8A3","#C06C84","#9A8FD8","#7C8794","#f2b84b","#9aa5bd","#b5e04f","#ff9a6b","#2dd4bf","#c9b6ff","#d9d2c3"]};
 let MODEV="light";
 let COL=PALS.light.slice(0,6);
 const $=id=>document.getElementById(id);
@@ -480,7 +480,7 @@ CH=[];
 $("out").innerHTML=kpis()+tabsHtml()+positions()+(warn.length?'<p class="mu">'+warn.map(esc).join("<br>")+"</p>":"");
 return;
 }
-if((TAB==="j"||TAB==="x"||TAB==="o")&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=kpis()+tabsHtml()+(TAB==="j"?journal():TAB==="x"?taxView():radar());if(TAB==="o")radInit();return}
+if((TAB==="j"||TAB==="x"||TAB==="o"||TAB==="f")&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=kpis()+tabsHtml()+(TAB==="j"?journal():TAB==="x"?taxView():TAB==="f"?perfView():radar());if(TAB==="o")radInit();return}
 if(TAB==="u"){CH=[];$("out").innerHTML=(rows.length?kpis():"")+tabsHtml()+users();return}
 renderR(syms,bad,warn);
 if(rows.length)$("out").innerHTML=kpis()+tabsHtml()+$("out").innerHTML;
@@ -613,6 +613,35 @@ if(!(vx>0&&vy>0))return null;
 return {beta:c/vx,corr:c/Math.sqrt(vx*vy),vp:Math.sqrt(vy/(N-1)*52),vm:Math.sqrt(vx/(N-1)*52),n:N};
 }
 const BETA_TIP="Beta shows how strongly your portfolio moved with the benchmark: 1.00 means in step, below 1 smaller moves, above 1 bigger moves. It is calculated on weekly returns as correlation \u00d7 (your volatility \u00f7 the index volatility). So you can swing more than the index and still have a beta below 1 when much of your swing is unrelated to the index (single stocks, derivatives).";
+function mwFl(ty){const o=[];txRows().forEach(r=>{if(!isFinite(r.a))return;if(ty!=="all"&&(!r.k||typOf(r.k)!==ty))return;if(r.ty==="Buy"||r.ty==="Sell")o.push({d:r.d,a:r.a,t:"x"});else if(r.ty==="Dividend"||r.ty==="Tax")o.push({d:r.d,a:r.a,t:"d"})});return o.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0)}
+function xirr(F){if(F.length<2||!F.some(f=>f.a<0)||!F.some(f=>f.a>0))return null;const t0=new Date(F[0].d).getTime(),yr=f=>(new Date(f.d).getTime()-t0)/31557600000;if(yr(F[F.length-1])<.25)return null;
+const npv=r=>F.reduce((s,f)=>s+f.a/Math.pow(1+r,yr(f)),0);let lo=-.99,hi=10;if(npv(lo)*npv(hi)>0)return null;for(let i=0;i<80;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m}return(lo+hi)/2}
+function mwrr(ty,tv){const F=mwFl(ty);if(!F.length)return null;F.push({d:days[days.length-1],a:tv});return xirr(F)}
+function mwBm(ty,bm){if(!bm||!bm.idx)return null;const L=days.length-1,ia=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i};let u=0;const F=[];
+mwFl(ty).filter(f=>f.t==="x").forEach(f=>{let i=ia(f.d);if(i<0)i=0;const p=bm.idx[i];if(!isFinite(p)||p<=0)return;u=Math.max(0,u-f.a/p);F.push({d:f.d,a:f.a})});
+if(!F.length)return null;F.push({d:days[L],a:u*bm.idx[L]});return xirr(F)}
+let PFA="t";
+function perfView(){
+const bm=actB(),tvOf=ty=>POSL.filter(r=>ty==="all"||r.typ===ty).reduce((a,r)=>a+r.val,0),
+mk=ty=>{if(ty==="all")return rows[0];const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(!ks.size)return null;const q=twrr(ks,MODE);return{idx:q.idx,st:q.st,held:q.held}};
+const E=[["all",X("Total portfolio","Totale portefeuille","Portefeuille total")],["Stock",X("Stocks","Aandelen","Actions")],["ETF","ETFs","ETFs"]],Pd=["1M","YTD","1Y","Max"],an=PFA==="a",
+g=(o,p)=>!o?null:p==="Max"&&an?cagr(o):ret(o,p),bv=Pd.map(p=>g(bm,p)),
+pc=v=>v==null?'<td class="mu">\u2013</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+" pts</td>",
+nul='<td class="mu">\u2013</td>';
+if(!bm)return '<div class="card"><h2>Performance</h2><p class="mu">Pick an index in the top bar to compare with.</p></div>';
+let r1="",r2="";
+E.forEach(e=>{const o=mk(e[0]),v=Pd.map(p=>g(o,p)),mw=mwrr(e[0],tvOf(e[0])),mb=mwBm(e[0],bm);
+r1+='<tr><td>'+e[1]+'</td>'+v.map(cell).join("")+cell(mw)+cell(mb)+pc(mw!=null&&mb!=null?mw-mb:null)+'</tr>';
+r2+='<tr><td>'+e[1]+'</td>'+v.map((x,i)=>pc(x!=null&&bv[i]!=null?x-bv[i]:null)).join("")+'</tr>'});
+const hd='<th>'+Pd.map(p=>p==="Max"&&an?"Max / yr":p).join('</th><th>')+'</th>',
+tw=infoI(X("How much would \u20ac1 have grown if it had been invested throughout the entire period, regardless of when you added money? Use this to compare your portfolio with the index.","Hoeveel zou \u20ac1 gegroeid zijn als het de hele periode belegd was, ongeacht wanneer je geld toevoegde? Gebruik dit om je portefeuille met de index te vergelijken.","De combien \u20ac1 aurait-il progress\u00e9 s\u2019il avait \u00e9t\u00e9 investi sur toute la p\u00e9riode, quel que soit le moment de vos versements ? Pour comparer avec l\u2019indice.")),
+mt=infoI(X("What annualised return did you actually earn on the money you contributed, considering when each contribution was made? Also known as the money-weighted rate of return or IRR.","Welk jaarlijks rendement behaalde je echt op het geld dat je inlegde, rekening houdend met wanneer je het inlegde? Ook gekend als money-weighted rendement of IRR.","Quel rendement annualis\u00e9 avez-vous r\u00e9ellement obtenu sur l\u2019argent vers\u00e9, selon la date de chaque versement ? Aussi appel\u00e9 taux de rendement pond\u00e9r\u00e9 par les flux ou TRI.")),
+mi=infoI(X("What you would have earned if every one of your buys and sells had gone into the index on the same day.","Wat je zou verdiend hebben als elke aan- en verkoop op dezelfde dag in de index was gegaan.","Ce que vous auriez gagn\u00e9 si chacun de vos achats et ventes avait \u00e9t\u00e9 plac\u00e9 dans l\u2019indice le m\u00eame jour."));
+return '<div class="card"><h2>Performance</h2><div class="tx-bar"><div class="seg"><button data-xa="pf-a" data-v="t"'+(an?"":' class="on"')+'>'+X("Total","Totaal","Total")+'</button><button data-xa="pf-a" data-v="a"'+(an?' class="on"':"")+'>'+X("Annualised","Per jaar","Annualis\u00e9")+'</button></div></div>'
++'<div class="sc"><table class="txt"><tr><th></th><th colspan="4">TWRR '+X("(investment performance)","(beleggingsrendement)","(performance de l\u2019investissement)")+tw+'</th><th colspan="3">MWRR '+X("annualised (your performance)","per jaar (jouw rendement)","annualis\u00e9 (votre performance)")+mt+'</th></tr>'
++'<tr><th></th>'+hd+'<th>'+X("You","Jij","Vous")+'</th><th>'+X("Index, same flows","Index, zelfde stromen","Indice, m\u00eames flux")+mi+'</th><th>'+X("Difference","Verschil","\u00c9cart")+'</th></tr>'
++r1+'<tr><td><b>'+esc(bmLab(bm.name))+'</b></td>'+bv.map(cell).join("")+nul+nul+nul+'</tr></table></div>'
++'<h2 style="margin-top:18px">'+X("Versus benchmark","Tegenover benchmark","Face \u00e0 l\u2019indice")+'</h2><div class="sc"><table class="txt"><tr><th></th>'+hd+'</tr>'+r2+'</table></div></div>'}
 function kpis(){
 positions();
 const ty=TAB==="r"||TAB==="p"?PT:"all",pl=ty==="all"?POSL:POSL.filter(r=>r.typ===ty),sfx=ty==="all"?"":" \u00b7 "+TYPS[ty];
@@ -625,16 +654,17 @@ ixSync(bm);
 const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+(sub?infoI(sub):"")+'</div><div class="kv'+(c?" "+c:"")+'">'+v+'</div></div>';
 const T=[];
 T.push(tile("Total value"+sfx,eur(tv),"Holdings only, cash not included"));
-T.push(tile("Total profit"+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
-T.push(tile("Time-weighted return"+sfx,tw==null?"\u2013":pct1(tw),cg==null?"All time":"All time \u00b7 "+pct1(cg)+" per year",tw==null?"":sg(tw)));
-{const ok=bm&&bw!=null&&tw!=null,d=ok?(tw-bw)*100:0;
-T.push(tile("Against "+(bm?esc(bmLab(bm.name)):"index"),ok?(d>=0?"+":"-")+Math.abs(d).toFixed(1)+" points":"\u2013",ok?"You "+pct1(tw)+" \u00b7 index "+pct1(bw)+" (all time)":(bm?"No data for this period":"Pick an index to compare with"),ok?sg(d):""))}
+const F=mwFl(ty),bt=F.filter(f=>f.t==="x"&&f.a<0).reduce((a,f)=>a-f.a,0),sr=bt>0?pr/bt:null,mw=mwrr(ty,tv);
+T.push(tile((pr<0?"Total loss":"Total profit")+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
+T.push(tile("Simple return"+sfx,sr==null?"\u2013":pct1(sr),"Total profit divided by everything you bought, after costs. It ignores timing; see the annualised returns for that.",sr==null?"":sg(sr)));
+T.push(tile("TWRR, annualised"+sfx,cg==null?"\u2013":pct1(cg),"Investment performance: how much \u20ac1 would have grown if invested throughout the entire period, regardless of when you added money. Use it to compare with the index."+(tw==null?"":" Total since the start: "+pct1(tw)+"."),cg==null?"":sg(cg)));
+T.push(tile("MWRR, annualised"+sfx,mw==null?"\u2013":pct1(mw),"Your personal performance: the annualised return you actually earned on the money you contributed, considering when each contribution was made (money-weighted return, also called IRR).",mw==null?"":sg(mw)));
 if(bm)T.push(tile("Beta"+sfx,bs==null?"\u2013":bs.beta.toFixed(2),"vs "+bmLab(bm.name)+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")+". "+BETA_TIP));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
-const TABI={o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
-const tabBtn=(k,l)=>'<button data-tab="'+k+'" title="'+l+'"'+(TAB===k?' class="on"':"")+'><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
-const tabsHtml=()=>'<div class="tabs"><div class="sec">Overview</div>'+tabBtn("r","Returns")+tabBtn("p","Positions")+tabBtn("a","Analysis")+tabBtn("o","Radar")+'<div class="sec">Activity</div>'+tabBtn("t","Transactions")+tabBtn("d","Dividends")+tabBtn("x","Tax")+'<div class="sec">Planning</div>'+tabBtn("w","Wealth builder")+tabBtn("n","Net worth")+tabBtn("j","Journal")+'<div class="sec">Admin</div>'+tabBtn("u","Users")+'</div>'+pfChips();
+const TABI={f:'<path d="M5 20V12M12 20V5M19 20v-5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
+const tabBtn=(k,l,g)=>'<button data-tab="'+k+'" title="'+l+'" class="sb'+(g||"B")+(TAB===k?" on":"")+'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
+const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbC">Planning</div>'+tabBtn("w","Wealth builder","C")+tabBtn("n","Net worth","C")+tabBtn("j","Journal","C")+'<div class="sec sbC">Admin</div>'+tabBtn("u","Users","C")+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -1062,7 +1092,7 @@ function txHover(e){
 const sv=e.target&&e.target.closest?e.target.closest("svg.txs"):null;
 document.querySelectorAll("svg.txs .txh").forEach(h=>{if(!sv||!sv.contains(h))h.style.display="none"});
 if(!sv||!TXK)return;const C=TXK,h=sv.querySelector(".txh");if(!h)return;
-const b=sv.getBoundingClientRect(),fx=e.target===sv&&sv.clientWidth?e.offsetX/sv.clientWidth:(e.clientX-b.left)/b.width,x=Math.min(Math.max(fx*C.W,C.pl),C.W-C.pr),t=Math.min(C.y0+(x-C.pl)/(C.W-C.pl-C.pr)*(C.y1-C.y0),C.now);
+const b=sv.getBoundingClientRect(),sc=Math.min(b.width/C.W,b.height/C.H),x=Math.min(Math.max((e.clientX-b.left-(b.width-C.W*sc)/2)/sc,C.pl),C.W-C.pr),t=Math.min(C.y0+(x-C.pl)/(C.W-C.pl-C.pr)*(C.y1-C.y0),C.now);
 let v=0;for(const p of C.pts){if(p[0]<=t)v=p[1];else break}
 const X1=C.pl+(t-C.y0)/(C.y1-C.y0)*(C.W-C.pl-C.pr),Y1=C.pt+(C.mx-v)*(C.H-C.pt-C.pb)/(C.mx-C.mn),iso=new Date(t).toISOString().slice(0,10),sd=C.ev.filter(z=>z.d===iso);
 const sg=n=>(n<0?"\u2212":"+")+eu2(Math.abs(n)),left=C.E-v,L=[new Date(t).toLocaleDateString(C.loc,{day:"numeric",month:"short",year:"numeric"}),X("Net gain to date ","Netto meerwaarde tot nu ","Plus-value nette à ce jour ")+sg(v),left>=0?X("Exemption left ","Nog vrij ","Exonération restante ")+eu2(left):X("Over exemption ","Boven vrijstelling ","Au-dessus exonération ")+eu2(-left)];
@@ -1180,6 +1210,7 @@ function xaClick(e){
 const t=e.target.closest&&e.target.closest("[data-xa]");if(!t)return false;
 const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("data-k");
 if(a==="jr-f"){JRFIL=v;jrPaint()}
+else if(a==="pf-a"){PFA=v;rr()}
 else if(a==="rd-mp"||a==="rd-mn"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="rd-mn"?1:-1),1);radPaint()}
 else if(a==="jr-exp"){const u=URL.createObjectURL(new Blob([JSON.stringify(JRN)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download="journal.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1e3)}
 else if(a==="jr-imp"){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const A=JSON.parse(r.result),m=new Map(JRN.map(x=>[String(x.id),x]));A.forEach(x=>{if(x&&x.id!=null&&x.d)m.set(String(x.id),x)});JRN=[...m.values()];jrSave();jrPaint()}catch(x){}};r.readAsText(f)};i.click()}
@@ -1254,10 +1285,12 @@ t=tile("Value after "+T+" years",eur(E.b*ef),"at age "+(a0+T))+tile("Total inves
 +tile("Growth",eur(gr),"\u00d7"+(E.c>0?(E.b/E.c).toFixed(2):"\u2013")+" on what you put in")+tile("Monthly income",eur(E.b*ef*wr/12),"at "+WB.wr+"% withdrawal"+(WB.real?" (today\u2019s \u20ac)":""));
 }
 const Wd=700,H=300,pl=56,pr=16,pt=26,pb=28,raw0=Math.max(1,...tot,...(pa||[]))*1.08,raw=raw0/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),q=raw/pw,step=(q<=1?1:q<=2?2:q<=2.5?2.5:q<=5?5:10)*pw,mx=Math.ceil(raw0/step-1e-9)*step;
-const xs=i=>pl+i*(Wd-pl-pr)/n,ys=v=>H-pb-v*(H-pt-pb)/mx,pp=(arr,j)=>arr.map((v,i)=>xs(i).toFixed(1)+","+ys(v).toFixed(1)).join(j);
+const LG=!!WB.log,pmin=Math.min(raw0,...[...tot,...cn,...(pa||[])].filter(v=>v>0)),lmn=Math.pow(10,Math.floor(Math.log10(pmin))),L0=Math.log10(lmn),L1=Math.max(Math.log10(raw0),L0+1),TK=[];
+if(LG){for(let v=lmn;v<=raw0*1.0001;v*=10)TK.push(v)}else{for(let v=0;v<=mx+step/1000;v+=step)TK.push(v)}
+const xs=i=>pl+i*(Wd-pl-pr)/n,ys=v=>LG?H-pb-(Math.log10(Math.max(v,lmn))-L0)/(L1-L0)*(H-pt-pb):H-pb-v*(H-pt-pb)/mx,pp=(arr,j)=>arr.map((v,i)=>xs(i).toFixed(1)+","+ys(v).toFixed(1)).join(j);
 const ek=v=>HIDE?"":v>=1e6?"\u20ac"+(+(v/1e6).toFixed(2))+"M":v>=1e3?"\u20ac"+Math.round(v/1e3)+"k":"\u20ac"+Math.round(v);
 let g='<defs><linearGradient id="wbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ac);stop-opacity:.42"/><stop offset="1" style="stop-color:var(--ac);stop-opacity:.05"/></linearGradient></defs>';
-for(let v=0;v<=mx+step/1000;v+=step){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(Wd-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".07":".35")+'"/><text x="'+(pl-8)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+ek(v)+'</text>'}
+for(const v of TK){const y=ys(v).toFixed(1);g+='<line class="gl" x1="'+pl+'" x2="'+(Wd-pr)+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" opacity="'+(v?".07":".35")+'"/><text x="'+(pl-8)+'" y="'+(+y+4)+'" font-size="11" text-anchor="end" fill="currentColor">'+ek(v)+'</text>'}
 const base=ys(0).toFixed(1),cr=cn.map((v,i)=>xs(i).toFixed(1)+","+ys(v).toFixed(1)).reverse().join("L");
 g+='<path d="M'+xs(0).toFixed(1)+","+base+"L"+pp(cn,"L")+"L"+xs(n).toFixed(1)+","+base+'Z" fill="currentColor" opacity=".09"/>';
 g+='<path d="M'+pp(tot,"L")+"L"+cr+'Z" fill="url(#wbg)"/>';
@@ -1269,7 +1302,7 @@ g+='<line class="gl" x1="'+x.toFixed(1)+'" x2="'+x.toFixed(1)+'" y1="'+(pt-4)+'"
 const ts=n<=10?1:n<=20?2:n<=40?5:10;
 for(let i=0;i<=n;i+=ts)g+='<text x="'+xs(i).toFixed(1)+'" y="'+(H-8)+'" font-size="11" text-anchor="middle" fill="currentColor">'+(a0+i)+'</text>';
 g+='<line id="wbl" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".5" visibility="hidden"/><g id="wbt" visibility="hidden" pointer-events="none"></g>';
-el.innerHTML='<div class="kpis">'+t+'</div><svg class="ch" viewBox="0 0 '+Wd+' '+H+'">'+g+'</svg><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> Total value</span><span><b style="color:var(--mu)">\u25cf</b> Invested</span><span><b style="color:var(--ac);opacity:.4">\u25cf</b> Growth</span>'+(pa?'<span><b style="color:#d9962b">\u25cf</b> '+X("At your actual return","Aan je werkelijk rendement","À votre rendement réel")+' ('+(cg*100).toFixed(1)+'%'+(age?(ah!=null?", "+X("target at age ","doel op leeftijd ","objectif à ")+ah:", "+X("target not reached","doel niet bereikt","objectif non atteint")):"")+')</span>':"")+(tgt?'<span><b style="color:'+PIEC[1]+'">\u25cf</b> Capital needed</span>':"")+(hit?'<span><b style="color:'+PIEC[1]+';opacity:.5">\u25a0</b> Retired: withdrawing, no new contributions</span>':"")+'<span class="mu">'+(WB.real?"Today\u2019s euros":"Nominal euros")+'</span></div>';
+el.innerHTML='<div class="kpis">'+t+'</div><div class="seg wb-sc"><button data-wl="0"'+(LG?"":' class="on"')+'>Linear</button><button data-wl="1"'+(LG?' class="on"':"")+'>Log scale</button></div><svg class="ch" viewBox="0 0 '+Wd+' '+H+'">'+g+'</svg><div class="lg"><span><b style="color:var(--ac)">\u25cf</b> Total value</span><span><b style="color:var(--mu)">\u25cf</b> Invested</span><span><b style="color:var(--ac);opacity:.4">\u25cf</b> Growth</span>'+(pa?'<span><b style="color:#d9962b">\u25cf</b> '+X("At your actual return","Aan je werkelijk rendement","À votre rendement réel")+' ('+(cg*100).toFixed(1)+'%'+(age?(ah!=null?", "+X("target at age ","doel op leeftijd ","objectif à ")+ah:", "+X("target not reached","doel niet bereikt","objectif non atteint")):"")+')</span>':"")+(tgt?'<span><b style="color:'+PIEC[1]+'">\u25cf</b> Capital needed</span>':"")+(hit?'<span><b style="color:'+PIEC[1]+';opacity:.5">\u25a0</b> Retired: withdrawing, no new contributions</span>':"")+'<span class="mu">'+(WB.real?"Today\u2019s euros":"Nominal euros")+'</span></div>';
 const sv=el.querySelector("svg"),cl=$("wbl"),tg=$("wbt");
 const hv=ev=>{
 const r=sv.getBoundingClientRect(),sc=Math.min(r.width/Wd,r.height/H),x=(ev.clientX-r.left-(r.width-Wd*sc)/2)/sc,i=Math.max(0,Math.min(n,Math.round((x-pl)*n/(Wd-pl-pr)))),px=xs(i);
@@ -1735,7 +1768,7 @@ if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=
 });
 $("out").addEventListener("click",e=>{
 const a=n=>e.target.getAttribute&&e.target.getAttribute(n);
-const vt=a("data-vt"),dvt2=a("data-dvt"),dvp=a("data-dvp"),txv=a("data-txv"),txp=a("data-txp"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo"),pfv=a("data-pf"),wm=a("data-wm"),pbv=a("data-pb"),ptv=a("data-pt");
+const vt=a("data-vt"),dvt2=a("data-dvt"),dvp=a("data-dvp"),txv=a("data-txv"),txp=a("data-txp"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo"),pfv=a("data-pf"),wm=a("data-wm"),wl=a("data-wl"),pbv=a("data-pb"),ptv=a("data-pt");
 if(vt){VT=VT.includes(vt)?VT.filter(x=>x!==vt):[...VT,vt];ls.set("vt",JSON.stringify(VT));render(G.syms,[],G.warn)}
 if(dm){DVM=dm;render(G.syms,[],G.warn)}
 if(dvt2){DVT=dvt2;render(G.syms,[],G.warn)}
@@ -1746,6 +1779,7 @@ if(txp){TXS=txp;render(G.syms,[],G.warn)}
 if(pbv){PB=pbv;ls.set("pb",PB);render(G.syms,[],G.warn)}
 if(ptv){PT=ptv;ls.set("pt",PT);render(G.syms,[],G.warn)}
 if(pfv){PF=pfv;ls.set("pf",PF);render(G.syms,[],G.warn)}
+if(wl){WB.log=wl==="1";ls.set("wb",JSON.stringify(WB));wbUpdate()}
 if(wm){WB.mode=wm;ls.set("wb",JSON.stringify(WB));render(G.syms,[],G.warn)}
 if(tf){TXF=tf;render(G.syms,[],G.warn)}
 });

@@ -3,6 +3,30 @@
 const J=(o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{"Content-Type":"application/json","Cache-Control":"no-store"}});
 const b64u=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");s+="=".repeat((4-s.length%4)%4);return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
 const today=()=>new Date().toISOString().slice(0,10);
+const PLANS=["Free","Paid","Suspended","Discount"];
+const ago=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
+const blank=(em)=>({email:em,name:"",plan:"Free",joined:today(),last:"",n:0,ld:{},seen:0});
+function norm(u){
+  if(u.plan==="Pro")u.plan="Paid";
+  if(u.status==="Suspended")u.plan="Suspended";
+  delete u.status;
+  if(!u.ld)u.ld={};if(!u.n)u.n=0;if(!u.seen)u.seen=0;if(u.last===undefined)u.last="";
+  return u;
+}
+/* one login = first visit after 30 minutes of silence */
+function touch(u){
+  const now=Date.now();
+  if(u.seen&&now-u.seen<18e5)return false;
+  u.seen=now;u.n++;u.last=today();u.ld[u.last]=(u.ld[u.last]||0)+1;
+  const cut=ago(62);for(const d in u.ld)if(d<cut)delete u.ld[d];
+  return true;
+}
+function stats(u){
+  const t=today(),wd=(new Date().getUTCDay()+6)%7,wk=ago(wd),mo=t.slice(0,8)+"01",d30=ago(29);
+  let day=0,week=0,month=0,days=0;
+  for(const d in u.ld){const c=u.ld[d];if(d===t)day+=c;if(d>=wk)week+=c;if(d>=mo)month+=c;if(d>=d30)days++}
+  return {email:u.email,name:u.name,plan:u.plan,joined:u.joined,last:u.last,today:day,week:week,month:month,total:u.n,days:days};
+}
 let CERTS=null,CT=0;
 async function who(req,env){
   const t=req.headers.get("Cf-Access-Jwt-Assertion"),TD=String(env.TEAM_DOMAIN||"").replace(/^https?:\/\//,"").replace(/\/+$/,"").trim(),AUD=String(env.POLICY_AUD||"").trim();
@@ -20,7 +44,7 @@ async function who(req,env){
 }
 async function list(env){
   const l=await env.USERS.list(),o=[];
-  for(const k of l.keys){const v=await env.USERS.get(k.name,"json");if(v)o.push(v)}
+  for(const k of l.keys){const v=await env.USERS.get(k.name,"json");if(v)o.push(stats(norm(v)))}
   return o.sort((a,b)=>a.joined<b.joined?-1:a.joined>b.joined?1:0);
 }
 export async function onRequestGet({request,env}){
@@ -28,10 +52,11 @@ export async function onRequestGet({request,env}){
   const em=w.email;
   if(!env.USERS)return J({admin:false,why:"KV binding USERS missing"});
   const adm=em===(env.ADMIN_EMAIL||"").toLowerCase();
-  let u=await env.USERS.get(em,"json")||{email:em,name:"",plan:"Free",status:"Active",joined:today()};
-  u.last=today();await env.USERS.put(em,JSON.stringify(u));
-  if(!adm&&u.status==="Suspended")return J({admin:false,suspended:true});
-  return J({email:em,admin:adm,users:adm?await list(env):undefined});
+  let u=norm(await env.USERS.get(em,"json")||blank(em)),ch=touch(u);
+  if(adm&&u.plan!=="Master"){u.plan="Master";ch=true}
+  if(ch)await env.USERS.put(em,JSON.stringify(u));
+  if(!adm&&u.plan==="Suspended")return J({admin:false,suspended:true});
+  return J({email:em,admin:adm,plan:u.plan,users:adm?await list(env):undefined});
 }
 export async function onRequestPost({request,env}){
   const em=(await who(request,env)).email;
@@ -40,10 +65,11 @@ export async function onRequestPost({request,env}){
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t))return J({error:"email"},400);
   if(b.op==="del"){if(t!==em)await env.USERS.delete(t)}
   else{
-    const u=await env.USERS.get(t,"json")||{email:t,name:"",plan:"Free",status:"Active",joined:today()};
+    const u=norm(await env.USERS.get(t,"json")||blank(t));
     if(b.op==="add"&&b.name)u.name=String(b.name).slice(0,80);
-    if(b.plan)u.plan=b.plan==="Pro"?"Pro":"Free";
-    if(b.status&&t!==em)u.status=b.status==="Suspended"?"Suspended":"Active";
+    /* Master only for the admin account; the admin plan cannot be changed */
+    if(t===em)u.plan="Master";
+    else if(PLANS.includes(b.plan))u.plan=b.plan;
     await env.USERS.put(t,JSON.stringify(u));
   }
   return J({email:em,admin:true,users:await list(env)});

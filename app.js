@@ -11,7 +11,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="29 Oct 2026, 14:05";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="29 Oct 2026, 14:35";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 /* small dropdown (same look as the top-bar dropdowns); optional hidden input id keeps the value for forms */
 const SCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -434,7 +434,7 @@ const hr=[...tb.rows].find(r=>r.querySelector("th"));
 [...hr.cells].forEach((th,i)=>{if(th.classList.contains("srt"))th.firstChild.nodeValue=th.getAttribute("data-l")+(s&&i===s.c?(s.d>0?" ▲":" ▼"):"")});
 }
 function fitCols(tb,hr){
-if(tb.classList.contains("tx"))return;
+if(tb.classList.contains("tx")||tb.classList.contains("ut"))return;
 const n=[...hr.cells].reduce((s,c)=>s+(c.colSpan||1),0);if(n<3)return;
 const old=tb.querySelector("colgroup");if(old)old.remove();
 const f=n<=4?32:n<=7?24:n<=10?18:14,o=((100-f)/(n-1)).toFixed(3)+"%",cg=document.createElement("colgroup");
@@ -578,10 +578,14 @@ function buildDiv(){
 DV=[];AO=[];
 const shares=(k,d)=>tx.reduce((a,t)=>a+(t.key===k&&t.d<=d?t.q:0),0);
 const ttAttach=(a,e)=>{
-const isin=a.isin||"",nm=String(a.n||"").toLowerCase().trim();
-const c=tx.filter(t=>t.b==="Degiro"&&((isin&&t.s==="D:"+isin)||(!isin&&nm&&String(t.n||"").toLowerCase().trim()===nm)));
+const isin=String(a.isin||"").trim().toUpperCase(),nn=x=>String(x||"").toLowerCase().replace(/[^a-z0-9]/g,""),nm=nn(a.n),amt0=Math.abs(e);
+const dd=x=>Math.abs((Date.parse(x.d)-Date.parse(a.d))/864e5),D=tx.filter(t=>t.b==="Degiro");
+const idm=t=>{if(isin&&String(t.s||"").toUpperCase()==="D:"+isin)return true;const m=nn(t.n);return nm.length>=4&&m.length>=4&&(m===nm||m.indexOf(nm)===0||nm.indexOf(m)===0)};
+let c=D.filter(t=>idm(t)&&dd(t)<=10);
+/* no ISIN/name match: the trade closest in date whose size fits a Belgian transaction tax rate */
+if(!c.length)c=D.filter(t=>{const g=Math.abs(t.g||0);return dd(t)<=3&&g>0&&amt0/g>=0.0004&&amt0/g<=0.02});
 if(!c.length)return false;
-const dd=x=>Math.abs((Date.parse(x.d)-Date.parse(a.d))/864e5),best=Math.min(...c.map(dd));if(!(best<=4))return false;
+const best=Math.min(...c.map(dd));
 const g=c.filter(t=>dd(t)===best),tot=g.reduce((s,t)=>s+Math.abs(t.g||0),0),amt=Math.abs(e);
 g.forEach(t=>{const w=tot>0?Math.abs(t.g||0)/tot:1/g.length,x=amt*w,dr=isFinite(t.g)&&t.g?t.fg/t.g:1;t.tt=(t.tt||0)+x;t.cs=(isFinite(t.cs)?t.cs:t.g)+(t.q>0?1:-1)*x;t.fc=(isFinite(t.fc)?t.fc:t.fg)+(t.q>0?1:-1)*x*dr});
 return true;
@@ -1068,7 +1072,11 @@ let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",TAXM="cg",TAXDY=nul
 try{JRN=JSON.parse(ls.get("jr")||"[]")}catch(e){JRN=[]}
 try{RWATCH=JSON.parse(ls.get("rw")||"null")}catch(e){RWATCH=null}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-const jrSave=()=>ls.set("jr",JSON.stringify(JRN)),rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
+let JRDEL=[],JRAPI=false,JRT=null;try{JRDEL=JSON.parse(ls.get("jrdel")||"[]")}catch(e){JRDEL=[]}
+const jrPush=()=>{if(!JRAPI)return;clearTimeout(JRT);JRT=setTimeout(()=>fetch("/api/journal",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({notes:JRN,del:JRDEL})}).then(r=>{if(!r.ok)throw 0}).catch(()=>msg("Journal not saved online, kept in this browser.")),600)};
+const jrMerge=(A,Dl)=>{const del=new Set(JRDEL.concat(Dl||[]).map(String)),m=new Map();A.concat(JRN).forEach(x=>{if(x&&x.id!=null&&!del.has(String(x.id))&&!m.has(String(x.id)))m.set(String(x.id),x)});JRDEL=[...del];JRN=[...m.values()]};
+fetch("/api/journal",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.notes))return;JRAPI=true;const n0=JSON.stringify(j.notes);jrMerge(j.notes,j.del);ls.set("jr",JSON.stringify(JRN));ls.set("jrdel",JSON.stringify(JRDEL));if(JSON.stringify(JRN)!==n0)jrPush();if(TAB==="j")rr()}).catch(()=>{});
+const jrSave=()=>{ls.set("jr",JSON.stringify(JRN));ls.set("jrdel",JSON.stringify(JRDEL));jrPush()},rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
 const xTile=(l,v,s,i)=>'<div class="kpi"><div class="kl">'+l+(i?infoI(i):"")+'</div><div class="kv">'+v+'</div><div class="ks">'+s+'</div></div>';
 function pxAt(k,d){if(!P[k])return null;let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i<0?null:{i:i,p:P[k][i]}}
 function jrOut(e){const s=JPX[e.k];if(!s||!s.d)return null;let i=-1;for(let j=0;j<s.d.length&&s.d[j]<=e.d;j++)i=j;if(i<0)i=0;return {p:s.cv[i],now:s.cv[s.cv.length-1],cur:s.cur}}
@@ -1309,7 +1317,7 @@ else if(a==="pf-m"){PM=v;ls.set("pm",PM);rr()}
 else if(a==="rd-mp"||a==="rd-mn"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="rd-mn"?1:-1),1);radPaint()}
 else if(a==="jr-exp"){const u=URL.createObjectURL(new Blob([JSON.stringify(JRN)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download="journal.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1e3)}
 else if(a==="jr-imp"){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const A=JSON.parse(r.result),m=new Map(JRN.map(x=>[String(x.id),x]));A.forEach(x=>{if(x&&x.id!=null&&x.d)m.set(String(x.id),x)});JRN=[...m.values()];jrSave();jrPaint()}catch(x){}};r.readAsText(f)};i.click()}
-else if(a==="jr-del"){JRN=JRN.filter(x=>String(x.id)!==t.getAttribute("data-id"));jrSave();jrPaint()}
+else if(a==="jr-del"){JRDEL.push(String(t.getAttribute("data-id")));JRN=JRN.filter(x=>String(x.id)!==t.getAttribute("data-id"));jrSave();jrPaint()}
 else if(a==="jr-dd"){const p=t.parentNode.querySelector(".pop"),h=!p.hidden;document.querySelectorAll(".jr-pop").forEach(x=>x.hidden=true);p.hidden=h;if(!h){const q=p.querySelector("#jrq");if(q)setTimeout(()=>q.focus(),0)}}
 else if(a==="jr-pk"){JK={k:k,n:t.getAttribute("data-n")||k};jrSync()}
 else if(a==="jr-ac"){JA=v;if(JA!=="w"&&!jrHold().some(r=>r.k===JK.k)){const f=jrHold()[0];JK=f?{k:f.k,n:f.n}:{k:"",n:""}}jrSync()}

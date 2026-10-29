@@ -28,7 +28,7 @@ function stats(u){
   return {email:u.email,name:u.name,plan:u.plan,joined:u.joined,last:u.last,today:day,week:week,month:month,total:u.n,days:days};
 }
 let CERTS=null,CT=0;
-async function who(req,env){
+export async function who(req,env){
   const t=req.headers.get("Cf-Access-Jwt-Assertion"),TD=String(env.TEAM_DOMAIN||"").replace(/^https?:\/\//,"").replace(/\/+$/,"").trim(),AUD=String(env.POLICY_AUD||"").trim();
   if(!t)return {why:"no-login-header (site not behind Access, or you opened a URL Access does not cover)"};
   if(!TD||!AUD)return {why:"TEAM_DOMAIN or POLICY_AUD missing in Pages variables"};
@@ -44,7 +44,7 @@ async function who(req,env){
 }
 async function list(env){
   const l=await env.USERS.list(),o=[];
-  for(const k of l.keys){const v=await env.USERS.get(k.name,"json");if(v)o.push(stats(norm(v)))}
+  for(const k of l.keys){if(k.name.startsWith("jr:"))continue;const v=await env.USERS.get(k.name,"json");if(v)o.push(stats(norm(v)))}
   return o.sort((a,b)=>a.joined<b.joined?-1:a.joined>b.joined?1:0);
 }
 export async function onRequestGet({request,env}){

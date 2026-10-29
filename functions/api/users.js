@@ -51,7 +51,7 @@ export async function onRequestGet({request,env}){
   const w=await who(request,env);if(!w.email)return J({admin:false,why:w.why});
   const em=w.email;
   if(!env.USERS)return J({admin:false,why:"KV binding USERS missing"});
-  const adm=em===(env.ADMIN_EMAIL||"").toLowerCase();
+  const adm=em===String(env.ADMIN_EMAIL||"").trim().toLowerCase();
   let u=norm(await env.USERS.get(em,"json")||blank(em)),ch=touch(u);
   if(adm&&u.plan!=="Master"){u.plan="Master";ch=true}
   if(ch)await env.USERS.put(em,JSON.stringify(u));
@@ -60,7 +60,7 @@ export async function onRequestGet({request,env}){
 }
 export async function onRequestPost({request,env}){
   const em=(await who(request,env)).email;
-  if(!em||em!==(env.ADMIN_EMAIL||"").toLowerCase())return J({error:"forbidden"},403);
+  if(!em||em!==String(env.ADMIN_EMAIL||"").trim().toLowerCase())return J({error:"forbidden"},403);
   const b=await request.json().catch(()=>({})),t=String(b.email||"").trim().toLowerCase();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(t))return J({error:"email"},400);
   if(b.op==="del"){if(t!==em)await env.USERS.delete(t)}

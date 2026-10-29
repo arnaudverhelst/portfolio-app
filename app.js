@@ -11,7 +11,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="29 Oct 2026, 14:05";let USAPI=false,UADM=false,USRV=[],UWHY="";let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 /* small dropdown (same look as the top-bar dropdowns); optional hidden input id keeps the value for forms */
 const SCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -184,8 +184,8 @@ if(!isFinite(f))continue;
 if(buy)B+=f;else S+=f;
 const q0=pos[s]||0;
 if(t.opt){
-const q1=q0+t.q;
-if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);
+const q1=q0+t.q,fv=isFinite(t.fg)?t.fg:f;
+if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?fv:-fv);
 else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);
 pos[s]=q1;
 }else pos[s]=q0+t.qa;
@@ -217,7 +217,7 @@ const pos={},bas={};let v=0;
 tx.forEach(t=>{
 if(t.di>i||(ks&&!ks.has(t.key)))return;const s=t.key;
 if(t.opt){
-const q0=pos[s]||0,q1=q0+t.q,f=t.fc,buy=t.q>0;
+const q0=pos[s]||0,q1=q0+t.q,f=isFinite(t.fg)?t.fg:t.fc,buy=t.q>0;
 if((q0>=0&&buy)||(q0<=0&&!buy))bas[s]=(bas[s]||0)+(buy?f:-f);else if(q0!==0)bas[s]=(bas[s]||0)*(q1/q0);
 pos[s]=q1;
 }else pos[s]=(pos[s]||0)+t.qa;
@@ -314,7 +314,7 @@ let S,f;
 if(VM==="v"){
 const val=[],net=[];let cum=0,k=0;
 for(let i=0;i<=L;i++){
-while(k<tx.length&&tx[k].di<=i){cum+=(tx[k].q>0?1:-1)*(isFinite(tx[k].cs)?tx[k].cs:tx[k].g);k++}
+while(k<tx.length&&tx[k].di<=i){cum+=(tx[k].q>0?1:-1)*(MODE&&isFinite(tx[k].cs)?tx[k].cs:tx[k].g);k++}
 if(i>=x0){val.push(valueAt(i));net.push(cum)}
 }
 S=[{name:"Value of holdings",a:x0,v:val},{name:"Net invested",a:x0,v:net}];f=eur;
@@ -357,16 +357,16 @@ const L=days.length-1,by={},out=[],dvk={};
 tx.forEach(t=>{(by[t.key]=by[t.key]||[]).push(t)});
 DV.forEach(e=>{dvk[e.k]=(dvk[e.k]||0)+e.g+e.t});
 for(const s in by){
-const o=isOpt(s);let q=0,cost=0,real=0,bg=0,sc=0,qb=0;
+const o=isOpt(s);let q=0,cost=0,cg=0,real=0,bg=0,sc=0,qb=0;
 by[s].forEach(t=>{
 const a=o?t.q:t.qa,c=MODE&&isFinite(t.cs)?t.cs:t.g;
-if(a>0){q+=a;cost+=c;bg+=c;qb+=a}
-else if(q>0){const f=Math.min(1,-a/q);real+=c-cost*f;sc+=cost*f;cost-=cost*f;q+=a}
+if(a>0){q+=a;cost+=c;cg+=isFinite(t.g)?t.g:c;bg+=c;qb+=a}
+else if(q>0){const f=Math.min(1,-a/q);real+=c-cost*f;sc+=cost*f;cost-=cost*f;cg-=cg*f;q+=a}
 else real+=c;
 });
-if(Math.abs(q)<1e-9){q=0;cost=0}
-if(o&&G.ex[s]!==undefined&&q>0){real-=cost;sc+=cost;cost=0;q=0}
-const k=s,px=o?0:P[k][L],val=o?cost:q*px;
+if(Math.abs(q)<1e-9){q=0;cost=0;cg=0}
+if(o&&G.ex[s]!==undefined&&q>0){real-=cost;sc+=cost;cost=0;cg=0;q=0}
+const k=s,px=o?0:P[k][L],val=o?cg:q*px;
 out.push({k:s,n:(o?by[s][0].n:ser[k].name),q:q,avg:q>0?cost/q:(qb>0?bg/qb:0),qb:qb,px:px,val:val,un:q>0?val-cost:0,real:real,o:o,dv:dvk[s]||0,typ:typOf(s),bg:bg,sc:sc,loc:locCalc(s,by[s])});
 }
 POSL=out;OPS=new Set(out.filter(r=>r.q>0).map(r=>r.k));const vis=out.filter(r=>pf(r.k));
@@ -576,8 +576,18 @@ return amt/s.v[j]*(pen?0.01:1);
 function buildDiv(){
 DV=[];AO=[];
 const shares=(k,d)=>tx.reduce((a,t)=>a+(t.key===k&&t.d<=d?t.q:0),0);
+const ttAttach=(a,e)=>{
+const isin=a.isin||"",nm=String(a.n||"").toLowerCase().trim();
+const c=tx.filter(t=>t.b==="Degiro"&&((isin&&t.s==="D:"+isin)||(!isin&&nm&&String(t.n||"").toLowerCase().trim()===nm)));
+if(!c.length)return false;
+const dd=x=>Math.abs((Date.parse(x.d)-Date.parse(a.d))/864e5),best=Math.min(...c.map(dd));if(!(best<=4))return false;
+const g=c.filter(t=>dd(t)===best),tot=g.reduce((s,t)=>s+Math.abs(t.g||0),0),amt=Math.abs(e);
+g.forEach(t=>{const w=tot>0?Math.abs(t.g||0)/tot:1/g.length,x=amt*w,dr=isFinite(t.g)&&t.g?t.fg/t.g:1;t.tt=(t.tt||0)+x;t.cs=(isFinite(t.cs)?t.cs:t.g)+(t.q>0?1:-1)*x;t.fc=(isFinite(t.fc)?t.fc:t.fg)+(t.q>0?1:-1)*x*dr});
+return true;
+};
 AC.forEach(a=>{
 const e=toEur(a.amt,a.cur,a.d);if(!isFinite(e))return;
+if(a.k==="fee"&&a.sub==="tt"&&ttAttach(a,e))return;
 if(a.k==="fee"||a.k==="int"){if(Math.abs(e)>=0.005)AO.push({k:a.k,d:a.d,e:e,sub:a.sub||"",n:a.n||""});return}
 const s="D:"+a.isin,t=tx.find(x=>x.s===s),k=t?t.key:s;
 DV.push({b:"Degiro",d:a.d,k:k,n:t?t.n:a.n,g:a.k==="div"?e:0,t:a.k==="tax"?e:0,sh:shares(k,a.d)});
@@ -677,7 +687,7 @@ return '<div class="card"><h2>Performance</h2><div class="tx-bar pft-sel">'
 function kpis(){
 positions();
 const ty=TAB==="r"||TAB==="p"?PT:"all",pl=ty==="all"?POSL:POSL.filter(r=>r.typ===ty),sfx=ty==="all"?"":" \u00b7 "+TYPS[ty];
-const tv=pl.reduce((a,r)=>a+r.val,0),pr=pl.reduce((a,r)=>a+r.un+r.real+r.dv,0);
+const tv=pl.reduce((a,r)=>a+r.val,0),pr=pl.reduce((a,r)=>a+r.un+r.real+r.dv,0)+(MODE&&ty==="all"?AO.filter(x=>x.k==="fee").reduce((s,x)=>s+x.e,0):0);
 let tot=rows[0];
 if(ty!=="all"){const ks=new Set(G.keys.filter(k=>typOf(k)===ty));if(ks.size){const q=twrr(ks,MODE);tot={idx:q.idx,st:q.st,held:q.held}}else tot=null}
 const tw=tot?ret(tot,"Max"):null,cg=tot?cagr(tot):null,bm=actB(),bw=bm?ret(bm,"Max"):null,bs=bm?betaStats(tot,bm):null;
@@ -687,7 +697,7 @@ const tile=(l,v,sub,c)=>'<div class="kpi"><div class="kl">'+l+(sub?infoI(sub):""
 const T=[];
 T.push(tile("Total value"+sfx,eur(tv),"Holdings only, cash not included"));
 const F=mwFl(ty),bt=F.filter(f=>f.t==="x"&&f.a<0).reduce((a,f)=>a-f.a,0),sr=bt>0?pr/bt:null,mw=mwrr(ty,tv);
-T.push(tile((pr<0?"Total loss":"Total profit")+sfx,(pr>0?"+":"")+eur(pr),"Unrealised, realised and dividends, after costs",sg(pr)));
+T.push(tile((pr<0?"Total loss":"Total profit")+sfx,(pr>0?"+":"")+eur(pr),(MODE?"Unrealised, realised and dividends, after all costs: trade fees, currency conversion, transaction tax and account fees":"Unrealised, realised and dividends, before costs"),sg(pr)));
 T.push(tile("Simple return"+sfx,sr==null?"\u2013":pct1(sr),"Total profit divided by everything you bought, after costs. It ignores timing; see the annualised returns for that.",sr==null?"":sg(sr)));
 T.push(tile("TWRR, annualised"+sfx,cg==null?"\u2013":pct1(cg),"Investment performance: how much \u20ac1 would have grown if invested throughout the entire period, regardless of when you added money. Use it to compare with the index."+(tw==null?"":" Total since the start: "+pct1(tw)+"."),cg==null?"":sg(cg)));
 T.push(tile("MWRR, annualised"+sfx,mw==null?"\u2013":pct1(mw),"Your personal performance: the annualised return you actually earned on the money you contributed, considering when each contribution was made (money-weighted return, also called IRR).",mw==null?"":sg(mw)));
@@ -930,18 +940,18 @@ const UPL=[["Free","Free"],["Paid","Paid"],["Suspended","Suspended"],["Discount"
 function usrPost(b){return fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json().then(j=>{if(!r.ok||!j.users)throw new Error(j.error||"failed");USRV=j.users;render(G.syms,[],G.warn)})).catch(e=>msg("Could not save: "+e.message))}
 function usrSet(k,p){if(USAPI){usrPost({op:"set",email:k,plan:p});return}const u=USR.find(x=>x.email===k);if(!u)return;u.plan=p;saveUsers();render(G.syms,[],G.warn)}
 function users(){
-const L=USAPI?USRV:USR.map(u=>({email:u.email,name:u.name,plan:u.plan,joined:u.joined})),sv=USAPI;
+const L=USAPI?USRV:USR.map(u=>({email:u.email,name:u.name,plan:u.plan,joined:u.joined})),sv=USAPI,UPM=UPL.concat([["Master","Master"]]);
 const real=L.filter(u=>u.plan!=="Master"),n=real.length,t0=new Date().toISOString().slice(0,10),mo=t0.slice(0,8)+"01";
 const paid=real.filter(u=>u.plan==="Paid").length,disc=real.filter(u=>u.plan==="Discount").length,pay=paid+disc;
 const sum=(k)=>real.reduce((a,u)=>a+(u[k]||0),0),dAgo=d=>d?Math.floor((Date.parse(t0)-Date.parse(d))/864e5):null;
 const act=k=>real.filter(u=>u[k]>0).length,risk=real.filter(u=>u.plan!=="Suspended"&&(dAgo(u.last)==null||dAgo(u.last)>=14)).length;
 const tile=(l,v,t)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv">'+v+'</div><div class="ks">'+t+'</div></div>';
-let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:6">'+tile("Users",n,real.filter(u=>u.joined>=mo).length+" new this month")+tile("Paying",pay,"Paid "+paid+" \u00b7 Discount "+disc)+tile("Conversion",n?Math.round(pay/n*100)+"%":"\u2013","Paying of all users")+tile("Active today",sv?act("today"):"\u2013",sv?sum("today")+" logins":"Needs sign-in")+tile("Active this week",sv?act("week"):"\u2013",sv?sum("week")+" logins":"Needs sign-in")+tile("At risk",sv?risk:"\u2013","No login for 14+ days")+'</div>';
+let h='<div class="card"><h2>Users</h2>'+(UWHY?'<p class="mu">Sign-in not recognised ('+esc(UWHY)+'). Showing the list saved in this browser.</p>':'')+'<div class="kpis" style="--kc:6">'+tile("Users",n,real.filter(u=>u.joined>=mo).length+" new this month")+tile("Paying",pay,"Paid "+paid+" \u00b7 Discount "+disc)+tile("Conversion",n?Math.round(pay/n*100)+"%":"\u2013","Paying of all users")+tile("Active today",sv?act("today"):"\u2013",sv?sum("today")+" logins":"Needs sign-in")+tile("Active this week",sv?act("week"):"\u2013",sv?sum("week")+" logins":"Needs sign-in")+tile("At risk",sv?risk:"\u2013","No login for 14+ days")+'</div>';
 h+='<div class="uf"><input id="uem" type="email" placeholder="name@company.com" autocomplete="off"><input id="unm" placeholder="Name" autocomplete="off">'+sdd(UPL,"Free","","upl2")+'<button class="go" data-ua="1">Add user</button></div>';
-h+='<div class="sc"><table class="ut"><tr><th>Name</th><th>Email</th><th>Plan</th><th>Today</th><th>Week</th><th>Month</th><th>Total</th><th>Active days'+infoI("Days with at least one login in the last 30 days.")+'</th><th>Last login</th><th>Joined</th><th></th></tr>';
+h+='<div class="sc"><table class="ut"><tr><th>Name</th><th>Email</th><th>Plan</th><th>Logins today</th><th>Logins this week</th><th>Logins this month</th><th>Total logins</th><th>Active days'+infoI("Days with at least one login in the last 30 days.")+'</th><th>Last login</th><th>Joined</th><th></th></tr>';
 if(!L.length)h+='<tr><td colspan="11" class="mu" style="text-align:left">No users yet. Add a test user to see how plans will look.</td></tr>';
-L.forEach(u=>{const m=u.plan==="Master",c=x=>'<td>'+(sv?(x||0):"\u2013")+'</td>';
-h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td>'+esc(u.email)+'</td><td>'+(m?'<span class="pill p-Dividend">Master</span>':sdd(UPL,u.plan,' data-uid="'+esc(u.email)+'"'))+'</td>'+c(u.today)+c(u.week)+c(u.month)+c(u.total)+c(u.days)+'<td>'+(sv&&u.last?fd(u.last):"\u2013")+'</td><td>'+fd(u.joined)+'</td><td>'+(m?"":'<button class="ib" data-ud="'+esc(u.email)+'" title="Remove user" aria-label="Remove user">&#10005;</button>')+'</td></tr>'});
+L.forEach(u=>{const m=u.plan==="Master"&&sv,c=x=>'<td>'+(sv?(x||0):"\u2013")+'</td>';
+h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td>'+esc(u.email)+'</td><td>'+(m?sdd([["Master","Master"]],"Master"):sdd(sv?UPL:UPM,u.plan,' data-uid="'+esc(u.email)+'"'))+'</td>'+c(u.today)+c(u.week)+c(u.month)+c(u.total)+c(u.days)+'<td>'+(sv&&u.last?fd(u.last):"\u2013")+'</td><td>'+fd(u.joined)+'</td><td>'+(m?"":'<button class="ib" data-ud="'+esc(u.email)+'" title="Remove user" aria-label="Remove user">&#10005;</button>')+'</td></tr>'});
 return h+'</table></div></div>';
 }
 function dvEvents(){
@@ -1053,7 +1063,7 @@ const it=NW.items.find(i=>i.id===id),v=parseFloat(t.value);if(!it||!isFinite(v)|
 const d=new Date().toISOString().slice(0,10);it.h=it.h.filter(p=>p.d!==d);it.h.push({d:d,v:v});it.h.sort((a,b)=>a.d<b.d?-1:1);nwSave();render(G.syms,[],G.warn)});
 /* ---- Journal, Tax and Radar tabs ---- */
 const X=(e,n,f)=>LANG==="nl"?n:LANG==="fr"?f:e;
-let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",JK={k:"",n:""},JA="b",JPX={},JQT=null,RWATCH=null,RSEL=null,RAD={},RSEC={},TXQ={net:0,E:10000};
+let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",TAXM="cg",TAXDY=null,JK={k:"",n:""},JA="b",JPX={},JQT=null,RWATCH=null,RSEL=null,RAD={},RSEC={},TXQ={net:0,E:10000};
 try{JRN=JSON.parse(ls.get("jr")||"[]")}catch(e){JRN=[]}
 try{RWATCH=JSON.parse(ls.get("rw")||"null")}catch(e){RWATCH=null}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
@@ -1143,7 +1153,28 @@ const c=h.querySelector(".txc");c.setAttribute("cx",X1.toFixed(1));c.setAttribut
 h.querySelector(".txp").innerHTML='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw+'" height="'+bh+'" rx="8" style="fill:var(--card);stroke:var(--bd)"/>'+L.map((l,i)=>'<text x="'+(bx+10).toFixed(1)+'" y="'+(by+18+i*16).toFixed(1)+'" font-size="11.5"'+(i===0?' style="fill:var(--mu)"':' style="fill:var(--fg)"')+'>'+esc(l)+'</text>').join("");
 }
 document.addEventListener("pointermove",txHover);document.addEventListener("pointerdown",txHover);
+const taxModeBar=()=>'<div class="seg">'+[["cg",X("Capital gains","Meerwaarden","Plus-values")],["dv",X("Dividends","Dividenden","Dividendes")]].map(z=>'<button data-xa="tx-m" data-v="'+z[0]+'"'+(z[0]===TAXM?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div>';
+function taxDivView(){
+const ctry=k=>{const t=tx.find(x=>x.key===k);if(t&&typeof t.s==="string"&&t.s.indexOf("D:")===0)return t.s.slice(2,4).toUpperCase();return t&&t.isin?String(t.isin).slice(0,2).toUpperCase():"\u2013"};
+const Y={};
+DV.forEach(e=>{const y=String(e.d).slice(0,4),o=Y[y]=Y[y]||{};const r=o[e.k]=o[e.k]||{k:e.k,n:e.n,c:ctry(e.k),g:0,t:0};r.g+=e.g;r.t+=e.t});
+const ys=Object.keys(Y).sort();if(TAXDY==null||!Y[TAXDY])TAXDY=ys[ys.length-1];
+const bar='<div class="tx-bar">'+taxModeBar()+(ys.length?'<div class="seg">'+ys.map(y=>'<button data-xa="tx-dy" data-v="'+y+'"'+(y===TAXDY?' class="on"':"")+'>'+y+'</button>').join("")+'</div>':"")+'</div>';
+const head='<div class="card"><h2>'+X("Dividends in your tax return","Dividenden in je aangifte","Dividendes dans votre déclaration")+'</h2>'+bar;
+if(!ys.length)return head+'<p class="mu">'+X("No dividends found yet. Load the account statement (Degiro) or the dividend rows (Saxo).","Nog geen dividenden gevonden. Laad het rekeningoverzicht (Degiro) of de dividendrijen (Saxo).","Aucun dividende trouvé. Chargez le relevé de compte (Degiro) ou les lignes de dividendes (Saxo).")+'</p></div>';
+const all=Object.values(Y[TAXDY]).filter(r=>Math.abs(r.g)+Math.abs(r.t)>=0.005).sort((p,q)=>(q.g+q.t)-(p.g+p.t)),fo=all.filter(r=>r.c!=="BE"),be=all.filter(r=>r.c==="BE");
+const sm=(L,f)=>L.reduce((s,r)=>s+f(r),0),gross=sm(fo,r=>r.g),wh=-sm(fo,r=>r.t),net=gross-wh,bg=sm(be,r=>r.g);
+const cc={};fo.forEach(r=>{cc[r.c]=(cc[r.c]||0)+r.g+r.t});
+const brk=Object.keys(cc).sort((p,q)=>cc[q]-cc[p]).map(c=>c+" "+eu2(cc[c])).join(" + ");
+const row=(r,mu)=>'<tr'+(mu?' class="mu"':"")+'><td>'+esc(r.n)+'</td><td>'+r.c+'</td><td>'+eu2(r.g)+'</td><td>'+(r.t?eu2(r.t):"\u2013")+'</td><td>'+eu2(r.g+r.t)+'</td></tr>';
+const hero='<div class="tx-hero"><div class="kl">'+X("Enter in your tax return","Vul in in je aangifte","À indiquer dans votre déclaration")+'</div><div class="kv">'+eu2(net)+'</div><div class="tx-cds"><span class="cdc">'+X("code","code","code")+' 1444</span><span class="cdc">'+X("partner","partner","partenaire")+' 2444</span></div>'
++'<p class="mu">'+X("Total of all foreign dividends, all countries, as the net amount after foreign withholding tax.","Totaal van alle buitenlandse dividenden, alle landen, als nettobedrag na buitenlandse bronheffing.","Total de tous les dividendes étrangers, tous pays, en montant net après retenue étrangère.")+'</p>'
++(brk?'<p class="mu">'+(HIDE?"":brk+" = "+eu2(net))+'</p>':"")+'</div>';
+const tbl='<div class="sc"><table class="txt"><tr><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Country","Land","Pays")+'</th><th>'+X("Gross","Bruto","Brut")+'</th><th>'+X("Foreign tax","Buitenl. heffing","Retenue étrang.")+'</th><th>'+X("Net","Netto","Net")+'</th></tr>'+fo.map(r=>row(r)).join("")+'<tr><td><b>'+X("Total to report","Totaal aan te geven","Total à déclarer")+'</b></td><td></td><td><b>'+eu2(gross)+'</b></td><td><b>'+(wh?eu2(-wh):"\u2013")+'</b></td><td><b>'+eu2(net)+'</b></td></tr>'+(be.length?'<tr><td colspan="5" class="mu" style="text-align:left;padding-top:14px">'+X("Belgian shares: 30% was already withheld at source, so they are not part of the amount above.","Belgische aandelen: 30% werd al aan de bron ingehouden, ze zitten dus niet in het bedrag hierboven.","Actions belges : 30 % ont déjà été retenus à la source, elles ne font pas partie du montant ci-dessus.")+'</td></tr>'+be.map(r=>row(r,1)).join(""):"")+'</table></div>';
+return head+'<div class="tx-dv">'+hero+tbl+'</div><p class="mu">'+X("Income year "+TAXDY+": declare it in the return you file the year after. Codes as in the latest form I could check (1444 / 2444); confirm them on the form for this income year. French or other treaty claims need extra steps. Indicative, not tax advice.","Inkomstenjaar "+TAXDY+": geef het aan in de aangifte van het jaar erna. Codes volgens het laatste formulier dat ik kon nakijken (1444 / 2444); controleer ze op het formulier van dit inkomstenjaar. Franse of andere verdragsclaims vragen extra stappen. Indicatief, geen belastingadvies.","Revenus "+TAXDY+" : à déclarer l’année suivante. Codes selon le dernier formulaire consulté (1444 / 2444) ; vérifiez-les sur le formulaire de cette année. Les demandes liées à la France ou à d’autres conventions demandent des étapes supplémentaires. Indicatif, pas un conseil fiscal.")+'</p></div>';
+}
 function taxView(){
+if(TAXM==="dv")return taxDivView();
 const R=taxCalc(),ys=Object.keys(R.y).map(Number);if(TAXY==null||!R.y[TAXY])TAXY=ys[ys.length-1];
 const r=R.y[TAXY],left=r.E-r.net,nm=k=>{const z=POSL.find(z=>z.k===k);return z?z.n:k};TXQ={net:r.net,E:r.E};
 const W=700,H=290,pl=58,pr=16,pt=26,pb=28,y0=new Date(TAXY+"-01-01T00:00:00Z").getTime(),y1=new Date(TAXY+"-12-31T00:00:00Z").getTime(),now=Math.min(Date.now(),y1),xs=t=>pl+(Math.max(y0,Math.min(y1,t))-y0)/(y1-y0)*(W-pl-pr);
@@ -1168,13 +1199,13 @@ const sr=Object.keys(sh).filter(k=>sh[k]>1e-6&&P[k]&&i25>=0&&isFinite(P[k][i25])
 const SN=sr.length?'<p class="mu">'+X("Value of what you held on 31/12/2025. Shares bought before 2026 start counting from this price (or your real purchase price if that is higher), so only gains after this date are taxed.","Waarde van wat je op 31/12/2025 bezat. Aandelen gekocht voor 2026 starten vanaf deze koers (of je werkelijke aankoopprijs als die hoger is), zodat enkel winst na deze datum belast wordt.","Valeur de ce que vous déteniez au 31/12/2025. Les titres achetés avant 2026 comptent à partir de ce cours (ou de votre prix réel s’il est plus élevé), seules les plus-values après cette date sont taxées.")+'</p><div class="sc"><table class="txt"><tr><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Shares","Aantal","Quantité")+'</th><th>'+X("Close 31/12/2025","Slotkoers 31/12/2025","Clôture 31/12/2025")+infoI(X("Official closing price of that day, not adjusted for later dividends.","Officiële slotkoers van die dag, niet aangepast voor latere dividenden.","Cours de clôture officiel de ce jour, non ajusté pour les dividendes ultérieurs."))+'</th><th>'+X("Value","Waarde","Valeur")+'</th></tr>'+sr.map(x=>'<tr><td>'+esc(nm(x.k))+'</td><td>'+(Math.round(x.q*1e4)/1e4)+'</td><td>'+eu2(x.p)+'</td><td>'+eu2(x.v)+'</td></tr>').join("")+'<tr><td><b>Total</b></td><td></td><td></td><td><b>'+eu2(stot)+'</b></td></tr></table></div>':'<p class="mu">'+X("Nothing held on 31/12/2025.","Niets in bezit op 31/12/2025.","Rien détenu au 31/12/2025.")+'</p>';
 const GD='<div class="tx-g"><h3>'+X("Capital gains (from 2026)","Meerwaarden (vanaf 2026)","Plus-values (dès 2026)")+'</h3><ul><li>'+X("10% on net realised gains above €10,000 per person per year. Only sales count; losses offset gains of the same year.","10% op netto gerealiseerde meerwaarden boven €10.000 per persoon per jaar. Enkel verkopen tellen; verliezen compenseren winsten van hetzelfde jaar.","10 % sur les plus-values nettes réalisées au-delà de 10 000 € par personne et par an. Seules les ventes comptent ; les pertes compensent les gains de la même année.")+'</li><li>'+X("Shares bought before 2026 start from their 31/12/2025 closing price (or your real price if higher).","Aandelen gekocht voor 2026 starten vanaf hun slotkoers van 31/12/2025 (of je echte prijs als die hoger is).","Les titres achetés avant 2026 partent de leur cours de clôture du 31/12/2025 (ou de votre prix réel s’il est plus élevé).")+'</li></ul><h3>'+X("Dividends","Dividenden","Dividendes")+'</h3><ul><li>'+X("Belgium taxes dividends at 30% (roerende voorheffing). If a Belgian bank or broker pays them, that is final and you do not have to declare them.","België belast dividenden aan 30% (roerende voorheffing). Betaalt een Belgische bank of broker ze uit, dan is dat bevrijdend en moet je ze niet aangeven.","La Belgique taxe les dividendes à 30 % (précompte mobilier). Si une banque ou un courtier belge les verse, c’est libératoire et vous ne devez pas les déclarer.")+'</li><li>'+X("Foreign brokers such as Degiro or Saxo usually do not withhold the Belgian 30% on foreign shares, so you declare those dividends yourself, as the net amount after foreign withholding tax. Typical codes: 1444 / 2444 (check the current form).","Buitenlandse brokers zoals Degiro of Saxo houden meestal geen Belgische 30% in op buitenlandse aandelen, dus geef je die dividenden zelf aan, als nettobedrag na buitenlandse bronheffing. Gebruikelijke codes: 1444 / 2444 (controleer het actuele formulier).","Les courtiers étrangers comme Degiro ou Saxo ne retiennent généralement pas les 30 % belges sur les actions étrangères : vous déclarez ces dividendes vous-même, en montant net après retenue étrangère. Codes usuels : 1444 / 2444 (vérifiez le formulaire actuel).")+'</li><li>'+X("The first €833 of dividends per person is exempt (income year 2026). If 30% was already withheld on it, you can recover up to €249.90 via codes 1437 / 2437.","De eerste €833 dividenden per persoon is vrijgesteld (inkomstenjaar 2026). Werd daarop al 30% ingehouden, dan recupereer je tot €249,90 via codes 1437 / 2437.","Les premiers 833 € de dividendes par personne sont exonérés (revenus 2026). Si 30 % ont déjà été retenus, vous récupérez jusqu’à 249,90 € via les codes 1437 / 2437.")+'</li><li>'+X("Belgian shares held at a foreign broker (for example Degiro) already have the Belgian 30% withheld at source; you can recover it via your return, like on a Belgian account.","Belgische aandelen bij een buitenlandse broker (bv. Degiro) hebben de Belgische 30% al aan de bron ingehouden; je kunt die via je aangifte recupereren, zoals bij een Belgische rekening.","Les actions belges détenues chez un courtier étranger (p. ex. Degiro) ont déjà subi les 30 % belges à la source ; vous pouvez les récupérer via votre déclaration, comme sur un compte belge.")+'</li><li>'+X("Foreign withholding tax (for example 15% on US dividends) is taken at source. A treaty credit can reduce double taxation; keep your broker’s dividend statements.","Buitenlandse bronheffing (bv. 15% op Amerikaanse dividenden) wordt aan de bron ingehouden. Een verdragskrediet kan dubbele belasting beperken; bewaar de dividendoverzichten van je broker.","La retenue étrangère (p. ex. 15 % sur les dividendes américains) est prélevée à la source. Un crédit conventionnel peut réduire la double imposition ; conservez les relevés de dividendes de votre courtier.")+'</li></ul><p class="mu">'+X("Indicative, not tax advice. Check MyMinfin or an advisor for your situation.","Indicatief, geen belastingadvies. Controleer MyMinfin of een adviseur voor jouw situatie.","Indicatif, pas un conseil fiscal. Vérifiez MyMinfin ou un conseiller pour votre situation.")+'</p></div>';
 const TT=[["o",X("Overview","Overzicht","Aperçu")],["s",X("Sales","Verkopen","Ventes")],["p",X("Snapshot 31/12/2025","Momentopname 31/12/2025","Instantané 31/12/2025")],["g",X("Dividends & guide","Dividenden & gids","Dividendes & guide")]];
-return '<div class="card"><h2>'+X("Capital gains tax","Meerwaardebelasting","Taxe sur les plus-values")+'</h2><div class="tx-bar"><div class="seg">'+ys.map(y=>'<button data-xa="tx-y" data-v="'+y+'"'+(y===TAXY?' class="on"':"")+'>'+y+'</button>').join("")+'</div><div class="seg">'+TT.map(z=>'<button data-xa="tx-t" data-v="'+z[0]+'"'+(z[0]===TAXT?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div></div>'
+return '<div class="card"><h2>'+X("Capital gains tax","Meerwaardebelasting","Taxe sur les plus-values")+'</h2><div class="tx-bar">'+taxModeBar()+'<div class="seg">'+ys.map(y=>'<button data-xa="tx-y" data-v="'+y+'"'+(y===TAXY?' class="on"':"")+'>'+y+'</button>').join("")+'</div><div class="seg">'+TT.map(z=>'<button data-xa="tx-t" data-v="'+z[0]+'"'+(z[0]===TAXT?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div></div>'
 +(TAXT==="o"?'<div class="kpis">'
 +xTile(X("Realised gain","Gerealiseerde meerwaarde","Plus-value réalisée"),(r.net<0?"\u2212":"")+eur(Math.abs(r.net)).replace("-",""),X("gains ","winsten ","gains ")+eur(r.gains)+" · "+X("losses ","verliezen ","pertes ")+eur(-r.loss),X("Sale price minus acquisition value, after costs. Only sales count (realised). Losses in the same year are deducted from gains.","Verkoopprijs min aanschaffingswaarde, na kosten. Enkel verkopen tellen (gerealiseerd). Minderwaarden van hetzelfde jaar worden van de meerwaarden afgetrokken.","Prix de vente moins valeur d’acquisition, frais compris. Seules les ventes comptent (réalisées). Les moins-values de la même année sont déduites."))
 +xTile(left>=0?X("Exemption left","Nog vrij","Exonération restante"):X("Over the exemption","Boven de vrijstelling","Au-dessus de l’exonération"),eur(Math.abs(left)).replace("-",""),X("of ","van ","sur ")+eur(r.E)+(r.pool>0?" ("+X("incl. carried over ","incl. overgedragen ","dont reporté ")+eur(r.pool)+")":""),X("Per person, the first €10,000 of net gains per year is tax free (indexed later). Up to €1,000 of an unused first tranche carries over to next year, for max. 5 years (so max. €15,000).","Per persoon is de eerste €10.000 netto meerwaarde per jaar belastingvrij (later geïndexeerd). Van een niet gebruikte eerste schijf kan max. €1.000 naar het volgende jaar worden overgedragen, max. 5 jaar (dus max. €15.000).","Par personne, les premiers 10 000 € de plus-values nettes par an sont exonérés (indexés ensuite). Jusqu’à 1 000 € non utilisés sont reportables l’année suivante, 5 ans max. (soit 15 000 € max.)."))
 +xTile(X("Tax due","Te betalen belasting","Impôt dû"),eur(r.tax),"10% "+X("of ","van ","de ")+eur(r.taxable),X("10% on the part above the exemption. If your broker does not withhold it, you declare it in your tax return.","10% op het deel boven de vrijstelling. Houdt je broker het niet in, dan geef je het aan in je belastingaangifte.","10 % sur la part au-dessus de l’exonération. Si votre courtier ne la retient pas, vous la déclarez dans votre déclaration."))
 +'</div><svg class="txs" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'
-+'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div>':TAXT==="s"?(rowsH?'<div class="sc"><table class="txt"><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+infoI(X("Net proceeds: the sale amount minus trading costs.","Netto-opbrengst: het verkoopbedrag min transactiekosten.","Produit net : le montant de la vente moins les frais."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):TAXT==="g"?GD:SN)
++'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div><p class="mu">'+X("Saxo and Degiro do not withhold Belgian tax, so you report your realised gains in the tax return even when they stay below the exemption: the exemption is claimed there.","Saxo en Degiro houden geen Belgische belasting in, dus je geeft je gerealiseerde meerwaarden aan in de aangifte, ook als ze onder de vrijstelling blijven: de vrijstelling vraag je daar aan.","Saxo et Degiro ne retiennent pas d’impôt belge : vous déclarez vos plus-values réalisées même sous l’exonération, car elle se demande dans la déclaration.")+'</p>':TAXT==="s"?(rowsH?'<div class="sc"><table class="txt"><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+infoI(X("Net proceeds: the sale amount minus trading costs.","Netto-opbrengst: het verkoopbedrag min transactiekosten.","Produit net : le montant de la vente moins les frais."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):TAXT==="g"?GD:SN)
 +'</div>'}
 const RSECMAP={"Technology":"XLK","Communication Services":"XLC","Consumer Cyclical":"XLY","Consumer Defensive":"XLP","Energy":"XLE","Financial Services":"XLF","Healthcare":"XLV","Industrials":"XLI","Basic Materials":"XLB","Real Estate":"XLRE","Utilities":"XLU"};
 const rwList=()=>RWATCH||POSL.filter(r=>!r.o&&r.typ==="Stock"&&r.q>0).map(r=>r.k);
@@ -1264,6 +1295,8 @@ if(!JK.k||!n){alert(X("Pick an instrument and write a note first.","Kies een ins
 JRN.push({id:Date.now(),d:g("jrd").value||todayS(),k:JK.k,a:JA,n:n,lv:lv>0?lv:null,nm:JK.n});jrSave();rr()}
 else if(a==="tx-y"){TAXY=+v;rr()}
 else if(a==="tx-t"){TAXT=v;rr()}
+else if(a==="tx-m"){TAXM=v;rr()}
+else if(a==="tx-dy"){TAXDY=v;rr()}
 else if(a==="wb-use"){WB.ret=+v;ls.set("wb",JSON.stringify(WB));rr()}
 else if(a==="rd-cal"){const n=new Date();RCAL=new Date(n.getFullYear(),n.getMonth(),1);radCalShow()}
 else if(a==="rd-s"){RSEL=k;radPaint()}
@@ -1863,6 +1896,14 @@ if(o.hasAttribute("data-cm")){MODE=+o.getAttribute("data-cm");calc();return}
 if(o.hasAttribute("data-pf")){PF=o.getAttribute("data-pf");ls.set("pf",PF)}else{PT=o.getAttribute("data-pt");ls.set("pt",PT)}
 render(G.syms,[],G.warn);
 });
+function segify(root){
+const sel="button[data-vm],button[data-tf],button[data-vt],button[data-alv],button[data-ctf],button[data-ptf],button[data-txf],button[data-nwm],button[data-nwtf],button[data-wm],button[data-dtf],button[data-dvm]";
+root.querySelectorAll(sel).forEach(b=>{
+if(b.closest(".seg")||b.closest("#side")||b.closest(".pop")||!b.parentNode)return;
+const w=document.createElement("span");w.className="seg";b.parentNode.insertBefore(w,b);
+let n=b;while(n&&(n.nodeType===3&&!n.textContent.trim()||n.nodeType===1&&n.matches(sel))){const nx=n.nextSibling;if(n.nodeType===1)w.appendChild(n);n=nx}
+});
+}
 function layout(){
 const out=$("out");if(!out||!out.firstElementChild)return;
 const kids=[...out.children],kp=kids.find(e=>e.classList.contains("kpis")),tabs=kids.find(e=>e.classList.contains("tabs")),pfc=kids.find(e=>e.classList.contains("tfc")&&e.querySelector("[data-pf]"));
@@ -1874,7 +1915,7 @@ const view=document.createElement("div");view.id="view";view.className="v-"+(DET
 const warn=[];
 kids.forEach(e=>{if(e===kp||e===tabs||e===pfc)return;if(e.classList.contains("card"))view.appendChild(e);else if(e.textContent.trim())warn.push(e.innerHTML)});
 const foot=document.createElement("div");foot.className="sfoot";
-foot.innerHTML=(warn.length?'<details class="note"><summary>Notes ('+warn.length+')</summary>'+warn.join("<br>")+'</details>':"")+"Data stays in this browser &middot; v5.6";
+foot.innerHTML=(warn.length?'<details class="note"><summary>Notes ('+warn.length+')</summary>'+warn.join("<br>")+'</details>':"")+"Data stays in this browser &middot; Updated "+BUILD;
 side.appendChild(foot);
 while(out.firstChild)out.removeChild(out.firstChild);
 out.appendChild(side);if(kp)out.appendChild(kp);out.appendChild(view);
@@ -1885,7 +1926,7 @@ const cv=view.querySelector('[data-w=val]'),cc=view.querySelector('[data-w=cmp]'
 if(ps.length){
 if(!ps.some(p=>p[1]===WT))WT=ps[0][1];
 const w=document.createElement("div");w.className="card";w.setAttribute("data-w","charts");w.style.gridArea="charts";
-const tb=document.createElement("div");tb.className="wtabs";
+const tb=document.createElement("div");tb.className="wtabs seg";
 tb.innerHTML=ps.map(p=>'<button data-wt="'+p[1]+'"'+(p[1]===WT?' class="on"':"")+'>'+p[2]+'</button>').join("");w.appendChild(tb);
 ps.forEach(p=>{const pane=document.createElement("div");pane.className="wpane"+(p[1]===WT?" on":"");pane.setAttribute("data-p",p[1]);const c=p[0],h=c.querySelector("h2");if(h)h.remove();while(c.firstChild)pane.appendChild(c.firstChild);w.appendChild(pane);c.remove()});
 view.appendChild(w);
@@ -1896,6 +1937,7 @@ const ks=[...c.children],isC=k=>k.classList.contains("sc")||(k.matches&&k.matche
 const ns=ks.filter((k,i)=>k.tagName==="P"&&k.classList.contains("mu")&&k.textContent.length>min&&(mi<0||i>mi));
 if(ns.length){const d=document.createElement("details");d.className="note";d.innerHTML="<summary>Notes</summary>";ns.forEach(n=>d.appendChild(n));c.appendChild(d)}
 }
+segify(view);
 view.querySelectorAll(".wpane").forEach(p=>noteify(p,1));
 const tw=view.querySelector("[data-w=twrr]");
 if(tw){const h=tw.querySelector("h2"),ks=[...tw.children],si=ks.findIndex(k=>k.classList.contains("sc")),ctl=ks.slice(ks.indexOf(h)+1,si);
@@ -2390,11 +2432,13 @@ const b=e.target.closest&&e.target.closest("[data-pcm],[data-loc]");if(!b)return
 if(b.hasAttribute("data-pcm")){MODE=+b.getAttribute("data-pcm");calc()}else setLoc(b.getAttribute("data-loc")==="1");
 });
 renderGuide();syncPrefs();
+{const v=document.createElement("div");v.id="ver";v.textContent="Updated "+BUILD;document.body.appendChild(v)}
 document.documentElement.lang=LANG;
 if(LANG!=="en"){TUSED=true;TBUSY=true;try{trNode(document.body)}finally{TMO.takeRecords();TBUSY=false}}
 /* ---- users: register this visit and load the list (admin only); no API means the local list is used ---- */
 fetch("/api/users",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
 if(!j||typeof j!=="object"||!("admin" in j||j.suspended))return;
-USAPI=true;UADM=!!j.admin;USRV=j.users||[];if(j.why)console.warn("Users: "+j.why);
+if(j.why&&!j.suspended){UWHY=j.why;console.warn("Users: "+j.why);if(TAB==="u")render(G.syms,[],G.warn);return}
+USAPI=true;UADM=!!j.admin;USRV=j.users||[];
 if(j.suspended){const d=document.createElement("div");d.style.cssText="position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:var(--bg);color:var(--fg);text-align:center;padding:20px";d.innerHTML="<div><h2>Access suspended</h2><p class=\"mu\">Your access to this app is currently suspended. Please contact the owner.</p></div>";document.body.appendChild(d);return}
 if(rows.length||TAB==="u")render(G.syms,[],G.warn)}).catch(()=>{});

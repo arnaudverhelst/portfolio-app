@@ -85,7 +85,7 @@ svg.ic{width:18px;height:18px;color:inherit}
 .pop button{padding:4px 12px;font-size:.82em;margin:4px 6px 0 0}
 .modal{position:fixed;inset:0;z-index:50;background:rgba(5,8,16,.6);display:flex;align-items:center;justify-content:center}
 .mcard{width:min(720px,94vw);max-height:90vh;overflow:auto;margin:0}.mhead{display:flex;justify-content:space-between;align-items:center}.mcard textarea{height:60px}
-#out{flex:1;min-height:0;display:grid;grid-template-columns:245px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px 14px}
+#out{flex:1;min-height:0;display:grid;grid-template-columns:196px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px 14px}
 #side{grid-row:1/3;grid-column:1;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
 #side .tabs{flex-direction:column;margin:0;gap:0}
 #side .tabs button{text-align:left;border:0;background:none;border-radius:10px;padding:5px 12px;color:var(--mu);margin:0}
@@ -374,11 +374,11 @@ svg.txs *{pointer-events:none}
 .rd-l .rd-cal{margin-top:0}.rd-l .rd-cd{min-height:42px;padding:3px}.rd-l .rd-cd .jp{font-size:.62rem;padding:0 4px}
 @media(max-width:700px){.rd-g{grid-template-columns:1fr}}
 
-#side .tabs .sec.sbB,#side .tabs .sec.sbC{color:color-mix(in srgb,var(--mu) 60%,transparent)}
+#side .tabs .sec.sbB,#side .tabs .sec.sbC{color:color-mix(in srgb,var(--mu) 75%,transparent)}
 html[data-mode=dark]{--sbc:#8FB8FF}html[data-mode=light]{--sbc:var(--ac)}
 #side .tabs button.sbB:hover{color:var(--fg)}
 #side .tabs button.sbB.on{background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--fg);font-weight:600;box-shadow:inset 3px 0 0 var(--ac)}
-#side .tabs button.sbB.on svg{color:var(--ac)}
+#side .tabs button.sbB.on svg{color:var(--fg)}
 #side .tabs button.sbC svg{color:color-mix(in srgb,var(--sbc) 70%,var(--mu))}
 #side .tabs button.sbC.on{background:color-mix(in srgb,var(--sbc) 14%,transparent);color:var(--sbc);font-weight:600;box-shadow:none}
 #side .tabs button.sbC.on svg{color:var(--sbc)}
@@ -389,42 +389,8 @@ html[data-mode=dark]{--sbc:#8FB8FF}html[data-mode=light]{--sbc:var(--ac)}
 .pft th{font-size:12px;font-weight:500;text-align:right}.pft th:first-child{text-align:left}
 .pft td{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.pft td:first-child{text-align:left}
 .pft tr.pfb td:first-child{font-weight:600}.pft tr.pfd td{font-size:12px}
-
-/* sidebar +25% */
-#side .tabs button{font-size:1.25em}#side .tabs button svg.ic{width:21px;height:21px}
-#side .sec{font-size:.85em}
-/* one switch style everywhere */
-.seg button:not(#_){margin:0;padding:4px 14px;font-size:.84em;border:0;background:none;color:var(--mu);border-radius:999px;box-shadow:none}
-.seg button.on:not(#_){background:var(--ac);color:var(--onac)}
-.seg+.seg,.seg+button,.seg+label{margin-left:8px}.wtabs{margin-bottom:8px}.tfc .seg{margin-right:4px}
-.themes,#gtabs{display:inline-flex;flex-wrap:nowrap;gap:2px;padding:2px;border:1px solid var(--bd);border-radius:999px;background:var(--bg)}
-.themes button:not(#_),#gtabs button:not(#_){margin:0;border:0;background:none;color:var(--mu);border-radius:999px;box-shadow:none}
-.themes button{padding:5px 14px}
-.themes button.on:not(#_),#gtabs button.on:not(#_){background:var(--ac);color:var(--onac)}
-#gtabs button:disabled{opacity:.4}
-/* FAQ */
-.fq-lead{margin:0 0 14px;line-height:1.55}
-.fq{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
-.fq-i{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
-.fq-i h3{margin:0 0 6px;font-size:1em;font-weight:600}
-.fq-i p{margin:0 0 10px;line-height:1.55;color:var(--mu)}
-.fq-f{margin:8px 0 10px;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--ac) 9%,transparent);border-left:3px solid var(--ac);text-align:center;line-height:2.1;overflow-x:auto;font-size:1.02em}
-.fq-f i,.fq-i i{font-family:Georgia,"Times New Roman",serif}
-.fx{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 4px;line-height:1.5}
-.fx .fn{border-bottom:1.5px solid currentColor;padding:0 6px 2px}.fx .fd{padding:2px 6px 0}
-.fq-e{font-size:.92em;line-height:1.55;padding-top:2px}.fq-e b{display:block;font-size:.78em;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:3px;font-weight:500}
-#view.v-q{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"faq"}
-/* dividends per year (tax) */
-.dy{margin:0 0 18px}.dy h3{margin:0 0 8px;font-size:1em}.dy-do{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--ac) 8%,transparent);font-size:.9em;line-height:1.5}
-.dy-do ol{margin:6px 0 0;padding-left:20px}.dy-do li{margin:3px 0}
-.rd-hm-g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 14px}
-.rd-hm{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;color:#fff;min-width:0;font-size:.82rem;font-weight:500}
-.rd-hm b{font-size:.95rem;font-weight:600;font-variant-numeric:tabular-nums}
-.rd-main{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
-.rd-main.sel{grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr)}
-.rd-tb{min-width:0}
-.rd-tr{cursor:pointer}.rd-tr:hover td{background:var(--hv)}.rd-tr.on td{background:color-mix(in srgb,var(--ac) 14%,transparent)}
-.rd-mq{display:inline-flex;align-items:flex-end;gap:3px;height:24px;vertical-align:middle}.rd-mq i{display:block;width:7px;border-radius:2px}
-.rd-mq i.b{background:var(--k)}.rd-mq i.m{background:color-mix(in srgb,var(--mu) 45%,transparent)}
-@media(min-width:901px){#view.v-o .rd-main{flex:1;min-height:0}#view.v-o .rd-tb,#view.v-o .rd-main .rd-rc{min-height:0;overflow:auto}}
-@media(max-width:700px){.rd-hm-g{grid-template-columns:repeat(2,minmax(0,1fr))}.rd-main.sel{grid-template-columns:minmax(0,1fr)}}
+#side .tabs button{font-size:.9em}
+.sdd{display:inline-block}.sdd .ixb{height:30px;margin:0;justify-content:space-between;min-width:104px}
+.uf .sdd,.uf .sdd .ixb{width:100%;height:36px}.nwf .sdd .ixb{height:36px;min-width:150px}
+.pop.sdp{min-width:150px;padding:6px;z-index:70;text-align:left}
+.ut th,.ut td{text-align:right;white-space:nowrap}.ut th:nth-child(-n+3),.ut td:nth-child(-n+3){text-align:left}

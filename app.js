@@ -3,16 +3,19 @@ const MON={jan:0,feb:1,mar:2,mrt:2,apr:3,may:4,mei:4,jun:5,jul:6,aug:7,sep:8,oct
 const SUF={xams:".AS",xetr:".DE",xpar:".PA",xbru:".BR",xlon:".L",xmil:".MI",xswx:".SW",xmad:".MC",xhel:".HE",xsto:".ST",xcse:".CO",xosl:".OL",xtsx:".V",xtse:".TO",xasx:".AX",xhkg:".HK"};
 const TFS=["1D","1W","1M","3M","6M","YTD","1Y","3Y","5Y","Max"];
 const PALS={
-light:["#2F6FDB","#E8892B","#7B5FD0","#17A2B8","#D9709C","#9AA7BD","#B9B2A3","#A9A3C9","#8E9AAF","#C4BCAB","#B3AED0","#A0AAB8","#CFC8BA"],
-dark:["#5B8DEF","#F0A04B","#9A82E8","#3DB9CF","#E58BB1","#7F8CA3","#A39C8B","#8F89B5","#8591A6","#B5AE9F","#9CA3C8","#8A93AD","#C2BBAC"]};
+light:["#3F6FD8","#C9962F","#2E9E88","#A94F68","#7B6FC6","#64707E","#ca8a04","#475569","#65a30d","#dc2626","#0d9488","#9333ea","#a8a29e"],
+dark:["#5B8DEF","#E0B15A","#4FB8A3","#C06C84","#9A8FD8","#7C8794","#f2b84b","#9aa5bd","#b5e04f","#ff9a6b","#2dd4bf","#c9b6ff","#d9d2c3"]};
 let MODEV="light";
 let COL=PALS.light.slice(0,6);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
+/* small dropdown (same look as the top-bar dropdowns); optional hidden input id keeps the value for forms */
+const SCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const sdd=(o,v,a,hid)=>{const c=o.find(z=>z[0]===v)||o[0];return '<div class="pw sdd"'+(a||"")+'><button type="button" class="ixb sdb"><span>'+esc(c[1])+'</span>'+SCH+'</button><div class="pop sdp" hidden>'+o.map(z=>'<button type="button" class="ixo'+(z[0]===c[0]?" on":"")+'" data-sv="'+esc(z[0])+'"><span>'+esc(z[1])+'</span></button>').join("")+'</div>'+(hid?'<input type="hidden" id="'+hid+'" value="'+esc(c[0])+'">':"")+'</div>'};
 const infoI=t=>'<span class="inf" tabindex="0" data-tip="'+esc(t)+'"></span>';
 const BMN={"IWDA.AS":"World (MSCI World)","VWCE.DE":"All-World (FTSE)","CSPX.AS":"S&P 500","^STOXX50E":"Euro Stoxx 50","^NDX":"Nasdaq 100"};
 const bmLab=n=>BMN[n]||n;
@@ -323,7 +326,7 @@ return {name:r.kind==="b"?bmLab(r.name):r.name,a:x0,v:v};
 });
 f=pctf;
 }
-return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFA().map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,x0,L,f,VM==="p")+"</div>";
+return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFA().map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,x0,L,f,VM==="p")+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included. Net invested is cumulative since your first trade; over the full period, the gap between the lines is your profit.":"Time-weighted return of your invested part since your first trade, against the benchmark.")+"</p></div>";
 }
 function hold(syms,bad){
 const q={},nm={},bu={},se={};tx.forEach(t=>{q[t.s]=(q[t.s]||0)+t.q;nm[t.s]=t.n;if(t.q>0)bu[t.s]=(bu[t.s]||0)+t.q;else se[t.s]=(se[t.s]||0)-t.q});
@@ -455,14 +458,7 @@ const tb=th.closest("table"),key=tb.getAttribute("data-sk"),c=th.cellIndex,s=SOR
 const n=(s&&s.c===c)?{c:c,d:-s.d}:{c:c,d:1};
 SORTS[key]=n;applySort(tb,n.c,n.d);markSort(tb,n);
 }
-function segify(){
-const A=["vt","vm","ptf","tf","alv","ctf","nwm","nwtf","dtf","wt","wm","txf"],sel=A.map(a=>"#out button[data-"+a+"]").join(",");
-document.querySelectorAll(sel).forEach(b=>{
-if(b.parentNode.classList.contains("seg"))return;
-const at=A.find(a=>b.hasAttribute("data-"+a)),g=[b];let n=b.nextSibling;
-while(n){if(n.nodeType===1&&n.tagName==="BUTTON"&&n.hasAttribute("data-"+at)){g.push(n);n=n.nextSibling}else if(n.nodeType===3&&!n.textContent.trim()){n=n.nextSibling}else break}
-const w=document.createElement("span");w.className="seg";b.parentNode.insertBefore(w,b);g.forEach(x=>w.appendChild(x))})}
-function render(syms,bad,warn){renderBase(syms,bad,warn);enhanceTables();layout();segify();wbUpdate();fit();dvFitAll()}
+function render(syms,bad,warn){renderBase(syms,bad,warn);enhanceTables();layout();wbUpdate();fit();dvFitAll()}
 function renderBase(syms,bad,warn){
 if(DET&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=tabsHtml()+detailView(DET);return}
 if(TAB==="a"&&rows.length&&!bad.length){
@@ -496,7 +492,7 @@ $("out").innerHTML=kpis()+tabsHtml()+positions()+(warn.length?'<p class="mu">'+w
 return;
 }
 if((TAB==="j"||TAB==="x"||TAB==="o"||TAB==="f")&&rows.length&&!bad.length){CH=[];positions();$("out").innerHTML=kpis()+tabsHtml()+(TAB==="j"?journal():TAB==="x"?taxView():TAB==="f"?perfView():radar());if(TAB==="o")radInit();return}
-if(TAB==="q"){CH=[];$("out").innerHTML=(rows.length?kpis():"")+tabsHtml()+faq();return}
+if(TAB==="u"&&USAPI&&!UADM)TAB="r";
 if(TAB==="u"){CH=[];$("out").innerHTML=(rows.length?kpis():"")+tabsHtml()+users();return}
 renderR(syms,bad,warn);
 if(rows.length)$("out").innerHTML=kpis()+tabsHtml()+$("out").innerHTML;
@@ -632,7 +628,7 @@ const pChips=()=>'<div class="tfc pft-tf">'+TFA().map(t=>'<button data-vt="'+t+'
 function perSpan(t,r){const L=days.length-1;if(t==="C")return(new Date(CT)-new Date(CF))/864e5;const i0=t==="Max"?(r&&r.st>=0?r.st:0):iStart(t);if(i0<0)return 0;return(new Date(days[L])-new Date(days[i0]))/864e5}
 const annV=(v,t,r)=>{if(v==null||PFA!=="a")return v;const d=perSpan(t,r);return d>=365?Math.pow(1+v,365/d)-1:v};
 function twrrTbl(){let h="";
-h+=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR</th></tr>";
+h+=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
 const NC=VTs().length+(CU?1:0)+2;
 const val=(r,t)=>annV(t==="C"?ret(r,"C"):rt(r,t),t,r);
 const line=r=>"<tr"+(r.k?"":' class="pfb"')+"><td>"+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.name)+"</a>":esc(r.kind==="b"?bmLab(r.name):r.name==="Total portfolio"?"My portfolio":r.name))+"</td>"+VTs().map(t=>cell(val(r,t))).join("")+(CU?cell(val(r,"C")):"")+cell(cagr(r))+"</tr>";
@@ -667,45 +663,13 @@ let h=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(
 E.forEach(e=>{h+="<tr"+(e[0]==="all"?' class="pfb"':"")+"><td>"+e[1]+"</td>"+tfs.map(t=>cell(mwP(e[0],t))).join("")+"</tr>"});
 if(bm)h+='<tr class="pfb"><td>'+esc(bmLab(bm.name))+infoI(X("What you would have earned if every one of your buys and sells had gone into the index on the same day.","Wat je zou verdiend hebben als elke aan- en verkoop op dezelfde dag in de index was gegaan.","Ce que vous auriez gagn\u00e9 si chacun de vos achats et ventes avait \u00e9t\u00e9 plac\u00e9 dans l\u2019indice le m\u00eame jour."))+"</td>"+tfs.map(t=>cell(mwP("all",t,bm))).join("")+"</tr>";
 return h+"</table></div>"}
-
-const fqx=(n,d)=>'<span class="fx"><span class="fn">'+n+'</span><span class="fd">'+d+'</span></span>';
-const FQ=(t,p,f,e)=>'<section class="fq-i"><h3>'+t+'</h3><p>'+p+'</p>'+(f?'<div class="fq-f">'+f+'</div>':'')+(e?'<div class="fq-e"><b>Example</b>'+e+'</div>':'')+'</section>';
-function faq(){
-const v=s=>'<i>'+s+'</i>',sb=(a,b)=>'<i>'+a+'</i><sub>'+b+'</sub>';
-return '<div class="card"><h2>FAQ</h2><div class="sc"><p class="fq-lead">'+X("Which number should I look at? Use <b>TWRR</b> to compare your choices with the index, <b>MWRR</b> for what your own money earned, and <b>Total profit</b> for the euros.","Welk cijfer moet je bekijken? Gebruik <b>TWRR</b> om je keuzes met de index te vergelijken, <b>MWRR</b> voor wat je eigen geld opbracht en <b>Totale winst</b> voor de euro\u2019s.","Quel chiffre regarder ? Utilisez le <b>TWRR</b> pour comparer vos choix \u00e0 l\u2019indice, le <b>MWRR</b> pour ce que votre argent a rapport\u00e9 et le <b>profit total</b> pour les euros.")+'</p><div class="fq">'
-+FQ("TWRR \u00b7 time-weighted return","How well your investments performed, regardless of when you added or withdrew money. The period is cut at every deposit or purchase, each piece gets its own return, and the pieces are multiplied. It is the fair number to compare with an index.",
- 'TWRR = (1 + '+sb("r",1)+') \u00d7 (1 + '+sb("r",2)+') \u00d7 \u2026 \u00d7 (1 + '+sb("r",'n')+') \u2212 1<br>'+sb("r",'i')+' = '+fqx(sb("V","end"),sb("V","start"))+' \u2212 1',
- "You hold \u20ac1,000 and it grows 10% to \u20ac1,100. You add \u20ac1,000 (now \u20ac2,100), then it falls 10% to \u20ac1,890.<br>TWRR = 1.10 \u00d7 0.90 \u2212 1 = <b>\u22121.0%</b>. Your euro result is \u2212\u20ac110 (\u20ac1,890 \u2212 \u20ac2,000), because more money was exposed to the fall.")
-+FQ("MWRR \u00b7 money-weighted return","What your own money earned per year, taking into account when you put it in. Large deposits just before a rise help you, large deposits just before a fall hurt you. Also known as IRR. It is the rate <i>r</i> for which all cash flows balance out:",
- '0 = '+'\u03a3 '+fqx(sb("CF","t"),'(1 + <i>r</i>)<sup><i>t</i></sup>')+' + '+fqx(sb("V","end"),'(1 + <i>r</i>)<sup><i>T</i></sup>'),
- "You invest \u20ac1,000 today and \u20ac1,000 after 6 months. After 1 year it is worth \u20ac2,200.<br>1,000(1 + <i>r</i>) + 1,000(1 + <i>r</i>)<sup>0.5</sup> = 2,200, so <i>r</i> \u2248 <b>13.5% per year</b>. A plain 200 \u00f7 2,000 = 10% would ignore that half the money was only invested for 6 months.")
-+FQ("Annualised","Converts a return over any period into a yearly rate, so a 6-month and a 3-year result can be compared. Periods shorter than a year show the return over that period instead, because annualising a few weeks exaggerates. CAGR is the annualised return over the whole history.",
- 'Annualised = (1 + '+v("R")+')<sup>365 \u00f7 '+v("days")+'</sup> \u2212 1',
- "+30% over 2 years: 1.30<sup>1 \u00f7 2</sup> \u2212 1 = <b>14.0% per year</b>.")
-+FQ("Total vs annualised","<b>Total</b> is what you gained over the period shown. <b>Annualised</b> is the same result expressed per year. Switch between them in the Performance tab.","",
- "A period of 2 years with a total of +21% is <b>10% per year</b> annualised.")
-+FQ("Profit types","Your profit has three parts. The app adds them up after trading costs.",
- v("Unrealised")+' = '+v("value now")+' \u2212 '+v("cost of shares you still hold")+'<br>'+v("Realised")+' = '+v("sale proceeds")+' \u2212 '+v("cost of shares you sold")+'<br>'+v("Dividends")+' = '+v("received")+' \u2212 '+v("withholding tax")+'<br><b>'+v("Total profit")+' = '+v("Unrealised")+' + '+v("Realised")+' + '+v("Dividends")+'</b>',
- "You hold shares you bought for \u20ac4,000, now worth \u20ac4,600 (unrealised +\u20ac600). You sold others bought for \u20ac1,000 at \u20ac1,300 (realised +\u20ac300). You received \u20ac100 net dividends.<br>Total profit = 600 + 300 + 100 = <b>\u20ac1,000</b>.")
-+FQ("Simple return","The total profit as a share of everything you bought. Easy to read, but it ignores timing, so a gain earned over 5 years looks the same as one earned over 5 months.",
- 'Simple return = '+fqx(v("Total profit"),v("total bought, after costs")),
- "Total profit \u20ac1,000 on \u20ac5,000 bought: 1,000 \u00f7 5,000 = <b>20%</b>.")
-+FQ("Difference vs index","Your return minus the index return over the same period, in percentage points (pts). Positive means you beat the index.",
- 'Difference = '+sb("R","you")+' \u2212 '+sb("R","index"),
- "You made +12.0%, the index +9.5%: <b>+2.5 pts</b>.")
-+FQ("Index with your cash flows","In the MWRR table the index row shows what you would have earned if every buy and sale had gone into the index on the same day. It answers: did my picks beat simply buying the index?","")
-+FQ("Beta","How strongly your portfolio moves with the index, measured on weekly returns. 1.00 means in step, below 1 smaller moves, above 1 bigger moves.",
- '\u03b2 = <i>correlation</i> \u00d7 '+fqx(sb("\u03c3","you"),sb("\u03c3","index")),
- "Correlation 0.80, your volatility 20%, index volatility 16%: \u03b2 = 0.80 \u00d7 1.25 = <b>1.00</b>.")
-+'</div></div></div>'}
 function perfView(){
 const bm=actB(),an=PFA==="a",mw=PM==="m"&&PB!=="stock",pb=mw?"me":PB;
 if(!bm)return '<div class="card"><h2>Performance</h2><p class="mu">Pick an index in the top bar to compare with.</p></div>';
 const sg=(at,L)=>'<div class="seg">'+L.map(z=>'<button '+at+'="'+z[0]+'"'+(z[2]?' class="on"':"")+(z[3]?" disabled":"")+'>'+z[1]+'</button>').join("")+'</div>',
 tw=infoI(mw?X("What annualised return did you actually earn on the money you contributed, considering when each contribution was made? Also known as the money-weighted rate of return or IRR.","Welk jaarlijks rendement behaalde je echt op het geld dat je inlegde, rekening houdend met wanneer je het inlegde? Ook gekend als money-weighted rendement of IRR.","Quel rendement annualis\u00e9 avez-vous r\u00e9ellement obtenu sur l\u2019argent vers\u00e9, selon la date de chaque versement ? Aussi appel\u00e9 taux de rendement pond\u00e9r\u00e9 par les flux ou TRI."):X("How much would \u20ac1 have grown if it had been invested throughout the entire period, regardless of when you added money? Use this to compare your portfolio with the index.","Hoeveel zou \u20ac1 gegroeid zijn als het de hele periode belegd was, ongeacht wanneer je geld toevoegde? Gebruik dit om je portefeuille met de index te vergelijken.","De combien \u20ac1 aurait-il progress\u00e9 s\u2019il avait \u00e9t\u00e9 investi sur toute la p\u00e9riode, quel que soit le moment de vos versements ? Pour comparer avec l\u2019indice."));
-return '<div class="card"><div class="tx-bar pft-sel">'
+return '<div class="card"><h2>Performance</h2><div class="tx-bar pft-sel">'
 +sg("data-pb",[["me",X("My performance","Mijn prestatie","Ma performance"),pb==="me"],["stock",X("Stock performance","Prestatie aandelen","Performance des actions"),pb==="stock",mw]])
-+'</div><div class="tx-bar pft-sel">'
 +sg('data-xa="pf-a" data-v',[["t",X("Total","Totaal","Total"),!an],["a",X("Annualised","Per jaar","Annualis\u00e9"),an]])
 +sg('data-xa="pf-m" data-v',[["t","TWRR",!mw],["m","MWRR",mw,PB==="stock"]])+tw+'</div>'
 +(mw?mwrrTbl():twrrTbl())
@@ -730,10 +694,9 @@ T.push(tile("MWRR, annualised"+sfx,mw==null?"\u2013":pct1(mw),"Your personal per
 if(bm)T.push(tile("Beta"+sfx,bs==null?"\u2013":bs.beta.toFixed(2),"vs "+bmLab(bm.name)+(bs==null?" \u00b7 needs 12+ weeks":" \u00b7 corr. "+bs.corr.toFixed(2)+" \u00b7 volatility "+(bs.vp*100).toFixed(0)+"% vs "+(bs.vm*100).toFixed(0)+"%")+". "+BETA_TIP));
 return '<div class="kpis" style="--kc:'+T.length+'">'+T.join("")+"</div>";
 }
-const TABI={q:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 114 2c-.9.6-1.6 1.1-1.6 2.1M12 17h.01"/>',f:'<path d="M5 20V12M12 20V5M19 20v-5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
+const TABI={f:'<path d="M5 20V12M12 20V5M19 20v-5"/>',o:'<circle cx="12" cy="12" r="9"/><path d="M12 12l5-5"/><circle cx="12" cy="12" r="1"/>',x:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/>',j:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 9h6M9 13h4"/>',r:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',p:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',a:'<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/>',t:'<path d="M7 4L3 8l4 4"/><path d="M3 8h14"/><path d="M17 20l4-4-4-4"/><path d="M21 16H7"/>',d:'<circle cx="12" cy="12" r="9"/><path d="M9.5 10.5C10 9.4 11 9 12 9s2 .5 2 1.5-1 1.3-2 1.5-2 .6-2 1.5S11 15 12 15s2-.4 2.5-1.5"/><path d="M12 7.5V9M12 15v1.5"/>',w:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',n:'<path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11"/><circle cx="16.5" cy="14" r="1"/>',u:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/>'};
 const tabBtn=(k,l,g)=>'<button data-tab="'+k+'" title="'+l+'" class="sb'+(g||"B")+(TAB===k?" on":"")+'"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+TABI[k]+'</svg><span class="tl">'+l+'</span></button>';
-let ME={admin:false,users:[]};
-const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbB">Planning</div>'+tabBtn("w","Wealth builder","B")+tabBtn("n","Net worth","B")+tabBtn("j","Journal","B")+'<div class="sec sbB">Help</div>'+tabBtn("q","FAQ","B")+(ME.admin?'<div class="sec sbB">Admin</div>'+tabBtn("u","Users","B"):"")+'</div>'+pfChips();
+const tabsHtml=()=>'<div class="tabs"><div class="sec sbB">Overview</div>'+tabBtn("r","Returns","B")+tabBtn("f","Performance","B")+tabBtn("p","Positions","B")+tabBtn("a","Analysis","B")+tabBtn("o","Radar","B")+'<div class="sec sbB">Activity</div>'+tabBtn("t","Transactions","B")+tabBtn("d","Dividends","B")+tabBtn("x","Tax","B")+'<div class="sec sbB">Planning</div>'+tabBtn("w","Wealth builder","B")+tabBtn("n","Net worth","B")+tabBtn("j","Journal","B")+(USAPI&&!UADM?"":'<div class="sec sbB">Admin</div>'+tabBtn("u","Users","B"))+'</div>'+pfChips();
 let SEC={},SECL=false;try{SEC=JSON.parse(ls.get("sect")||"{}")}catch(e){}
 const etfSec=n=>/INFORMATION TECH|INFO TECH|TECHNOLG|TECHNOLOGY/i.test(n)?"Technology":/DEFEN[CS]E/i.test(n)?"Industrials":/PRIVATE EQUITY/i.test(n)?"Financial Services":"ETFs (broad market)";
 const sectorOf=x=>x.typ==="Derivative"?"Derivatives":x.typ==="ETF"?etfSec(x.n):(SEC[x.k]!==undefined?SEC[x.k]:"Loading...");
@@ -960,17 +923,25 @@ h+='<tr><td data-s="'+r.d.replace(/-/g,"")+'">'+fd(r.d)+'</td><td><span class="p
 });
 return h+'</table></div></div>';
 }
-async function meCall(b){try{const r=await fetch("/api/users",b?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}:{cache:"no-store"}),j=r.ok?await r.json():null;if(!j){if(b)msg("Could not save.");return}if(j.suspended){document.body.innerHTML='<div style="font:16px Inter,sans-serif;padding:48px;text-align:center">Your access is paused. Contact the administrator.</div>';return}ME=j;if(!ME.users)ME.users=[];try{if(G&&G.syms)rr()}catch(e){}}catch(e){}}
+let USR=[];try{USR=JSON.parse(ls.get("users")||"[]")}catch(e){}
+USR.forEach(u=>{if(u.plan==="Pro")u.plan="Paid";if(u.status==="Suspended")u.plan="Suspended"});
+const saveUsers=()=>ls.set("users",JSON.stringify(USR));
+const UPL=[["Free","Free"],["Paid","Paid"],["Suspended","Suspended"],["Discount","Discount"]];
+function usrPost(b){return fetch("/api/users",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json().then(j=>{if(!r.ok||!j.users)throw new Error(j.error||"failed");USRV=j.users;render(G.syms,[],G.warn)})).catch(e=>msg("Could not save: "+e.message))}
+function usrSet(k,p){if(USAPI){usrPost({op:"set",email:k,plan:p});return}const u=USR.find(x=>x.email===k);if(!u)return;u.plan=p;saveUsers();render(G.syms,[],G.warn)}
 function users(){
-if(!ME.admin)return"";
-const U=ME.users||[],n=U.length,pro=U.filter(u=>u.plan==="Pro").length,act=U.filter(u=>u.status!=="Suspended").length;
+const L=USAPI?USRV:USR.map(u=>({email:u.email,name:u.name,plan:u.plan,joined:u.joined})),sv=USAPI;
+const real=L.filter(u=>u.plan!=="Master"),n=real.length,t0=new Date().toISOString().slice(0,10),mo=t0.slice(0,8)+"01";
+const paid=real.filter(u=>u.plan==="Paid").length,disc=real.filter(u=>u.plan==="Discount").length,pay=paid+disc;
+const sum=(k)=>real.reduce((a,u)=>a+(u[k]||0),0),dAgo=d=>d?Math.floor((Date.parse(t0)-Date.parse(d))/864e5):null;
+const act=k=>real.filter(u=>u[k]>0).length,risk=real.filter(u=>u.plan!=="Suspended"&&(dAgo(u.last)==null||dAgo(u.last)>=14)).length;
 const tile=(l,v,t)=>'<div class="kpi"><div class="kl">'+l+'</div><div class="kv">'+v+'</div><div class="ks">'+t+'</div></div>';
-const sel=(o,v,id,f)=>'<select data-uid="'+esc(id)+'" data-uf="'+f+'">'+o.map(x=>'<option'+(x===v?" selected":"")+'>'+x+'</option>').join("")+'</select>';
-let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:4">'+tile("Total users",n,"Registered")+tile("Free",n-pro,"Basic access")+tile("Pro",pro,"Paid plan")+tile("Active",act,"Not suspended")+'</div>';
-h+='<div class="uf"><input id="uem" type="email" placeholder="name@company.com" autocomplete="off"><input id="unm" placeholder="Name" autocomplete="off"><select id="upl2"><option>Free</option><option>Pro</option></select><button class="go" data-ua="1">Add user</button></div>';
-h+='<div class="sc"><table><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th>Last seen</th><th></th></tr>';
-if(!n)h+='<tr><td colspan="7" class="mu" style="text-align:left">No users yet.</td></tr>';
-U.forEach(u=>{const me=u.email===ME.email;h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td style="text-align:left">'+esc(u.email)+'</td><td>'+sel(["Free","Pro"],u.plan,u.email,"plan")+'</td><td>'+(me?"Admin":sel(["Active","Suspended"],u.status,u.email,"status"))+'</td><td>'+fd(u.joined)+'</td><td>'+(u.last?fd(u.last):"\u2013")+'</td><td>'+(me?"":'<button class="ib" data-ud="'+esc(u.email)+'" title="Remove user" aria-label="Remove user">&#10005;</button>')+'</td></tr>'});
+let h='<div class="card"><h2>Users</h2><div class="kpis" style="--kc:6">'+tile("Users",n,real.filter(u=>u.joined>=mo).length+" new this month")+tile("Paying",pay,"Paid "+paid+" \u00b7 Discount "+disc)+tile("Conversion",n?Math.round(pay/n*100)+"%":"\u2013","Paying of all users")+tile("Active today",sv?act("today"):"\u2013",sv?sum("today")+" logins":"Needs sign-in")+tile("Active this week",sv?act("week"):"\u2013",sv?sum("week")+" logins":"Needs sign-in")+tile("At risk",sv?risk:"\u2013","No login for 14+ days")+'</div>';
+h+='<div class="uf"><input id="uem" type="email" placeholder="name@company.com" autocomplete="off"><input id="unm" placeholder="Name" autocomplete="off">'+sdd(UPL,"Free","","upl2")+'<button class="go" data-ua="1">Add user</button></div>';
+h+='<div class="sc"><table class="ut"><tr><th>Name</th><th>Email</th><th>Plan</th><th>Today</th><th>Week</th><th>Month</th><th>Total</th><th>Active days'+infoI("Days with at least one login in the last 30 days.")+'</th><th>Last login</th><th>Joined</th><th></th></tr>';
+if(!L.length)h+='<tr><td colspan="11" class="mu" style="text-align:left">No users yet. Add a test user to see how plans will look.</td></tr>';
+L.forEach(u=>{const m=u.plan==="Master",c=x=>'<td>'+(sv?(x||0):"\u2013")+'</td>';
+h+='<tr><td>'+esc(u.name||"\u2013")+'</td><td>'+esc(u.email)+'</td><td>'+(m?'<span class="pill p-Dividend">Master</span>':sdd(UPL,u.plan,' data-uid="'+esc(u.email)+'"'))+'</td>'+c(u.today)+c(u.week)+c(u.month)+c(u.total)+c(u.days)+'<td>'+(sv&&u.last?fd(u.last):"\u2013")+'</td><td>'+fd(u.joined)+'</td><td>'+(m?"":'<button class="ib" data-ud="'+esc(u.email)+'" title="Remove user" aria-label="Remove user">&#10005;</button>')+'</td></tr>'});
 return h+'</table></div></div>';
 }
 function dvEvents(){
@@ -1066,7 +1037,7 @@ h+=c[3]<0?row(c[1],c[2],-tot,"",""):row(c[1],c[2],tot,"",pc(tot));
 its.forEach(i=>{h+='<div class="nwr sub"><span class="mu">'+esc(i.n)+'</span><span class="pc"></span><input class="nwin" type="'+(HIDE?"password":"number")+'" step="any" min="0" data-nwv="'+i.id+'" value="'+nwVal(i,tdy)+'"><button class="nwx" data-nwd="'+i.id+'" title="Remove" aria-label="Remove">\u2715</button></div>'});
 });
 h+='<div class="nwr tot"><span>Total assets</span><span class="pc"></span><b>'+eur(assets)+'</b></div>'+(Dt?'<div class="nwr tot"><span>Total liabilities</span><span class="pc"></span><b class="neg">'+eur(-Dt)+'</b></div>':'');
-h+='<div class="nwf"><select id="nwc">'+NWC.map(c=>'<option value="'+c[0]+'">'+c[1]+'</option>').join("")+'</select><input id="nwn" placeholder="Name (for example ING savings)"><input id="nwa" type="number" step="any" min="0" placeholder="Amount (\u20ac)"><input id="nwd" type="date" title="Since (optional)"><button data-nwadd="1">Add</button></div>';
+h+='<div class="nwf">'+sdd(NWC.map(c=>[c[0],c[1]]),NWC[0][0],"","nwc")+'<input id="nwn" placeholder="Name (for example ING savings)"><input id="nwa" type="number" step="any" min="0" placeholder="Amount (\u20ac)"><input id="nwd" type="date" title="Since (optional)"><button data-nwadd="1">Add</button></div>';
 return h+'</div>';
 }
 $("out").addEventListener("click",e=>{
@@ -1086,9 +1057,7 @@ let JRN=[],JRFIL="all",TXK=null,RCAL=null,TAXY=null,TAXT="o",JK={k:"",n:""},JA="
 try{JRN=JSON.parse(ls.get("jr")||"[]")}catch(e){JRN=[]}
 try{RWATCH=JSON.parse(ls.get("rw")||"null")}catch(e){RWATCH=null}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-const jrIDB=(m,v)=>new Promise(res=>{try{const q=indexedDB.open("pf-jr",1);q.onupgradeneeded=()=>q.result.createObjectStore("k");q.onerror=()=>res(null);q.onsuccess=()=>{try{const s=q.result.transaction("k",m==="get"?"readonly":"readwrite").objectStore("k"),r=m==="get"?s.get("jr"):s.put(v,"jr");r.onsuccess=()=>res(m==="get"?r.result:true);r.onerror=()=>res(null)}catch(e){res(null)}}}catch(e){res(null)}});
-const jrSave=()=>{const s=JSON.stringify(JRN);ls.set("jr",s);jrIDB("put",s)},rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
-jrIDB("get").then(s=>{if(!s)return;try{const A=JSON.parse(s),m=new Map(JRN.map(x=>[String(x.id),x])),n=m.size;A.forEach(x=>{if(x&&x.id!=null&&x.d&&!m.has(String(x.id)))m.set(String(x.id),x)});if(m.size>n){JRN=[...m.values()];ls.set("jr",JSON.stringify(JRN));if(typeof jrPaint==="function")jrPaint()}}catch(e){}});
+const jrSave=()=>ls.set("jr",JSON.stringify(JRN)),rr=()=>render(G.syms,[],G.warn),pc1=v=>(v>=0?"+":"")+(v*100).toFixed(1)+"%";
 const xTile=(l,v,s,i)=>'<div class="kpi"><div class="kl">'+l+(i?infoI(i):"")+'</div><div class="kv">'+v+'</div><div class="ks">'+s+'</div></div>';
 function pxAt(k,d){if(!P[k])return null;let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i<0?null:{i:i,p:P[k][i]}}
 function jrOut(e){const s=JPX[e.k];if(!s||!s.d)return null;let i=-1;for(let j=0;j<s.d.length&&s.d[j]<=e.d;j++)i=j;if(i<0)i=0;return {p:s.cv[i],now:s.cv[s.cv.length-1],cur:s.cur}}
@@ -1174,25 +1143,6 @@ const c=h.querySelector(".txc");c.setAttribute("cx",X1.toFixed(1));c.setAttribut
 h.querySelector(".txp").innerHTML='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw+'" height="'+bh+'" rx="8" style="fill:var(--card);stroke:var(--bd)"/>'+L.map((l,i)=>'<text x="'+(bx+10).toFixed(1)+'" y="'+(by+18+i*16).toFixed(1)+'" font-size="11.5"'+(i===0?' style="fill:var(--mu)"':' style="fill:var(--fg)"')+'>'+esc(l)+'</text>').join("");
 }
 document.addEventListener("pointermove",txHover);document.addEventListener("pointerdown",txHover);
-
-function divTax(){
-const yrs=[...new Set(DV.map(e=>e.d.slice(0,4)))].sort().reverse();
-if(!yrs.length)return '<p class="mu">'+X("No dividends found yet.","Nog geen dividenden gevonden.","Aucun dividende trouv\u00e9 pour l\u2019instant.")+'</p>';
-const nmOf=k=>{const z=POSL.find(z=>z.k===k);return z?z.n:k},TH=(a,b,c)=>X(a,b,c);
-let h='<div class="sc">';
-yrs.forEach(y=>{
-const L=DV.filter(e=>e.d.slice(0,4)===y),by={},bb={};
-L.forEach(e=>{const o=by[e.k]=by[e.k]||{n:e.n||nmOf(e.k),b:e.b,g:0,t:0};o.g+=e.g;o.t+=e.t;const q=bb[e.b]=bb[e.b]||{g:0,t:0};q.g+=e.g;q.t+=e.t});
-const ks=Object.keys(by).sort((a,b)=>by[b].g-by[a].g),G=L.reduce((a,e)=>a+e.g,0),T=L.reduce((a,e)=>a+e.t,0);
-h+='<div class="dy"><h3>'+y+'<span class="cnt">'+eur(G+T)+' '+TH("net","netto","net")+'</span></h3><table class="txt"><tr><th>'+TH("Instrument","Instrument","Instrument")+'</th><th>'+TH("Broker","Broker","Courtier")+'</th><th>'+TH("Gross","Bruto","Brut")+'</th><th>'+TH("Tax withheld","Ingehouden belasting","Imp\u00f4t retenu")+'</th><th>'+TH("Net received","Netto ontvangen","Net re\u00e7u")+'</th></tr>'
-+ks.map(k=>{const o=by[k];return '<tr><td>'+esc(o.n)+'</td><td>'+esc(o.b||"")+'</td><td>'+eur(o.g)+'</td><td>'+eur(-o.t)+'</td><td>'+eur(o.g+o.t)+'</td></tr>'}).join("")
-+'<tr class="pfb"><td>'+TH("Total","Totaal","Total")+'</td><td></td><td>'+eur(G)+'</td><td>'+eur(-T)+'</td><td>'+eur(G+T)+'</td></tr></table>'
-+'<div class="dy-do"><b>'+TH("What to do in your tax return","Wat doe je in je belastingaangifte","Que faire dans votre d\u00e9claration")+'</b><ol>'
-+'<li>'+TH("Keep the dividend statements of each broker as proof.","Bewaar de dividendoverzichten van elke broker als bewijs.","Conservez les relev\u00e9s de dividendes de chaque courtier comme preuve.")+'</li>'
-+Object.keys(bb).map(b=>'<li>'+esc(b)+': '+TH("if no Belgian 30% was withheld, declare ","als geen Belgische 30% werd ingehouden, geef je ","si aucun pr\u00e9compte belge de 30 % n\u2019a \u00e9t\u00e9 retenu, d\u00e9clarez ")+'<b>'+eur(bb[b].g+bb[b].t)+'</b> '+TH("(net of foreign tax) under foreign dividends, codes 1444 / 2444."," (netto na buitenlandse heffing) aan bij buitenlandse dividenden, codes 1444 / 2444."," (net de la retenue \u00e9trang\u00e8re) sous dividendes \u00e9trangers, codes 1444 / 2444.")+'</li>').join("")
-+'<li>'+TH("The first \u20ac833 of dividends per person is exempt. Tax already withheld on it can be recovered via codes 1437 / 2437.","De eerste \u20ac833 dividenden per persoon is vrijgesteld. Reeds ingehouden belasting daarop recupereer je via codes 1437 / 2437.","Les premiers 833 \u20ac de dividendes par personne sont exon\u00e9r\u00e9s. L\u2019imp\u00f4t d\u00e9j\u00e0 retenu peut \u00eatre r\u00e9cup\u00e9r\u00e9 via les codes 1437 / 2437.")+'</li>'
-+'<li>'+TH("Foreign tax withheld ("+eur(-T)+") is shown above; a treaty credit can reduce double taxation.","Buitenlandse bronheffing ("+eur(-T)+") staat hierboven; een verdragskrediet kan dubbele belasting beperken.","La retenue \u00e9trang\u00e8re ("+eur(-T)+") figure ci-dessus ; un cr\u00e9dit conventionnel peut r\u00e9duire la double imposition.")+'</li></ol></div></div>'});
-return h+'<p class="mu">'+X("Indicative, not tax advice. Check MyMinfin or an advisor for your situation.","Indicatief, geen belastingadvies. Controleer MyMinfin of een adviseur voor jouw situatie.","Indicatif, pas un conseil fiscal. V\u00e9rifiez MyMinfin ou un conseiller pour votre situation.")+'</p></div>'}
 function taxView(){
 const R=taxCalc(),ys=Object.keys(R.y).map(Number);if(TAXY==null||!R.y[TAXY])TAXY=ys[ys.length-1];
 const r=R.y[TAXY],left=r.E-r.net,nm=k=>{const z=POSL.find(z=>z.k===k);return z?z.n:k};TXQ={net:r.net,E:r.E};
@@ -1217,14 +1167,14 @@ let i25=-1;for(let j=0;j<days.length&&days[j]<="2025-12-31";j++)i25=j;
 const sr=Object.keys(sh).filter(k=>sh[k]>1e-6&&P[k]&&i25>=0&&isFinite(P[k][i25])).map(k=>({k:k,q:sh[k],p:rawAt(k,i25),v:sh[k]*rawAt(k,i25)})).sort((a,b)=>b.v-a.v),stot=sr.reduce((a,x)=>a+x.v,0);
 const SN=sr.length?'<p class="mu">'+X("Value of what you held on 31/12/2025. Shares bought before 2026 start counting from this price (or your real purchase price if that is higher), so only gains after this date are taxed.","Waarde van wat je op 31/12/2025 bezat. Aandelen gekocht voor 2026 starten vanaf deze koers (of je werkelijke aankoopprijs als die hoger is), zodat enkel winst na deze datum belast wordt.","Valeur de ce que vous déteniez au 31/12/2025. Les titres achetés avant 2026 comptent à partir de ce cours (ou de votre prix réel s’il est plus élevé), seules les plus-values après cette date sont taxées.")+'</p><div class="sc"><table class="txt"><tr><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Shares","Aantal","Quantité")+'</th><th>'+X("Close 31/12/2025","Slotkoers 31/12/2025","Clôture 31/12/2025")+infoI(X("Official closing price of that day, not adjusted for later dividends.","Officiële slotkoers van die dag, niet aangepast voor latere dividenden.","Cours de clôture officiel de ce jour, non ajusté pour les dividendes ultérieurs."))+'</th><th>'+X("Value","Waarde","Valeur")+'</th></tr>'+sr.map(x=>'<tr><td>'+esc(nm(x.k))+'</td><td>'+(Math.round(x.q*1e4)/1e4)+'</td><td>'+eu2(x.p)+'</td><td>'+eu2(x.v)+'</td></tr>').join("")+'<tr><td><b>Total</b></td><td></td><td></td><td><b>'+eu2(stot)+'</b></td></tr></table></div>':'<p class="mu">'+X("Nothing held on 31/12/2025.","Niets in bezit op 31/12/2025.","Rien détenu au 31/12/2025.")+'</p>';
 const GD='<div class="tx-g"><h3>'+X("Capital gains (from 2026)","Meerwaarden (vanaf 2026)","Plus-values (dès 2026)")+'</h3><ul><li>'+X("10% on net realised gains above €10,000 per person per year. Only sales count; losses offset gains of the same year.","10% op netto gerealiseerde meerwaarden boven €10.000 per persoon per jaar. Enkel verkopen tellen; verliezen compenseren winsten van hetzelfde jaar.","10 % sur les plus-values nettes réalisées au-delà de 10 000 € par personne et par an. Seules les ventes comptent ; les pertes compensent les gains de la même année.")+'</li><li>'+X("Shares bought before 2026 start from their 31/12/2025 closing price (or your real price if higher).","Aandelen gekocht voor 2026 starten vanaf hun slotkoers van 31/12/2025 (of je echte prijs als die hoger is).","Les titres achetés avant 2026 partent de leur cours de clôture du 31/12/2025 (ou de votre prix réel s’il est plus élevé).")+'</li></ul><h3>'+X("Dividends","Dividenden","Dividendes")+'</h3><ul><li>'+X("Belgium taxes dividends at 30% (roerende voorheffing). If a Belgian bank or broker pays them, that is final and you do not have to declare them.","België belast dividenden aan 30% (roerende voorheffing). Betaalt een Belgische bank of broker ze uit, dan is dat bevrijdend en moet je ze niet aangeven.","La Belgique taxe les dividendes à 30 % (précompte mobilier). Si une banque ou un courtier belge les verse, c’est libératoire et vous ne devez pas les déclarer.")+'</li><li>'+X("Foreign brokers such as Degiro or Saxo usually do not withhold the Belgian 30% on foreign shares, so you declare those dividends yourself, as the net amount after foreign withholding tax. Typical codes: 1444 / 2444 (check the current form).","Buitenlandse brokers zoals Degiro of Saxo houden meestal geen Belgische 30% in op buitenlandse aandelen, dus geef je die dividenden zelf aan, als nettobedrag na buitenlandse bronheffing. Gebruikelijke codes: 1444 / 2444 (controleer het actuele formulier).","Les courtiers étrangers comme Degiro ou Saxo ne retiennent généralement pas les 30 % belges sur les actions étrangères : vous déclarez ces dividendes vous-même, en montant net après retenue étrangère. Codes usuels : 1444 / 2444 (vérifiez le formulaire actuel).")+'</li><li>'+X("The first €833 of dividends per person is exempt (income year 2026). If 30% was already withheld on it, you can recover up to €249.90 via codes 1437 / 2437.","De eerste €833 dividenden per persoon is vrijgesteld (inkomstenjaar 2026). Werd daarop al 30% ingehouden, dan recupereer je tot €249,90 via codes 1437 / 2437.","Les premiers 833 € de dividendes par personne sont exonérés (revenus 2026). Si 30 % ont déjà été retenus, vous récupérez jusqu’à 249,90 € via les codes 1437 / 2437.")+'</li><li>'+X("Belgian shares held at a foreign broker (for example Degiro) already have the Belgian 30% withheld at source; you can recover it via your return, like on a Belgian account.","Belgische aandelen bij een buitenlandse broker (bv. Degiro) hebben de Belgische 30% al aan de bron ingehouden; je kunt die via je aangifte recupereren, zoals bij een Belgische rekening.","Les actions belges détenues chez un courtier étranger (p. ex. Degiro) ont déjà subi les 30 % belges à la source ; vous pouvez les récupérer via votre déclaration, comme sur un compte belge.")+'</li><li>'+X("Foreign withholding tax (for example 15% on US dividends) is taken at source. A treaty credit can reduce double taxation; keep your broker’s dividend statements.","Buitenlandse bronheffing (bv. 15% op Amerikaanse dividenden) wordt aan de bron ingehouden. Een verdragskrediet kan dubbele belasting beperken; bewaar de dividendoverzichten van je broker.","La retenue étrangère (p. ex. 15 % sur les dividendes américains) est prélevée à la source. Un crédit conventionnel peut réduire la double imposition ; conservez les relevés de dividendes de votre courtier.")+'</li></ul><p class="mu">'+X("Indicative, not tax advice. Check MyMinfin or an advisor for your situation.","Indicatief, geen belastingadvies. Controleer MyMinfin of een adviseur voor jouw situatie.","Indicatif, pas un conseil fiscal. Vérifiez MyMinfin ou un conseiller pour votre situation.")+'</p></div>';
-const TT=[["o",X("Overview","Overzicht","Aperçu")],["s",X("Sales","Verkopen","Ventes")],["p",X("Snapshot 31/12/2025","Momentopname 31/12/2025","Instantané 31/12/2025")],["v",X("Dividends per year","Dividenden per jaar","Dividendes par an")],["g",X("Dividends & guide","Dividenden & gids","Dividendes & guide")]];
+const TT=[["o",X("Overview","Overzicht","Aperçu")],["s",X("Sales","Verkopen","Ventes")],["p",X("Snapshot 31/12/2025","Momentopname 31/12/2025","Instantané 31/12/2025")],["g",X("Dividends & guide","Dividenden & gids","Dividendes & guide")]];
 return '<div class="card"><h2>'+X("Capital gains tax","Meerwaardebelasting","Taxe sur les plus-values")+'</h2><div class="tx-bar"><div class="seg">'+ys.map(y=>'<button data-xa="tx-y" data-v="'+y+'"'+(y===TAXY?' class="on"':"")+'>'+y+'</button>').join("")+'</div><div class="seg">'+TT.map(z=>'<button data-xa="tx-t" data-v="'+z[0]+'"'+(z[0]===TAXT?' class="on"':"")+'>'+z[1]+'</button>').join("")+'</div></div>'
 +(TAXT==="o"?'<div class="kpis">'
 +xTile(X("Realised gain","Gerealiseerde meerwaarde","Plus-value réalisée"),(r.net<0?"\u2212":"")+eur(Math.abs(r.net)).replace("-",""),X("gains ","winsten ","gains ")+eur(r.gains)+" · "+X("losses ","verliezen ","pertes ")+eur(-r.loss),X("Sale price minus acquisition value, after costs. Only sales count (realised). Losses in the same year are deducted from gains.","Verkoopprijs min aanschaffingswaarde, na kosten. Enkel verkopen tellen (gerealiseerd). Minderwaarden van hetzelfde jaar worden van de meerwaarden afgetrokken.","Prix de vente moins valeur d’acquisition, frais compris. Seules les ventes comptent (réalisées). Les moins-values de la même année sont déduites."))
 +xTile(left>=0?X("Exemption left","Nog vrij","Exonération restante"):X("Over the exemption","Boven de vrijstelling","Au-dessus de l’exonération"),eur(Math.abs(left)).replace("-",""),X("of ","van ","sur ")+eur(r.E)+(r.pool>0?" ("+X("incl. carried over ","incl. overgedragen ","dont reporté ")+eur(r.pool)+")":""),X("Per person, the first €10,000 of net gains per year is tax free (indexed later). Up to €1,000 of an unused first tranche carries over to next year, for max. 5 years (so max. €15,000).","Per persoon is de eerste €10.000 netto meerwaarde per jaar belastingvrij (later geïndexeerd). Van een niet gebruikte eerste schijf kan max. €1.000 naar het volgende jaar worden overgedragen, max. 5 jaar (dus max. €15.000).","Par personne, les premiers 10 000 € de plus-values nettes par an sont exonérés (indexés ensuite). Jusqu’à 1 000 € non utilisés sont reportables l’année suivante, 5 ans max. (soit 15 000 € max.)."))
 +xTile(X("Tax due","Te betalen belasting","Impôt dû"),eur(r.tax),"10% "+X("of ","van ","de ")+eur(r.taxable),X("10% on the part above the exemption. If your broker does not withhold it, you declare it in your tax return.","10% op het deel boven de vrijstelling. Houdt je broker het niet in, dan geef je het aan in je belastingaangifte.","10 % sur la part au-dessus de l’exonération. Si votre courtier ne la retient pas, vous la déclarez dans votre déclaration."))
 +'</div><svg class="txs" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'
-+'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div>':TAXT==="s"?(rowsH?'<div class="sc"><table class="txt"><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+infoI(X("Net proceeds: the sale amount minus trading costs.","Netto-opbrengst: het verkoopbedrag min transactiekosten.","Produit net : le montant de la vente moins les frais."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):TAXT==="v"?divTax():TAXT==="g"?GD:SN)
++'<div class="lg"><span><b style="color:var(--ac)">\u25cf</b> '+X("Net realised gain (cumulative)","Netto gerealiseerde meerwaarde (cumulatief)","Plus-value nette réalisée (cumulée)")+'</span><span><b style="color:var(--neg)">\u25cf</b> '+X("Exemption","Vrijstelling","Exonération")+'</span></div>':TAXT==="s"?(rowsH?'<div class="sc"><table class="txt"><tr><th>'+X("Date","Datum","Date")+'</th><th>'+X("Instrument","Instrument","Instrument")+'</th><th>'+X("Acquisition value","Aanschaffingswaarde","Valeur d’acquisition")+infoI(X("Bought before 2026: closing price of 31 Dec 2025, or your real purchase price if that is higher (allowed for sales until end of 2030). Bought from 2026: real price including costs. Oldest shares are sold first (FIFO).","Gekocht voor 2026: slotkoers van 31 dec 2025, of je werkelijke aankoopprijs als die hoger is (toegestaan voor verkopen tot eind 2030). Gekocht vanaf 2026: werkelijke prijs incl. kosten. Oudste aandelen worden eerst verkocht (FIFO).","Achetés avant 2026 : cours de clôture du 31 déc. 2025, ou votre prix réel s’il est plus élevé (autorisé pour les ventes jusqu’à fin 2030). Achetés dès 2026 : prix réel frais compris. Les plus anciens titres sont vendus d’abord (FIFO)."))+'</th><th>'+X("Sale price","Verkoopprijs","Prix de vente")+infoI(X("Net proceeds: the sale amount minus trading costs.","Netto-opbrengst: het verkoopbedrag min transactiekosten.","Produit net : le montant de la vente moins les frais."))+'</th><th>'+X("Gain","Meerwaarde","Plus-value")+'</th></tr>'+rowsH+'</table></div>':'<p class="mu">'+X("No sales in "+TAXY+" yet.","Nog geen verkopen in "+TAXY+".","Pas encore de ventes en "+TAXY+".")+'</p>'):TAXT==="g"?GD:SN)
 +'</div>'}
 const RSECMAP={"Technology":"XLK","Communication Services":"XLC","Consumer Cyclical":"XLY","Consumer Defensive":"XLP","Energy":"XLE","Financial Services":"XLF","Healthcare":"XLV","Industrials":"XLI","Basic Materials":"XLB","Real Estate":"XLRE","Utilities":"XLU"};
 const rwList=()=>RWATCH||POSL.filter(r=>!r.o&&r.typ==="Stock"&&r.q>0).map(r=>r.k);
@@ -1234,12 +1184,8 @@ try{const r=await fetch(PROXY+"/?radar="+encodeURIComponent(k));RAD[k]=r.ok?awai
 const d=RAD[k],e=d&&d.sector&&RSECMAP[d.sector];
 if(e&&RSEC[e]===undefined){RSEC[e]=null;try{const r=await fetch(PROXY+"/?symbol="+e+"&range=3mo&interval=1d"),j=await r.json(),c=(j.chart.result[0].indicators.quote[0].close||[]).filter(v=>v!=null);RSEC[e]=c.length>6?{w:c[c.length-1]/c[c.length-6]-1,m:c[c.length-1]/c[Math.max(0,c.length-22)]-1}:false}catch(x){RSEC[e]=false}}
 radPaint()}
-const RWK={};
-async function radSecFetch(e){if(RSEC[e]!==undefined)return;RSEC[e]=null;try{const r=await fetch(PROXY+"/?symbol="+e+"&range=3mo&interval=1d"),j=await r.json(),c=(j.chart.result[0].indicators.quote[0].close||[]).filter(v=>v!=null);RSEC[e]=c.length>6?{w:c[c.length-1]/c[c.length-6]-1,m:c[c.length-1]/c[Math.max(0,c.length-22)]-1}:false}catch(x){RSEC[e]=false}radPaint()}
-function radWk(k){if(P[k]){const L=days.length-1,x=P[k][L],y=P[k][Math.max(0,L-5)];return x>0&&y>0?x/y-1:null}const v=RWK[k];return typeof v==="number"?v:null}
-async function radWkFetch(k){if(P[k]||RWK[k]!==undefined)return;RWK[k]=null;try{const s=await getSeries(k);RWK[k]=s&&s.cv&&s.cv.length>6?s.cv[s.cv.length-1]/s.cv[s.cv.length-6]-1:false}catch(e){RWK[k]=false}radPaint()}
-function radInit(){Object.values(RSECMAP).forEach(radSecFetch);rwList().forEach(k=>{radFetch(k);radWkFetch(k)})}
-function radPaint(){const el=document.getElementById("rdbox");if(el){el.innerHTML=radarInner();enhanceTables()}}
+function radInit(){rwList().forEach(k=>radFetch(k))}
+function radPaint(){const el=document.getElementById("rdbox");if(el)el.innerHTML=radarInner()}
 const rdLoc=()=>LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB";
 const rdHist=d=>((d&&d.hist)||[]).filter(h=>h&&h.sp!=null&&isFinite(h.sp));
 function rdStats(d,n,loc){
@@ -1276,7 +1222,7 @@ function rdLast(d){const H=rdHist(d);if(!H.length)return"";const l=H[H.length-1]
 return '<div class="rd-r"><span class="mu">'+X("Last report","Laatste rapport","Dernier rapport")+'</span><b class="'+(up?"pos":"neg")+'">'+(up?X("Beat","Boven","Au-dessus"):X("Missed","Onder","En dessous"))+' '+pc1(l.sp)+'</b></div><div class="rd-r"><span class="mu">'+X("Streak","Reeks","Série")+'</span><span>'+k+' '+(up?X("beats in a row","keer boven schatting op rij","dépassements d’affilée"):X("misses in a row","keer onder schatting op rij","manques d’affilée"))+'</span></div>'}
 function radar(){return '<div class="card" id="rdbox">'+radarInner()+'</div>'}
 function radarInner(){
-const L=rwList(),now=Date.now(),loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB";if(RSEL!=null&&!L.includes(RSEL))RSEL=null;
+const L=rwList(),now=Date.now(),loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB";if(RSEL==null||!L.includes(RSEL))RSEL=L[0];
 const nmOf=k=>{const d=RAD[k];return d&&d.name?d.name:((POSL.find(r=>r.k===k)||{}).n||k)},dd=k=>{const d=RAD[k];return d&&d.earnings?Math.ceil((d.earnings*1000-now)/864e5):null};
 const ev=[];L.forEach(k=>{const d=RAD[k];if(!d)return;if(d.earnings)ev.push({t:d.earnings*1000,k:k,ty:"e"});if(d.exDiv)ev.push({t:d.exDiv*1000,k:k,ty:"x"})});
 const t0=new Date();t0.setHours(0,0,0,0);ev.sort((a,b)=>a.t-b.t);
@@ -1286,7 +1232,7 @@ wk+='<div class="rd-d"><div class="mu">'+d.toLocaleDateString(loc,{weekday:"shor
 const list=L.map(k=>{const n=dd(k),c=n==null?"var(--mu)":n<=7?"#d9962b":"var(--pos)";
 return '<button class="rd-i'+(k===RSEL?" on":"")+'" data-xa="rd-s" data-k="'+esc(k)+'"><span class="rd-dot" style="background:'+c+'"></span><span><b>'+esc(k.split(".")[0])+'</b><span class="mu"> '+(n==null?(RAD[k]===undefined||RAD[k]===null?"…":"–"):n<0?X("reported","gerapporteerd","publié"):n===0?X("reports today","rapporteert vandaag","publie aujourd’hui"):X("reports in "+n+" days","rapporteert over "+n+" dagen","publie dans "+n+" j"))+'</span></span></button>'}).join("");
 const d=RAD[RSEL];let hub;
-if(!RSEL)hub="";
+if(!RSEL)hub='<p class="mu">'+X("Add a company to start.","Voeg een bedrijf toe.","Ajoutez une entreprise.")+'</p>';
 else if(d==null)hub='<p class="mu">'+X("Loading…","Laden…","Chargement…")+'</p>';
 else if(d===false)hub='<p class="mu">'+X("No data from the price service. Update the price-proxy worker first.","Geen data van de koersdienst. Update eerst de price-proxy worker.","Pas de données du service de cours. Mettez d’abord à jour le worker price-proxy.")+'</p>';
 else{const n=dd(RSEL),cur=d.currency||"",sc=d.sector&&RSEC[RSECMAP[d.sector]],pct=v=>v==null||!isFinite(v)?"\u2013":pc1(v),arrow=d.revNext!=null&&d.revG!=null?(d.revNext>d.revG+.01?"\u25b2":d.revNext<d.revG-.01?"\u25bc":"\u25ba"):"";
@@ -1298,15 +1244,8 @@ hub='<div class="rd-h"><b>'+esc(nmOf(RSEL))+'</b>'+(d.earnings?' · '+X("reports
 +'<div class="rd-t"><b>'+X("Industry trend","Sectortrend","Tendance du secteur")+infoI(X("Now: the company’s latest yearly revenue growth, and the price change of its sector ETF over the past month (about 21 trading days). Next year: analysts’ estimates for revenue and earnings growth. The arrow compares next year’s revenue growth with now: up means growth is expected to speed up.","Nu: de laatste jaarlijkse omzetgroei van het bedrijf en de koersverandering van de sector-ETF over de afgelopen maand (ongeveer 21 beursdagen). Volgend jaar: schattingen van analisten voor omzet- en winstgroei. De pijl vergelijkt de omzetgroei van volgend jaar met nu: omhoog betekent versnelling.","Maintenant : la croissance annuelle récente du chiffre d’affaires et la variation de l’ETF du secteur sur le dernier mois (environ 21 séances). L’an prochain : estimations des analystes. La flèche compare la croissance du CA de l’an prochain à l’actuelle : vers le haut = accélération."))+'</b>'
 +'<div class="rd-r"><span class="mu">'+X("Now","Nu","Maintenant")+'</span><span>'+X("Revenue ","Omzet ","CA ")+pct(d.revG)+' · '+X("sector ETF, past month ","sector-ETF, afgelopen maand ","ETF du secteur, dernier mois ")+(sc?pct(sc.m):"\u2013")+'</span></div>'
 +'<div class="rd-r"><span class="mu">'+X("Next year","Volgend jaar","L’an prochain")+'</span><span>'+X("Revenue ","Omzet ","CA ")+pct(d.revNext)+' · '+X("earnings ","winst ","bénéfice ")+pct(d.epsNext)+' '+arrow+'</span></div></div>'}
-const SO=[["Technology",X("Technology","Technologie","Technologie"),"#2f6fde"],["Communication Services","Comm.","#7c5fd0"],["Industrials",X("Industrials","Industrie","Industrie"),"#5b6b87"],["Energy",X("Energy","Energie","Énergie"),"#858b98"],["Healthcare",X("Health","Gezondheid","Santé"),"#4a5568"],["Financial Services",X("Finance","Financiën","Finance"),"#6b7585"],["Basic Materials",X("Materials","Grondstoffen","Matériaux"),"#17a2b8"],["Utilities",X("Utilities","Nutsbedrijven","Services publics"),"#9c8b73"],["Consumer Cyclical",X("Cons. cyclical","Cyclisch","Cons. cyclique"),"#c77b3a"],["Consumer Defensive",X("Cons. defensive","Defensief","Cons. défensif"),"#b0689a"],["Real Estate",X("Real estate","Vastgoed","Immobilier"),"#5f8a8b"]];
-const rdPc=v=>v==null||!isFinite(v)?"\u2013":Math.abs(v*100)<.05?"0.0%":(v>0?"+":"\u2212")+Math.abs(v*100).toFixed(1)+"%";
-const tiles=SO.map(s=>{const v=RSEC[RSECMAP[s[0]]];return '<div class="rd-hm" style="background:'+s[2]+'"><span>'+s[1]+'</span><b>'+(v===undefined||v===null?"\u2026":v===false?"\u2013":rdPc(v.w))+'</b></div>'}).join("");
-const trs=L.map(k=>{const d=RAD[k],ld=d===undefined||d===null,ok=d&&typeof d==="object",H=ok?rdHist(d).slice(-8):[],beat=H.filter(h=>h.sp>0).length,wk=radWk(k),up=ok&&d.target&&d.price?d.target/d.price-1:null,cl=v=>v==null?"":v<0?' class="neg"':' class="pos"';
-const bars=H.length?'<span class="rd-mq">'+H.map(h=>'<i class="'+(h.sp>0?"b":"m")+'" style="height:'+(6+Math.min(Math.abs(h.sp)*100,20)*.8).toFixed(0)+'px"></i>').join("")+'</span>':"\u2013";
-return '<tr class="rd-tr'+(k===RSEL?" on":"")+'" data-xa="rd-s" data-k="'+esc(k)+'"><td title="'+esc(nmOf(k))+'"><b>'+esc(k.split(".")[0])+'</b></td><td'+(ok&&d.earnings?' data-s="'+d.earnings+'"':"")+'>'+(ok&&d.earnings?new Date(d.earnings*1000).toLocaleDateString(loc,{day:"numeric",month:"short"}):ld?"\u2026":"\u2013")+'</td><td'+(H.length?' data-s="'+beat+'"':"")+'>'+bars+'</td><td'+(up!=null?' data-s="'+up+'"':"")+cl(up)+'>'+rdPc(up)+'</td><td'+(wk!=null?' data-s="'+wk+'"':"")+cl(wk)+'>'+rdPc(wk)+'</td></tr>'}).join("");
-const tbl=L.length?'<div class="sc"><table><tr><th>'+X("Stock","Aandeel","Action")+'</th><th>'+X("Next earnings","Volgende resultaten","Prochains résultats")+'</th><th>'+X("Last 8 quarters","Laatste 8 kwartalen","8 derniers trimestres")+'</th><th>'+X("Target","Koersdoel","Objectif")+'</th><th>'+X("Week","Week","Semaine")+'</th></tr>'+trs+'</table></div>':'<p class="mu">'+X("Add a company to start.","Voeg een bedrijf toe.","Ajoutez une entreprise.")+'</p>';
-return '<h2>Radar<button class="jr-x" data-xa="rd-add" title="'+X("Add company","Bedrijf toevoegen","Ajouter")+'">+ '+X("Add","Toevoegen","Ajouter")+'</button></h2><div class="rd-hm-g">'+tiles+'</div><div class="rd-main'+(RSEL?" sel":"")+'"><div class="rd-tb">'+tbl+'</div>'+(RSEL?'<div class="rd-rc">'+hub+'</div>':"")+'</div>'
-+'<p class="mu">'+X("Sector heatmap shows where the market is moving (sector ETFs, past week); one sortable table holds everything about your stocks. Data from Yahoo Finance, so it can be incomplete.","De sectorheatmap toont waar de markt beweegt (sector-ETF’s, voorbije week); één sorteerbare tabel bevat alles over je aandelen. Data van Yahoo Finance, dus mogelijk onvolledig.","La carte des secteurs montre où le marché bouge (ETF sectoriels, semaine passée) ; un seul tableau triable contient tout sur vos actions. Données Yahoo Finance, possiblement incomplètes.")+'</p>'}
+return '<h2>Radar<button class="jr-x" data-xa="rd-add" title="'+X("Add company","Bedrijf toevoegen","Ajouter")+'">+ '+X("Add","Toevoegen","Ajouter")+'</button></h2><div class="rd-g"><div class="rd-l">'+radMonth()+'<div class="rd-ll">'+list+'</div></div><div class="rd-rc">'+hub
++'<p class="mu">'+X("Your watchlist starts with the stocks you hold. Data from Yahoo Finance, so it can be incomplete.","Je kijklijst start met de aandelen die je bezit. Data van Yahoo Finance, dus mogelijk onvolledig.","Votre liste commence par les actions détenues. Données Yahoo Finance, possiblement incomplètes.")+'</p></div></div>'}
 function xaClick(e){
 const t=e.target.closest&&e.target.closest("[data-xa]");if(!t)return false;
 const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("data-k");
@@ -1327,7 +1266,7 @@ else if(a==="tx-y"){TAXY=+v;rr()}
 else if(a==="tx-t"){TAXT=v;rr()}
 else if(a==="wb-use"){WB.ret=+v;ls.set("wb",JSON.stringify(WB));rr()}
 else if(a==="rd-cal"){const n=new Date();RCAL=new Date(n.getFullYear(),n.getMonth(),1);radCalShow()}
-else if(a==="rd-s"){RSEL=RSEL===k?null:k;radPaint()}
+else if(a==="rd-s"){RSEL=k;radPaint()}
 else if(a==="rd-add"){const s=(prompt(X("Yahoo Finance symbol (for example ASML.AS)","Yahoo Finance-symbool (bv. ASML.AS)","Symbole Yahoo Finance (ex. ASML.AS)"))||"").trim();if(s){const L=rwList().slice();if(!L.includes(s))L.push(s);RWATCH=L;ls.set("rw",JSON.stringify(L));RSEL=s;radFetch(s);radPaint()}}
 else if(a==="rd-del"){RWATCH=rwList().filter(x=>x!==k);ls.set("rw",JSON.stringify(RWATCH));RSEL=null;radPaint()}
 return true}
@@ -1901,7 +1840,7 @@ if(rows.length)render(G.syms,[],G.warn);
 }
 $("hid").onclick=()=>setHide(!HIDE);setHide(HIDE);
 let WT=ls.get("wt")||"val",WMENU=false;
-const WK={"Net worth":"nw","Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","FAQ":"faq","Wealth builder":"inputs","Projection":"result"};
+const WK={"Net worth":"nw","Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
 const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
 /* ---- Show / Type: dropdowns in the top bar (same look as the index picker) ---- */
 function pfHead(on){
@@ -2035,10 +1974,24 @@ $("mclose").onclick=()=>{$("setup").hidden=true};
 $("setup").addEventListener("click",e=>{if(e.target===$("setup"))$("setup").hidden=true});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("setup").hidden=true;$("apr").hidden=true;$("ixp").hidden=true;$("bkp").hidden=true;document.querySelectorAll("#pfw .pop").forEach(p=>p.hidden=true)}});
 $("run").addEventListener("click",()=>{$("setup").hidden=true});
-$("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t||!ME.admin)return;
-if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}if((ME.users||[]).some(u=>u.email===em)){msg("That email is already in the list.");return}meCall({op:"add",email:em,name:nm,plan:$("upl2").value})}
-else meCall({op:"del",email:t.getAttribute("data-ud")})});
-$("out").addEventListener("change",e=>{const el=e.target,id=el.getAttribute&&el.getAttribute("data-uid");if(!id||!ME.admin)return;const f=el.getAttribute("data-uf"),b={op:"set",email:id};b[f]=el.value;meCall(b)});
+$("out").addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-ua],[data-ud]");if(!t)return;
+if(t.hasAttribute("data-ua")){const em=$("uem").value.trim().toLowerCase(),nm=$("unm").value.trim(),pl=$("upl2").value;if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg("Enter a valid email address.");return}
+if(USAPI){usrPost({op:"add",email:em,name:nm,plan:pl});return}
+if(USR.some(u=>u.email===em)){msg("That email is already in the list.");return}USR.push({id:Date.now().toString(36),email:em,name:nm,plan:pl,joined:new Date().toISOString().slice(0,10)})}
+else{const k=t.getAttribute("data-ud");if(USAPI){usrPost({op:"del",email:k});return}USR=USR.filter(u=>u.email!==k)}
+saveUsers();render(G.syms,[],G.warn)});
+/* small dropdowns: open / pick / close */
+const sddClose=()=>document.querySelectorAll(".sdp").forEach(p=>{p.hidden=true});
+document.addEventListener("click",e=>{const w=e.target.closest&&e.target.closest(".sdd");
+document.querySelectorAll(".sdp").forEach(p=>{if(!w||!w.contains(p))p.hidden=true});if(!w)return;
+const p=w.querySelector(".sdp"),o=e.target.closest(".ixo[data-sv]");
+if(o){const v=o.getAttribute("data-sv"),h=w.querySelector("input[type=hidden]");p.hidden=true;
+if(w.hasAttribute("data-uid")){usrSet(w.getAttribute("data-uid"),v);return}
+if(h)h.value=v;w.querySelector(".sdb span").textContent=o.textContent;w.querySelectorAll(".ixo").forEach(x=>x.classList.toggle("on",x===o));return}
+const b=e.target.closest(".sdb");if(!b)return;
+const open=p.hidden;document.querySelectorAll(".pop").forEach(x=>{x.hidden=true});
+if(open){p.hidden=false;const r=b.getBoundingClientRect();p.style.position="fixed";p.style.right="auto";p.style.left=r.left+"px";p.style.minWidth=Math.max(r.width,150)+"px";p.style.top=(r.bottom+4)+"px";if(r.bottom+4+p.offsetHeight>window.innerHeight)p.style.top=Math.max(8,r.top-4-p.offsetHeight)+"px"}});
+window.addEventListener("scroll",e=>{if(!(e.target&&e.target.closest&&e.target.closest(".sdp")))sddClose()},true);window.addEventListener("resize",sddClose);
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#sbt");if(!b)return;const R=document.documentElement,c=R.getAttribute("data-sb")==="c";if(c)R.removeAttribute("data-sb");else R.setAttribute("data-sb","c");ls.set("sb",c?"":"c");b.title=c?"Collapse sidebar":"Expand sidebar";b.setAttribute("aria-label",b.title);setTimeout(fit,0)});
 if(ls.get("sb")==="c")document.documentElement.setAttribute("data-sb","c");
 document.documentElement.setAttribute("data-kpi","a");
@@ -2436,6 +2389,12 @@ $("out").addEventListener("click",e=>{
 const b=e.target.closest&&e.target.closest("[data-pcm],[data-loc]");if(!b)return;
 if(b.hasAttribute("data-pcm")){MODE=+b.getAttribute("data-pcm");calc()}else setLoc(b.getAttribute("data-loc")==="1");
 });
-renderGuide();syncPrefs();meCall();
+renderGuide();syncPrefs();
 document.documentElement.lang=LANG;
 if(LANG!=="en"){TUSED=true;TBUSY=true;try{trNode(document.body)}finally{TMO.takeRecords();TBUSY=false}}
+/* ---- users: register this visit and load the list (admin only); no API means the local list is used ---- */
+fetch("/api/users",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+if(!j||typeof j!=="object"||!("admin" in j||j.suspended))return;
+USAPI=true;UADM=!!j.admin;USRV=j.users||[];if(j.why)console.warn("Users: "+j.why);
+if(j.suspended){const d=document.createElement("div");d.style.cssText="position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:var(--bg);color:var(--fg);text-align:center;padding:20px";d.innerHTML="<div><h2>Access suspended</h2><p class=\"mu\">Your access to this app is currently suspended. Please contact the owner.</p></div>";document.body.appendChild(d);return}
+if(rows.length||TAB==="u")render(G.syms,[],G.warn)}).catch(()=>{});

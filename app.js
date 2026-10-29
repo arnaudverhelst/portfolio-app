@@ -11,7 +11,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="29 Oct 2026, 15:04";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="29 Oct 2026, 15:30";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").textContent=t};
 /* small dropdown (same look as the top-bar dropdowns); optional hidden input id keeps the value for forms */
 const SCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -1116,10 +1116,16 @@ const nm=e=>{const r=POSL.find(r=>r.k===e.k);return r?r.n:(e.nm||e.k)},tl=jrAct(
 const F=[["all",X("All","Alles","Tout")],["b",tl.b],["s",tl.s],["w",tl.w]];
 let judged=0,right=0;JRN.forEach(e=>{jrPx(e);const v=jrVerdict(e);if(v.c==="g"||v.c==="a"||v.c==="r"){judged++;if(v.c==="g")right++}});
 const items=JRN.filter(e=>JRFIL==="all"||e.a===JRFIL).sort((a,b)=>a.d<b.d?1:-1).map(e=>{const v=jrVerdict(e);
-return '<div class="jr-e"><div class="jr-h"><span><b>'+esc(nm(e))+'</b> <span class="jp '+tc[e.a]+'">'+tl[e.a]+'</span> <span class="mu">'+e.d+'</span></span><span class="jp '+v.c+'">'+v.t+'</span></div><div class="jr-n">'+esc(e.n)+'</div><div class="mu">'+(e.lv>0?X("Level","Niveau","Niveau")+" €"+e.lv+" · ":"")+v.s+'<button class="jr-x" data-xa="jr-del" data-id="'+e.id+'" aria-label="Delete">\u2715</button><button class="jr-x" data-xa="jr-ed" data-id="'+e.id+'" aria-label="Edit" title="Edit">\u270e</button></div></div>'}).join("");
+return '<div class="jr-e"><div class="jr-h"><span><b>'+esc(nm(e))+'</b> <span class="jp '+tc[e.a]+'">'+tl[e.a]+'</span> <span class="mu">'+e.d+'</span></span><span class="jp '+v.c+'">'+v.t+'</span></div><div class="jr-n">'+esc(e.n)+'</div><div class="mu">'+(e.lv>0?X("Level","Niveau","Niveau")+" €"+e.lv+" · ":"")+v.s+'<button class="jr-x" data-xa="jr-del" data-id="'+e.id+'" aria-label="Delete">\u2715</button><button class="jr-x" data-xa="jr-ed" data-id="'+e.id+'" aria-label="Edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;pointer-events:none"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div></div>'}).join("");
 return '<div class="seg">'+F.map(f=>'<button data-xa="jr-f" data-v="'+f[0]+'"'+(JRFIL===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+'</div>'
 +(judged?'<p class="mu"><b>'+right+'</b> '+X("of","van","sur")+' <b>'+judged+'</b> '+X("judged calls were right (costs not included).","beoordeelde keuzes waren juist (zonder kosten).","décisions jugées étaient justes (hors frais).")+'</p>':"")
 +(items||'<p class="mu">'+X("No notes yet.","Nog geen notities.","Pas encore de notes.")+'</p>')}
+function jrAskDel(id){let m=document.getElementById("jrdm");if(!m){m=document.createElement("div");m.id="jrdm";m.className="modal";document.body.appendChild(m)}
+m.innerHTML='<div class="card jr-cf"><p>'+X("Are you sure you want to delete this journal note?","Weet je zeker dat je deze dagboeknotitie wilt verwijderen?","Voulez-vous vraiment supprimer cette note du journal ?")+'</p><div class="jr-cfb"><button type="button" data-c="0">'+X("Cancel","Annuleren","Annuler")+'</button><button type="button" class="jr-dx" data-c="1">'+X("Delete","Verwijderen","Supprimer")+'</button></div></div>';
+const close=()=>{m.hidden=true;document.removeEventListener("keydown",esc1)},esc1=ev=>{if(ev.key==="Escape")close()};
+m.onclick=ev=>{const b=ev.target.closest&&ev.target.closest("[data-c]");if(ev.target===m||(b&&b.getAttribute("data-c")==="0")){close();return}
+if(b){if(String(JED)===String(id))JED=null;JRDEL.push(String(id));JRN=JRN.filter(x=>String(x.id)!==String(id));jrSave();close();jrPaint()}};
+document.addEventListener("keydown",esc1);m.hidden=false;const c=m.querySelector('[data-c="0"]');if(c)c.focus()}
 function jrPaint(){const el=document.getElementById("jrlist");if(el)el.innerHTML=jrList()}
 /* ---- FAQ ---- */
 function faq(){
@@ -1346,7 +1352,7 @@ else if(a==="pf-m"){PM=v;ls.set("pm",PM);rr()}
 else if(a==="rd-mp"||a==="rd-mn"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="rd-mn"?1:-1),1);radPaint()}
 else if(a==="jr-exp"){const u=URL.createObjectURL(new Blob([JSON.stringify(JRN)],{type:"application/json"})),l=document.createElement("a");l.href=u;l.download="journal.json";l.click();setTimeout(()=>URL.revokeObjectURL(u),1e3)}
 else if(a==="jr-imp"){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const A=JSON.parse(r.result),m=new Map(JRN.map(x=>[String(x.id),x]));A.forEach(x=>{if(x&&x.id!=null&&x.d)m.set(String(x.id),x)});JRN=[...m.values()];jrSave();jrPaint()}catch(x){}};r.readAsText(f)};i.click()}
-else if(a==="jr-del"){if(String(JED)===t.getAttribute("data-id"))JED=null;JRDEL.push(String(t.getAttribute("data-id")));JRN=JRN.filter(x=>String(x.id)!==t.getAttribute("data-id"));jrSave();jrPaint()}
+else if(a==="jr-del"){jrAskDel(t.getAttribute("data-id"))}
 else if(a==="jr-dd"){const p=t.parentNode.querySelector(".pop"),h=!p.hidden;document.querySelectorAll(".jr-pop").forEach(x=>x.hidden=true);p.hidden=h;if(!h){const q=p.querySelector("#jrq");if(q)setTimeout(()=>q.focus(),0)}}
 else if(a==="jr-pk"){JK={k:k,n:t.getAttribute("data-n")||k};jrSync()}
 else if(a==="jr-ac"){JA=v;if(JA!=="w"&&!jrHold().some(r=>r.k===JK.k)){const f=jrHold()[0];JK=f?{k:f.k,n:f.n}:{k:"",n:""}}jrSync()}

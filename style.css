@@ -288,6 +288,7 @@ html[data-mode=dark] .tt{background:#1b1d22}
 .jr-e{border-top:1px solid var(--bd);padding:12px 0}
 .jr-h,.rd-r{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .jr-n{margin:6px 0 4px;white-space:pre-wrap}
+.jr-cf{width:min(380px,92vw);margin:0}.jr-cf p{margin:0 0 14px}.jr-cfb{display:flex;justify-content:flex-end;gap:8px}.jr-cfb button{margin:0}.jr-dx{background:var(--neg);border-color:var(--neg);color:#fff}
 .jr-x{border:0;background:transparent;color:var(--mu);cursor:pointer;font:inherit;font-size:.85rem;float:right}
 .jp{display:inline-block;font-size:.78rem;padding:2px 9px;border:0;border-radius:999px;white-space:nowrap;background:color-mix(in srgb,var(--mu) 16%,transparent);color:var(--mu);font-family:inherit}
 .jp.g{background:color-mix(in srgb,var(--pos) 16%,transparent);color:var(--pos)}

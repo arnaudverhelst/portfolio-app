@@ -529,3 +529,33 @@ html[data-mode=dark] .pfw>.pw>.ixb.act{background:rgba(91,141,239,.18)}
 td.grp,.ps,.ixb .ixk,.cs span,.dkh,.fq-g,.tx-fs,.tx-calc h4,.rd2-h,.rd2-wk,.gh{text-transform:none!important;letter-spacing:0!important;font-size:12px!important;font-weight:500}
 /* G3: quieter tables */
 td{border-bottom:0}tr:hover>td{background:var(--hv)}
+/* benchmark option 1: thin solid grey */
+svg.ch .ln.bm{stroke-dasharray:none;stroke-width:calc(var(--lw)*.8);opacity:.7}
+svg.ch:has(.ln:hover) .ln.bm{opacity:.3}svg.ch .ln.bm:hover{opacity:1}
+.lgc i.bm{border-top-style:solid;opacity:.8}
+/* sidebar S1-S7 (30 Oct) */
+#side .tabs{flex:1 1 auto;min-height:0}
+#side .tabs .tbot{margin-top:auto;padding-top:10px;display:flex;flex-direction:column}
+#side .tabs .sec,#side .tabs .sec.sbB{font-size:11.5px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--mu);margin:14px 12px 4px}
+#side .tabs .sec:first-child{margin-top:4px}
+#side .tabs button{font-size:14px;padding:8px 12px;position:relative}
+#side .tabs button svg.ic{width:18px;height:18px}
+html[data-mode=dark]{--sba:#5B8DEF}html[data-mode=light]{--sba:#3F6FD8}
+#side .tabs button.sbB.on,#side .tabs button.on{background:color-mix(in srgb,var(--sba) 15%,transparent);color:var(--fg);font-weight:600;box-shadow:none}
+#side .tabs button.sbB.on svg,#side .tabs button.on svg{color:var(--sba)}
+#side .tabs button.on::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--sba);display:block}
+#side .sbt{align-self:stretch;justify-content:flex-start;gap:10px;width:auto;height:34px;padding:0 12px;margin:6px 0 0;font-size:13px}
+#side .sbt .tl{color:var(--mu)}
+html[data-sb=c] #side{overflow:visible;align-items:center}
+html[data-sb=c] #side .tabs{align-items:center}
+html[data-sb=c] #side .tabs button{width:40px;height:40px;padding:0;justify-content:center;margin:1px 0}
+html[data-sb=c] #side .tabs button svg.ic{width:20px;height:20px}
+html[data-sb=c] #side .tabs button.on::before{left:-9px}
+html[data-sb=c] #side .tabs .sec{display:block;font-size:0;height:1px;width:28px;margin:7px auto;background:var(--bd)}
+html[data-sb=c] #side .tabs .sec:first-child{display:none}
+html[data-sb=c] #side .tabs .tbot{border-top:1px solid var(--bd);align-items:center}
+html[data-sb=c] #side .sbt{align-self:center;justify-content:center;width:40px;height:36px;padding:0}
+html[data-sb=c] #side .sfoot{display:flex;align-items:center;justify-content:center;position:relative;padding:8px 0;cursor:default}
+html[data-sb=c] #side .sfoot>span:not(.sf1){display:none}html[data-sb=c] #side .sf1{font-size:0}html[data-sb=c] #side .sf1 .ic{width:16px;height:16px}
+html[data-sb=c] #side .tabs button:hover::after,html[data-sb=c] #side .sfoot:hover::after{content:attr(data-t);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.3);z-index:50;pointer-events:none}
+@media(max-width:900px){#side .tabs .tbot{display:contents}#side .tabs button.on::before{display:none}}

@@ -697,3 +697,8 @@ tr.fdt>td{border-bottom:0!important}
 .xi{width:24px;height:24px}
 .xi svg{width:15px;height:15px;stroke-width:2.4}
 .xi-Dividend svg{width:16px;height:16px}
+/* round 4: one-line names, no ring */
+.pft-tf button.on.act{outline:none}
+table.one td:first-child,table.one td:first-child .nm{white-space:nowrap!important}
+#view table.one td:first-child{min-width:0}
+.pft{width:100%}

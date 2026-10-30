@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 22:28";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 22:42";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -30,7 +30,7 @@ let VT=["1D","1M","YTD","1Y","Max"],DVM="m",DVS="",DVT="chart",BMA=ls.get("bma")
 if(BMA==="VUAA.AS"){BMA="CSPX.AS";ls.set("bma",BMA)}{const b0=ls.get("bm");if(b0&&b0.indexOf("VUAA.AS")>=0)ls.set("bm",b0.split("VUAA.AS").join("CSPX.AS"))}
 const TFA=()=>TFS.filter(t=>t==="Max"||iStart(t)>=0);
 const VTs=()=>{const a=TFA().filter(t=>VT.includes(t));return a.length?a:["Max"]};
-let HIDE=ls.get("hide")==="1",PF=ls.get("pf")||"open",OPS=new Set(),PB=ls.get("pb")||"me",PT=ls.get("pt")||"all";
+let HIDE=ls.get("hide")==="1",PF=ls.get("pf")||"open",OPS=new Set(),PB="me",PT=ls.get("pt")||"all";
 function fxAt(c,d){const f=FX[c];if(!f)return 1;let a=0,b=f.d.length-1,j=0;while(a<=b){const m=(a+b)>>1;if(f.d[m]<=d){j=m;a=m+1}else b=m-1}return f.v[j]}
 function retPx(r,t){
 const L=days.length-1,p=P[r.k],x=ser[r.k];
@@ -265,8 +265,8 @@ const ND='<td class="nd">·</td>';
 const cellP=v=>{if(v==null)return ND;const c=v>=0?"pos":"neg";return '<td class="'+c+'" data-s="'+(v*100).toFixed(3)+'"'+(HEAT?' style="background:color-mix(in srgb,var(--'+c+') '+Math.min(32,4+Math.abs(v)*60).toFixed(0)+'%,transparent)"':"")+'>'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>"};
 const CHEV='<svg class="chv xsv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 const tyCol=ty=>{const P=LPAL[MODEV]||LPAL.light;return ty==="ETF"?P[1]:ty==="Stock"?P[2]:P[3]};
-const shortN=n=>{let t=String(n||"").replace(/\((USD|EUR|GBP|CHF|JPY)\)/gi," ").replace(/\b(UCITS|ETF|ETC|Accumulating|Distributing|Acc|Dist|Inc\.?|Corp\.?|Corporation|N\.?V\.?|S\.?A\.?|plc|Ltd\.?|Limited|AG|SE)(?=\s|$|[,.()])/gi," ").replace(/\(\s*\)/g," ").replace(/\s(USD|EUR|GBP|Hedged)\s*$/i," ").replace(/\s+/g," ").replace(/[\s,.\-–]+$/,"").trim();return t.length>=3?t:String(n||"")};
-const clsN=n=>{const m=String(n||"").match(/\b(Acc|Accumulating|Dist|Distributing)\b/i);return m?(/^acc/i.test(m[1])?"Acc":"Dist"):""};
+const shortN=n=>{let t=String(n||"").replace(/\((USD|EUR|GBP|CHF|JPY)\)/gi," ").replace(/\b(UCITS|ETF|ETC|Accumulating|Accumulation|Distributing|Distribution|Acc|Dist|Un-?hedged|EUR Hedged|Hedged|Inc\.?|Corp\.?|Corporation|N\.?V\.?|S\.?A\.?|plc|Ltd\.?|Limited|AG|SE|Class [A-Z]|Shares|\d[CD])(?=\s|$|[,.()])/gi," ").replace(/\b(USD|EUR|GBP|CHF)(?=\s*$|\s+\d?[CD]\b)/g," ").replace(/\(\s*\)/g," ").replace(/\s(USD|EUR|GBP|Hedged)\s*$/i," ").replace(/\s+/g," ").replace(/[\s,.\-–]+$/,"").trim();return t.length>=3?t:String(n||"")};
+const clsN=n=>{const N=String(n||""),m=N.match(/\b(Acc|Accumulating|Accumulation|Dist|Distributing|Distribution|\dC|\dD)\b/i),h=/\bhedged\b/i.test(N)&&!/\bun-?hedged\b/i.test(N);return [m?(/^acc|^\dC$/i.test(m[1])?"Acc":"Dist"):"",h?"Hedged":""].filter(Boolean).join(" \u00b7 ")};
 const tkTag=(k,n)=>{if(!k||isOpt(k))return "";const c=clsN(n);return ' <span class="tk">'+esc(k)+(c?" · "+c:"")+'</span>'};
 const nmCell=(k,n,ty,extra)=>'<td><span class="nm"><a href="#" data-det="'+esc(k)+'" title="'+esc(n)+'">'+esc(shortN(n))+'</a>'+tkTag(k,n)+(extra||"")+'</span></td>';
 const grh=(key,lab,n,NC,rest)=>{const c=!!GCOL[key];return '<tr class="grh'+(c?" cl":"")+'"><td'+(rest?"":' colspan="'+NC+'"')+'><button type="button" class="gch" data-xa="gcol" data-k="'+key+'" aria-expanded="'+!c+'">'+CHEV+'<span>'+lab+'</span><span class="gcn">'+n+'</span></button></td>'+(rest||"")+'</tr>'};
@@ -474,13 +474,16 @@ function fitCols(tb,hr){
 if(tb.classList.contains("tx")||tb.classList.contains("ut"))return;
 const n=[...hr.cells].reduce((s,c)=>s+(c.colSpan||1),0);if(n<3)return;
 const old=tb.querySelector("colgroup");if(old)old.remove();
+const one=tb.classList.contains("pft")||tb.classList.contains("ptb")||tb.classList.contains("nmt");let fw=0;
+if(one){tb.classList.add("one");[...tb.rows].forEach(r=>{const c=r.cells[0];if(c&&c.tagName==="TD"&&c.colSpan===1){const w=c.scrollWidth;if(w>fw)fw=w}})}
 const f=n<=4?32:n<=7?24:n<=10?18:14,o=((100-f)/(n-1)).toFixed(3)+"%",cg=document.createElement("colgroup");
-for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?o:f+"%";cg.appendChild(c)}
-tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=(150+(n-1)*96)+"px";tb.style.maxWidth=tb.classList.contains("ptb")?"none":(240+(n-1)*120)+"px";
+for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?(fw?"auto":o):(fw?Math.ceil(fw+6)+"px":f+"%");cg.appendChild(c)}
+tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=((fw?fw+6:150)+(n-1)*(fw?84:96))+"px";tb.style.maxWidth=tb.classList.contains("ptb")||tb.classList.contains("pft")?"none":(240+(n-1)*120)+"px";
 }
 function enhanceTables(){
 if(!document.querySelectorAll)return;
 document.querySelectorAll("#out table td:first-child a[data-det]").forEach(a=>{if(a.closest(".nm")||a.dataset.nm)return;const k=a.getAttribute("data-det"),n=a.textContent;a.dataset.nm="1";a.title=n;a.textContent=shortN(n);a.insertAdjacentHTML("afterend",tkTag(k,n));a.closest("table").classList.add("nmt")});
+document.querySelectorAll("#out table td:first-child .snm").forEach(e=>e.closest("table").classList.add("nmt"));
 document.querySelectorAll("#out table").forEach(tb=>{
 const hr=hdrRow(tb);if(!hr)return;
 fitCols(tb,hr);
@@ -689,25 +692,25 @@ function mwBm(ty,bm){if(!bm||!bm.idx)return null;const L=days.length-1,ia=d=>{le
 mwFl(ty).filter(f=>f.t==="x").forEach(f=>{let i=ia(f.d);if(i<0)i=0;const p=bm.idx[i];if(!isFinite(p)||p<=0)return;u=Math.max(0,u-f.a/p);F.push({d:f.d,a:f.a})});
 if(!F.length)return null;F.push({d:days[L],a:u*bm.idx[L]});return xirr(F)}
 let PFA="t",PM=ls.get("pm")||"t";
-const pChips=()=>'<div class="tfc pft-tf">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on'+(t===(PACT&&VTs().includes(PACT)?PACT:"Max")?" act":"")+'"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div>';
+const pChips=()=>'<div class="tfc pft-tf"><span class="seg">'+TFA().map(t=>'<button data-xa="pf-p" data-v="'+t+'"'+(t===(PACT&&TFA().includes(PACT)?PACT:"Max")?' class="on"':"")+'>'+t+'</button>').join("")+'</span><label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div>';
 function perSpan(t,r){const L=days.length-1;if(t==="C")return(new Date(CT)-new Date(CF))/864e5;const i0=t==="Max"?(r&&r.st>=0?r.st:0):iStart(t);if(i0<0)return 0;return(new Date(days[L])-new Date(days[i0]))/864e5}
 const annV=(v,t,r)=>{if(v==null||PFA!=="a")return v;const d=perSpan(t,r);return d>=365?Math.pow(1+v,365/d)-1:v};
 function twrrTbl(){let h="";
-h+=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
-const NC=VTs().length+(CU?1:0)+2;
+h+=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+TFA().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"<th>CAGR (all)</th></tr>";
+const NC=TFA().length+(CU?1:0)+2;
 const val=(r,t)=>annV(t==="C"?ret(r,"C"):rt(r,t),t,r);
-const line=r=>"<tr"+(r.k?"":' class="pfb'+(r.kind==="b"?" pbm":r.name==="Total portfolio"?" pmy":"")+'"')+">"+(r.k?nmCell(r.k,r.name,r.typ):"<td>"+esc(r.kind==="b"?bmLab(r.name):r.name==="Total portfolio"?"My portfolio":r.name)+"</td>")+VTs().map(t=>cellP(val(r,t))).join("")+(CU?cellP(val(r,"C")):"")+cellP(cagr(r))+"</tr>";
+const line=r=>"<tr"+(r.k?"":' class="pfb'+(r.kind==="b"?" pbm":r.name==="Total portfolio"?" pmy":"")+'"')+">"+(r.k?nmCell(r.k,r.name,r.typ):"<td>"+esc(r.kind==="b"?bmLab(r.name):r.name==="Total portfolio"?"My portfolio":r.name)+"</td>")+TFA().map(t=>cellP(val(r,t))).join("")+(CU?cellP(val(r,"C")):"")+cellP(cagr(r))+"</tr>";
 const tops=(PF==="all"&&PT==="all"?rows.filter(r=>!r.k&&(r.kind!=="b"||r===actB())):[subRow()].concat([actB()]).filter(Boolean));
 tops.forEach(r=>{h+=line(r)});
-{const a0=tops[0],bb=tops.find(r=>r.kind==="b");if(a0&&bb&&a0!==bb){const dc=v=>v==null?ND:'<td data-s="'+(v*100).toFixed(3)+'"><span class="chip '+(v>=0?"cp":"cn")+'">'+(v>0?"+":v<0?"−":"")+Math.abs(v*100).toFixed(1)+"</span></td>";h+='<tr class="pfb pfd"><td class="mu">'+X("Difference vs index","Verschil met index","Écart vs indice")+' <span class="pts">pts</span></td>'+VTs().map(t=>dc(val(a0,t)!=null&&val(bb,t)!=null?val(a0,t)-val(bb,t):null)).join("")+(CU?dc(val(a0,"C")!=null&&val(bb,"C")!=null?val(a0,"C")-val(bb,"C"):null):"")+ND+'</tr>'}}
+{const a0=tops[0],bb=tops.find(r=>r.kind==="b");if(a0&&bb&&a0!==bb){const dc=v=>v==null?ND:'<td data-s="'+(v*100).toFixed(3)+'"><span class="chip '+(v>=0?"cp":"cn")+'">'+(v>0?"+":v<0?"−":"")+Math.abs(v*100).toFixed(1)+"</span></td>";h+='<tr class="pfb pfd"><td class="mu">'+X("Difference vs index","Verschil met index","Écart vs indice")+' <span class="pts">pts</span></td>'+TFA().map(t=>dc(val(a0,t)!=null&&val(bb,t)!=null?val(a0,t)-val(bb,t):null)).join("")+(CU?dc(val(a0,"C")!=null&&val(bb,"C")!=null?val(a0,"C")-val(bb,"C"):null):"")+ND+'</tr>'}}
 ["ETF","Stock","Derivative"].forEach(ty=>{
 const g=rows.filter(r=>r.k&&r.typ===ty&&(PT==="all"||r.typ===PT)&&(PF==="all"||(PF==="open")===!!r.open)).sort((x,y)=>byName(x.name,y.name));
 if(!g.length)return;const gk="pf|"+ty;h+=grh(gk,TYPN[ty],g.length,NC);if(GCOL[gk])return;
-const nm=[...VTs().filter(t=>t!=="Max"),...(CU?["C"]:[])],emp=r=>nm.length&&nm.every(t=>val(r,t)==null),A=g.filter(r=>!emp(r)),E=g.filter(emp);
+const nm=[...TFA().filter(t=>t!=="Max"),...(CU?["C"]:[])],emp=r=>nm.length&&nm.every(t=>val(r,t)==null),A=g.filter(r=>!emp(r)),E=g.filter(emp);
 A.forEach(r=>{h+=line(r)});
 if(E.length){const fk="pf|"+ty,op=!!FOLD[fk];h+='<tr class="fdt'+(op?" op":"")+'"><td colspan="'+NC+'"><button type="button" class="fdb" data-xa="fold" data-k="'+fk+'">'+CHEV+'<b>'+E.length+'</b> '+X("not held in these periods","niet in bezit in deze periodes","non détenus sur ces périodes")+'<em>'+(op?X("Hide","Verbergen","Masquer"):X("Show","Tonen","Afficher"))+'</em></button></td></tr>';if(op)E.forEach(r=>{h+=line(r).replace("<tr","<tr data-fr=\"1\"")})}
 });
-h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. For closed positions, a period shows the return while the position was held. Basis: "My performance" is time-weighted, so it ignores when you added money and equals the stock\'s own return over the time you held it; "Stock performance" is the price return over the whole period, whether or not you held it (dividends reinvested). Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"");
+h+='</table></div><p class="mu">"Max" counts from when each line was first invested. A dash means the holding was not in your portfolio during that period (or the period starts before your data does). CAGR is the yearly growth rate behind the "Max" figure and only appears once the holding period is at least about 11 months; for a closed position it covers the time you held it. For closed positions, a period shows the return while the position was held. Returns are time-weighted, so they ignore when you added money and equal the stock\'s own return over the time you held it. Options and other derivatives are part of the total; for them, look at the euro result in Positions.</p>'+(CU?periodInfo():"");
 return h}
 function mwP(ty,t,bm){
 const L=days.length-1;let i0,i1=L;
@@ -726,8 +729,8 @@ let sc=0,sw=0;F.forEach(f=>{const c=-f.a;sc+=c;sw+=c*((new Date(d1)-new Date(f.d
 const den=V0+sw;if(!(den>0))return null;
 const tot=(V1-V0-sc)/den;return PFA==="a"&&T>=365?Math.pow(1+tot,365/T)-1:tot}
 function mwrrTbl(){
-const bm=actB(),E=[["all","My portfolio"],["Stock",X("Stocks","Aandelen","Actions")],["ETF","ETFs"]].filter(e=>PT==="all"?(e[0]==="all"||G.keys.some(k=>typOf(k)===e[0])):e[0]===PT),tfs=[...VTs(),...(CU?["C"]:[])];
-let h=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+VTs().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"</tr>";
+const bm=actB(),E=[["all","My portfolio"],["Stock",X("Stocks","Aandelen","Actions")],["ETF","ETFs"]].filter(e=>PT==="all"?(e[0]==="all"||G.keys.some(k=>typOf(k)===e[0])):e[0]===PT),tfs=[...TFA(),...(CU?["C"]:[])];
+let h=pChips()+'<div class="sc"><table class="pft"><tr><th>Name</th>'+TFA().map(t=>"<th>"+t+"</th>").join("")+(CU?"<th>Custom</th>":"")+"</tr>";
 E.forEach(e=>{h+='<tr class="pfb'+(e[0]==="all"?" pmy":"")+'"><td>'+e[1]+"</td>"+tfs.map(t=>cellP(mwP(e[0],t))).join("")+"</tr>"});
 if(bm)h+='<tr class="pfb pbm"><td>'+esc(bmLab(bm.name))+infoI(X("What you would have earned if every one of your buys and sells had gone into the index on the same day.","Wat je zou verdiend hebben als elke aan- en verkoop op dezelfde dag in de index was gegaan.","Ce que vous auriez gagn\u00e9 si chacun de vos achats et ventes avait \u00e9t\u00e9 plac\u00e9 dans l\u2019indice le m\u00eame jour."))+"</td>"+tfs.map(t=>cellP(mwP("all",t,bm))).join("")+"</tr>";
 return h+"</table></div>"}
@@ -737,7 +740,6 @@ if(!bm)return '<div class="card"><h2>Performance</h2><p class="mu">Pick an index
 const sg=(at,L)=>'<div class="seg">'+L.map(z=>'<button '+at+'="'+z[0]+'"'+(z[2]?' class="on"':"")+(z[3]?" disabled":"")+'>'+z[1]+'</button>').join("")+'</div>',
 tw=infoI(mw?X("What annualised return did you actually earn on the money you contributed, considering when each contribution was made? Also known as the money-weighted rate of return or IRR.","Welk jaarlijks rendement behaalde je echt op het geld dat je inlegde, rekening houdend met wanneer je het inlegde? Ook gekend als money-weighted rendement of IRR.","Quel rendement annualis\u00e9 avez-vous r\u00e9ellement obtenu sur l\u2019argent vers\u00e9, selon la date de chaque versement ? Aussi appel\u00e9 taux de rendement pond\u00e9r\u00e9 par les flux ou TRI."):X("How much would \u20ac1 have grown if it had been invested throughout the entire period, regardless of when you added money? Use this to compare your portfolio with the index.","Hoeveel zou \u20ac1 gegroeid zijn als het de hele periode belegd was, ongeacht wanneer je geld toevoegde? Gebruik dit om je portefeuille met de index te vergelijken.","De combien \u20ac1 aurait-il progress\u00e9 s\u2019il avait \u00e9t\u00e9 investi sur toute la p\u00e9riode, quel que soit le moment de vos versements ? Pour comparer avec l\u2019indice."));
 return '<div class="card"><h2>Performance</h2><div class="tx-bar pft-sel">'
-+sg("data-pb",[["me",X("My performance","Mijn prestatie","Ma performance"),pb==="me"],["stock",X("Stock performance","Prestatie aandelen","Performance des actions"),pb==="stock",mw]])
 +sg('data-xa="pf-a" data-v',[["t",X("Total","Totaal","Total"),!an],["a",X("Annualised","Per jaar","Annualis\u00e9"),an]])
 +sg('data-xa="pf-m" data-v',[["t","TWRR",!mw],["m","MWRR",mw,PB==="stock"]])+tw+'<button type="button" class="sw'+(HEAT?" on":"")+'" data-xa="pf-heat" role="switch" aria-checked="'+HEAT+'"><i></i>'+X("Heat map","Heatmap","Carte de chaleur")+'</button></div>'
 +(mw?mwrrTbl():twrrTbl())
@@ -798,7 +800,7 @@ const R=80,r=48,P=(rr,an)=>(100+rr*Math.cos(an)).toFixed(2)+" "+(100+rr*Math.sin
 g+='<path d="M'+P(R,ang)+'A'+R+' '+R+' 0 '+lf+' 1 '+P(R,a1)+'L'+P(r,a1)+'A'+r+' '+r+' 0 '+lf+' 0 '+P(r,ang)+'Z" fill="'+c+'" style="stroke:var(--card)" stroke-width="1.5"'+at+'/>';
 }
 ang=a1;
-lg+='<tr><td><b style="color:'+c+'">●</b> '+esc(x.name)+'</td><td>'+eur(x.val)+'</td><td>'+pc+'</td></tr>';
+lg+='<tr><td><b style="color:'+c+'">●</b> '+'<span class="snm" title="'+esc(x.name)+'">'+esc(shortN(x.name))+'</span>'+'</td><td>'+eur(x.val)+'</td><td>'+pc+'</td></tr>';
 });
 return '<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center"><svg data-pie="1" viewBox="0 0 200 200" style="width:290px;max-width:100%;overflow:visible">'+g+'<text id="pt1" x="100" y="92" text-anchor="middle" font-size="9.5" style="fill:var(--mu)" pointer-events="none">Total</text><text id="pt2" x="100" y="110" text-anchor="middle" font-size="14" font-weight="600" style="fill:var(--fg)" pointer-events="none">'+eur(tot)+'</text><text id="pt3" x="100" y="125" text-anchor="middle" font-size="10" style="fill:var(--mu)" pointer-events="none"></text></svg><div class="sc" style="flex:1;min-width:260px"><table>'+lg+'</table></div></div>';
 }
@@ -934,7 +936,7 @@ return h+'<svg class="dv" viewBox="0 0 '+W+' '+H+'">'+g+'</svg></div>';
 function openTx(b,sr){
 const R=txBS().filter(r=>txKey(r.d)===b).sort((x,y)=>x.d<y.d?-1:x.d>y.d?1:x.o-y.o),bo=R.filter(r=>r.ty==="Buy").reduce((a,r)=>a-r.a,0),so=R.filter(r=>r.ty==="Sell").reduce((a,r)=>a+r.a,0);
 let h='<p class="mu">Bought <b>'+e2(bo)+'</b> \u00b7 sold <b>'+e2(so)+'</b> \u00b7 net invested <b>'+(bo-so>=0?"+":"\u2212")+e2(Math.abs(bo-so))+'</b> \u00b7 '+R.length+' trade'+(R.length===1?"":"s")+'</p><div class="sc"><table><tr><th>Date</th><th>Type</th><th>Instrument</th><th>Broker</th><th>Shares</th><th>Price</th><th>Amount</th></tr>';
-R.forEach(r=>{const c=r.ty==="Buy"?TXC()[0]:TXC()[1];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+esc(r.n)+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
+R.forEach(r=>{const c=r.ty==="Buy"?TXC()[0]:TXC()[1];h+='<tr style="background:color-mix(in srgb,'+c+' 11%,transparent)'+(sr&&(sr==="B")===(r.ty==="Buy")?";font-weight:700":"")+'"><td style="box-shadow:inset 3px 0 0 '+c+'">'+fd(r.d)+'</td><td style="text-align:left"><b style="color:'+c+'">\u25cf</b> '+(r.ty==="Buy"?"Bought":"Sold")+'</td><td style="text-align:left">'+'<span class="snm" title="'+esc(r.n)+'">'+esc(shortN(r.n))+'</span>'+'</td><td>'+esc(r.b)+'</td><td>'+sh(r.q)+'</td><td>'+r.px+'</td><td>'+e2(Math.abs(r.a))+'</td></tr>'});
 h+='</table></div>';
 showModal("Bought & sold \u00b7 "+dvt(b),h);
 }
@@ -1308,7 +1310,7 @@ let x1=exA;all.filter(r=>r.code==="1444").sort((a,b)=>b.rec-a.rec).forEach(r=>{c
 let x2=E2;all.filter(r=>r.code==="1437").sort((a,b)=>b.base-a.base).forEach(r=>{const u=Math.max(0,Math.min(x2,r.base));r.free=u;r.back=Math.min(u*RV,r.rv);x2-=u});
 return{all:all,A:A,F:F,W:W,exA:exA,E2:E2,wE:wE,c1444:c1444,c1437:c1437,SX:SX,fin:all.filter(r=>r.code==="–"),tot:sm(()=>1,r=>r.rec),totRv:sm(()=>1,r=>r.rv||0)}}
 const txAmt=v=>Math.abs(v)<0.005?X("Leave empty","Leeg laten","Laisser vide"):(v<0?"−":"")+eu2(Math.abs(v));
-const txNm=r=>'<td class="tx-n">'+esc(r.n)+'<small class="mu">'+r.b+' · '+r.c+' · '+(r.sh?X("share","aandeel","action"):X("ETF / fund","ETF / fonds","ETF / fonds"))+'</small></td>';
+const txNm=r=>'<td class="tx-n">'+'<span class="snm" title="'+esc(r.n)+'">'+esc(shortN(r.n))+'</span>'+'<small class="mu">'+r.b+' · '+r.c+' · '+(r.sh?X("share","aandeel","action"):X("ETF / fund","ETF / fonds","ETF / fonds"))+'</small></td>';
 function txDl(rows){return '<dl class="tx-dl">'+rows.map(z=>'<dt>'+z[0]+'</dt><dd>'+z[1]+'</dd>').join("")+'</dl>'}
 function txCalc(rows){return '<div class="tx-calc"><h4>'+X("How this number is made","Hoe dit bedrag ontstaat","Comment ce montant est calculé")+'</h4>'+rows.map(z=>'<div class="cl'+(z[2]?' tot':'')+'"><span>'+z[0]+'</span><b>'+z[1]+'</b></div>').join("")+'</div>'}
 function txHead(code,partner,title,amt,kind){return '<div class="tx-xh"><span class="cdc">'+code+'</span><span class="mu">'+(partner?X("partner ","partner ","partenaire ")+partner:"")+'</span><span class="jp '+(kind==="pay"?"r":kind==="back"?"g":"")+'">'+(kind==="pay"?X("Extra tax","Extra belasting","Impôt en plus"):kind==="back"?X("You get money back","Je krijgt geld terug","Vous récupérez de l’argent"):X("Nothing to pay","Niets te betalen","Rien à payer"))+'</span></div><div class="kl">'+title+'</div><div class="kv">'+(Math.abs(amt)<0.005?X("Leave empty","Leeg laten","Laisser vide"):X("Enter ","Vul in: ","Indiquez ")+eu2(amt))+'</div>'}
@@ -1545,6 +1547,7 @@ const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("d
 if(a==="xt-row"&&e.target.closest("a"))return false;
 if(a==="jr-f"){JRFIL=v;jrPaint()}
 else if(a==="pf-a"){PFA=v;rr()}
+else if(a==="pf-p"){PACT=v;rrK()}
 else if(a==="pf-heat"){HEAT=!HEAT;ls.set("heat",HEAT?"1":"0");rrK()}
 else if(a==="gcol"){if(GCOL[k])delete GCOL[k];else GCOL[k]=1;rrK()}
 else if(a==="fold"){if(FOLD[k])delete FOLD[k];else FOLD[k]=1;rrK()}
@@ -1701,7 +1704,7 @@ const lg=list.filter(x=>(typOf(x.k)==="Derivative"?"Stock":typOf(x.k))===ty).sor
 if(lg.length)h+='<tr><td colspan="8" class="grp">'+TYPN[ty]+'</td></tr>';
 lg.forEach(x=>{
 const o=x.o,p=pos[x.k],held=p&&p.q>0,cost=held?p.avg*p.q:0;
-h+='<tr><td>'+esc(o.n)+'</td><td>'+o.c+'</td><td>'+eur(o.g)+'</td><td>'+eur(o.t)+'</td><td>'+eur(o.g+o.t)+'</td><td>'+(o.dps==null?"–":"€"+f2(o.dps))+'</td><td>'+(held&&p.val>0?(o.l12/p.val*100).toFixed(1)+"%":"–")+'</td><td>'+(held&&cost>0?(o.l12/cost*100).toFixed(1)+"%":"–")+'</td></tr>';
+h+='<tr><td>'+'<span class="snm" title="'+esc(o.n)+'">'+esc(shortN(o.n))+'</span>'+'</td><td>'+o.c+'</td><td>'+eur(o.g)+'</td><td>'+eur(o.t)+'</td><td>'+eur(o.g+o.t)+'</td><td>'+(o.dps==null?"–":"€"+f2(o.dps))+'</td><td>'+(held&&p.val>0?(o.l12/p.val*100).toFixed(1)+"%":"–")+'</td><td>'+(held&&cost>0?(o.l12/cost*100).toFixed(1)+"%":"–")+'</td></tr>';
 });
 });
 h+='</table></div>';

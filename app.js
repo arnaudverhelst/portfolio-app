@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="31 Oct 2026, 00:16";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="31 Oct 2026, 00:20";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -1503,9 +1503,10 @@ return txPan("—","",Math.abs(E.v.self)<0.005?X("No capital gains to declare yo
 function taxMirror(D,C){const am=v=>Math.abs(v)<0.005?"":HIDE?"•••":v.toFixed(2).replace(".",","),r=(id,c,t,v,mu)=>'<button type="button" data-xa="tx-ln" data-v="'+id+'" class="txm-r'+(id===TAXLN?" sel":"")+(mu?" dim":"")+'"><span class="txm-c">'+c+'</span><span class="txm-t">'+t+'</span><span class="txm-a">'+v+'</span></button>';
 let h='<div class="txm">';
 if(D)h+='<div class="txm-h">'+X("Part 1 · Frame VII · Income from capital and movable property","Deel 1 · Vak VII · Inkomsten van kapitalen en roerende goederen","Partie 1 · Cadre VII · Revenus des capitaux et biens mobiliers")+'</div>'+r("1437","1437",X("Belgian withholding tax on the exempt part","Roerende voorheffing op het vrijgestelde deel","Précompte mobilier sur la part exonérée"),am(D.c1437))+r("1444","1444",X("Dividends without Belgian withholding tax","Dividenden zonder Belgische roerende voorheffing","Dividendes sans précompte mobilier belge"),am(D.c1444));
-return h+'</div><div class="mu txm-n">'+X("Click a box for the explanation.","Klik op een vak voor uitleg.","Cliquez sur une case pour l’explication.")+'</div>'}
+if(C){const E=cgEst(C);h+='<div class="txm-h">'+X("Capital gains on financial assets · box not published yet","Meerwaarden op financiële activa · vak nog niet gepubliceerd","Plus-values sur actifs financiers · case pas encore publiée")+'</div>'+r("cgs","—",X("Net capital gain to declare yourself","Netto meerwaarde zelf aan te geven","Plus-value nette à déclarer"),am(E.v.self),1);if(E.v.SXO==="in"&&E.v.nsx)h+=r("cgw","—",X("Gains at Saxo, 10% withheld (optional)","Meerwaarden bij Saxo, 10% ingehouden (optioneel)","Plus-values Saxo, 10 % retenus (facultatif)"),am(E.v.wh),1)}
+return h+'</div><div class="mu txm-n">'+X("Click a box to open its step.","Klik op een vak om de stap te openen.","Cliquez sur une case pour ouvrir son étape.")+'</div>'}
 function taxForm(D,C){const E=C?cgEst(C):null,S1=D?["1444","1437"]:[],S2=C?["cgs"].concat(E.v.SXO==="in"&&E.v.nsx?["cgw"]:[]):[],steps=[];
-if(S1.length)steps.push([1,X("Dividends","Dividenden","Dividendes"),S1]);if(S2.length)steps.push([2,X("Capital gains","Meerwaarden","Plus-values"),S2]);steps.push([3,X("Summary","Overzicht","Résumé"),S1.length?S1:S2]);
+if(S1.length)steps.push([1,X("Dividends","Dividenden","Dividendes"),S1]);if(S2.length)steps.push([2,X("Capital gains","Meerwaarden","Plus-values"),S2]);steps.push([3,X("Summary","Overzicht","Résumé"),S1.concat(S2)]);
 if(!steps.some(z=>z[0]===TAXST))TAXST=steps[0][0];const cur=steps.find(z=>z[0]===TAXST),ix=steps.indexOf(cur);if(cur[2].indexOf(TAXLN)<0)TAXLN=cur[2][0];
 const am=v=>Math.abs(v)<0.005?X("Leave empty","Leeg laten","Laisser vide"):eu2(v),card=(id,code,t,v,chip,cl)=>'<button type="button" class="txcd'+(id===TAXLN?" sel":"")+'" data-xa="tx-ln" data-v="'+id+'"><span class="txcd-h"><span class="cdc">'+code+'</span><span class="chip '+cl+'">'+chip+'</span></span><span class="txcd-t">'+t+'</span><b class="txcd-a">'+v+'</b></button>';
 let L='<div class="txst">'+steps.map((z,i)=>(i?'<span class="txst-l"></span>':"")+'<button type="button" data-xa="tx-st" data-v="'+z[0]+'" class="txst-b'+(z[0]===TAXST?" on":"")+'"><span class="txst-n">'+(i+1)+'</span>'+z[1]+'</button>').join("")+'</div>';
@@ -1514,7 +1515,7 @@ else if(TAXST===2)L+='<div class="txcds">'+card("cgs","—",X("Net gain to decla
 else L+=taxMirror(D,C)+taxNet(D,C);
 L+='<div class="txnav">'+(ix>0?'<button type="button" class="txnb" data-xa="tx-st" data-v="'+steps[ix-1][0]+'">← '+steps[ix-1][1]+'</button>':"<span></span>")+(ix<steps.length-1?'<button type="button" class="go txnb" data-xa="tx-st" data-v="'+steps[ix+1][0]+'">'+X("Next: ","Volgende: ","Suivant : ")+steps[ix+1][1]+' →</button>':"")+'</div>';
 const det=TAXLN==="1444"?txP1444(D):TAXLN==="1437"?txP1437(D):txPcg(C,TAXLN==="cgw");
-return '<div class="tx-fm"><div class="tx-fl0">'+L+'</div><div class="tx-dp tx-x">'+det+'</div></div>'}
+return TAXST===3?'<div class="tx-fm tx-sum"><div class="tx-fl0">'+L+'</div></div>':'<div class="tx-fm"><div class="tx-fl0">'+L+'</div><div class="tx-dp tx-x">'+det+'</div></div>'}
 function taxYears(ys){const R=taxCalc(),keep=TAXDY,cols=ys.map(y=>{const D=taxDivData(y),r=R.y[+y],dv=D?D.c1437-D.c1444*0.3:0,ct=r?r.tax:0;return{y:y,D:D,r:r,dv:dv,ct:ct,net:dv-ct}});TAXDY=keep;
 const c=(v,f)=>v==null?ND:'<td data-s="'+v+'">'+(f?f(v):eu2(v))+'</td>',sg=v=>'<span class="'+(v>0.005?"pos":v<-0.005?"neg":"")+'">'+(v>0.005?"+":v<-0.005?"−":"")+eu2(Math.abs(v))+'</span>';
 const row=(l,f,fm,cl)=>'<tr'+(cl?' class="'+cl+'"':"")+'><td>'+l+'</td>'+cols.map(z=>c(f(z),fm)).join("")+'</tr>';
@@ -1702,7 +1703,7 @@ else if(a==="jr-ed"){const E=JRN.find(x=>String(x.id)===t.getAttribute("data-id"
 else if(a==="jr-cn"){JED=null;rr()}
 else if(a==="tx-y"){TAXYR=v;rr()}
 else if(a==="tx-l"){TAXL=v;rr()}
-else if(a==="tx-ln"){TAXLN=v;if(TAXST!==3)TAXST=v==="1444"||v==="1437"?1:2;rrK()}
+else if(a==="tx-ln"){TAXLN=v;TAXST=v==="1444"||v==="1437"?1:2;rrK()}
 else if(a==="tx-st"){TAXST=+v;rrK()}
 else if(a==="tx-q"){if(TAXQO[v])delete TAXQO[v];else TAXQO[v]=1}
 else if(a==="tx-t"){TAXT=v;rr()}

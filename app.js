@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 22:42";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 23:01";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -214,7 +214,7 @@ let i=-1;for(let j=0;j<days.length&&days[j]<=s;j++)i=j;
 return i;
 }
 const MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
-const fd=d=>{if(!d)return "";const p=d.split("-");return (+p[2])+" "+MN[+p[1]-1]+" '"+p[0].slice(2)};
+const fd=d=>{if(!d)return "";const T=d.length>10?d.slice(11,16):"",p=d.slice(0,10).split("-");return (+p[2])+" "+MN[+p[1]-1]+" '"+p[0].slice(2)+(T?", "+T:"")};
 const hasHeld=(h,a,b)=>{for(let i=a+1;i<=b;i++)if(h[i])return true;return false};
 const dayIdx=d=>{let i=-1;for(let j=0;j<days.length&&days[j]<=d;j++)i=j;return i};
 function valueAt(i,ks){
@@ -293,14 +293,17 @@ for(let k=0;k<=n;k++){
 const v=mn+k*step,z=Math.abs(v)<step/1000,y=ys(v).toFixed(1);
 g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl'+(z?" z0":"")+'" stroke="currentColor" opacity="'+(z?".55":".09")+'"'+(z?' stroke-width=".85"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+(pcA?(z?0:Math.round(v))+"%":HIDE&&fmt===eur?"":fmt(z?0:v))+'</text>';
 }
-{const D=dx||days,tk=[];let pm=null;
+{const D=dx||days,tk=[];let pm=null;if(D[L]&&D[L].length>10){const one=D[L].slice(0,10)===(D[x0+1]||D[L]).slice(0,10),WDN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];let pv=null;
+for(let i=x0+1;i<=L;i++){if(D[i].length<=10)continue;const k=one?D[i].slice(11,13):D[i].slice(0,10);if(k!==pv){tk.push({i:i,lb:one?D[i].slice(11,13)+":00":WDN[new Date(D[i].slice(0,10)+"T12:00:00Z").getUTCDay()]+" "+(+D[i].slice(8,10))});pv=k}}
+const kp=[];tk.forEach(t=>{const p=kp[kp.length-1];if(!p||xs(t.i)-xs(p.i)>=46)kp.push(t)});
+kp.forEach(t=>{const X=xs(t.i),nr=W-pr-X<22;if(X-pl>2)g+='<line x1="'+X.toFixed(1)+'" x2="'+X.toFixed(1)+'" y1="'+pt+'" y2="'+(H-pb)+'" class="gl" stroke="currentColor" opacity=".09"/>';g+='<text x="'+X.toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(nr?"end":"middle")+'" fill="currentColor">'+t.lb+'</text>'})}else{
 for(let i=x0;i<=L;i++){const m=D[i].slice(0,7);if(m!==pm){tk.push({i:i,y:+m.slice(0,4),m:+m.slice(5,7)-1});pm=m}}
 const sp=tk.length>1?(tk[tk.length-1].y*12+tk[tk.length-1].m)-(tk[0].y*12+tk[0].m)+1:1,stp=sp<=8?1:sp<=16?2:sp<=26?3:sp<=50?6:12;
 const lab=t=>MN[t.m].slice(0,3)+" "+String(t.y).slice(2);
 let sel=tk.filter((t,k)=>k===0||stp===1||t.m%stp===0);
 if(sel.length<2){const e=D[L],t={i:L,y:+e.slice(0,4),m:+e.slice(5,7)-1};if(!sel.length||lab(t)!==lab(sel[0]))sel.push(t)}
 const kp=[];sel.forEach(t=>{const p=kp[kp.length-1];if(!p||xs(t.i)-xs(p.i)>=46)kp.push(t)});
-kp.forEach(t=>{const X=xs(t.i),nl=X-pl<22,nr=W-pr-X<22;if(X-pl>2)g+='<line x1="'+X.toFixed(1)+'" x2="'+X.toFixed(1)+'" y1="'+pt+'" y2="'+(H-pb)+'" class="gl" stroke="currentColor" opacity=".09"/>';g+='<text x="'+X.toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(nl?"start":nr?"end":"middle")+'" fill="currentColor">'+lab(t)+'</text>'})}
+kp.forEach(t=>{const X=xs(t.i),nl=X-pl<22,nr=W-pr-X<22;if(X-pl>2)g+='<line x1="'+X.toFixed(1)+'" x2="'+X.toFixed(1)+'" y1="'+pt+'" y2="'+(H-pb)+'" class="gl" stroke="currentColor" opacity=".09"/>';g+='<text x="'+X.toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(nl?"start":nr?"end":"middle")+'" fill="currentColor">'+lab(t)+'</text>'})}}
 if(S[0].v.length>1&&VIS.indexOf(S[0])>=0){
 const s0=S[0],by=ys(zero?0:mn).toFixed(1);let d="M"+xs(s0.a).toFixed(1)+","+by;
 s0.v.forEach((v,j)=>{d+="L"+xs(s0.a+j).toFixed(1)+","+ys(v).toFixed(1)});
@@ -316,7 +319,37 @@ CH[id].vis=VIS;
 const lg=S.map((s,k)=>{const off=VIS.indexOf(s)<0,lv=s.v[s.v.length-1];return '<button type="button" class="lgc'+(off?" off":"")+'" data-xa="lg" data-k="'+esc(s.name)+'"'+(S.length>1?"":" disabled")+'><i style="background:'+sCol(s,k)+'"'+(s.bm?' class="bm"':"")+'></i>'+esc(s.name)+' <b>'+(lv==null?"–":fmt(lv))+'</b></button>'}).join("");
 return '<div class="lg lgA">'+lg+'</div><svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+(TAB==="r"?'':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
 }
+/* intraday points for 1D (15 min) and 1W (hourly), scaled to the daily euro closes */
+const IDC={},IDP={};
+const idMode=tf=>tf==="1D"?"d":tf==="1W"?"w":null;
+const BXF=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Brussels",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+const bxl=t=>{const p=BXF.formatToParts(new Date(t*1000)),g=k=>(p.find(x=>x.type===k)||{}).value;return g("year")+"-"+g("month")+"-"+g("day")+"T"+g("hour")+":"+g("minute")};
+async function idFetch(sym,m){const r=await fetch(PROXY+"/?symbol="+encodeURIComponent(sym)+(m==="d"?"&range=5d&interval=15m":"&range=1mo&interval=60m"));const j=await r.json(),res=j.chart&&j.chart.result&&j.chart.result[0];if(!res||!res.timestamp)throw new Error("no intraday");
+const off=(res.meta&&res.meta.gmtoffset)||0,c=res.indicators.quote[0].close,o=[];res.timestamp.forEach((t,i)=>{if(c[i]!=null&&isFinite(c[i])&&c[i]>0)o.push({t:t,d:new Date((t+off)*1000).toISOString().slice(0,10),p:c[i]})});return o}
+function idData(m){const key=m+"|"+days[days.length-1];if(IDC[key])return IDC[key];if(IDP[key])return null;IDP[key]=1;
+const syms=[...new Set(G.keys.filter(k=>!isOpt(k)&&P[k]).concat(rows.filter(r=>r.kind==="b").map(r=>r.name)))];
+Promise.all(syms.map(x=>idFetch(x,m).then(v=>[x,v]).catch(()=>[x,null]))).then(Lr=>{const D={};Lr.forEach(z=>{if(z[1]&&z[1].length)D[z[0]]=z[1]});IDC[key]=D;delete IDP[key];if(TAB==="r"&&Object.keys(D).length)rrK()});return null}
+function idSeries(m,defs){const D=idData(m);if(!D)return null;
+const L=days.length-1,i0=iStart(m==="d"?"1D":"1W");if(i0<0||i0>=L)return null;const d0=days[i0],dL=days[L];
+const lvl=(x,i)=>{const r=rows.find(z=>z.kind==="b"&&z.name===x);return r?r.idx[i]:P[x]?P[x][i]:NaN};
+const SP={};for(const x in D){const pts=D[x].filter(q=>q.d>d0&&q.d<=dL);if(!pts.length)continue;const last={};pts.forEach(q=>{last[q.d]=q.p});
+const o=pts.map(q=>{const i=dayIdx(q.d);return {t:q.t,v:i>=0?q.p*lvl(x,i)/last[q.d]:NaN,i:i}}).filter(q=>isFinite(q.v));if(o.length)SP[x]=o}
+const used=new Set();defs.forEach(f=>(f.bm?[f.bm]:f.keys).forEach(k=>used.add(k)));
+const T=[...new Set([].concat(...[...used].filter(k=>SP[k]).map(k=>SP[k].map(q=>q.t))))].sort((a,b)=>a-b);if(T.length<2)return null;
+const ptr={},cur={};used.forEach(k=>{ptr[k]=0;cur[k]=lvl(k,i0)});
+const QC={},qAt=(k,i)=>{const z=k+"|"+i;if(QC[z]==null){let q=0;tx.forEach(t=>{if(t.key===k&&t.di<=i)q+=isFinite(t.qa)?t.qa:t.q});QC[z]=q}return QC[z]};
+const PX=[{}],DI=[i0];used.forEach(k=>{PX[0][k]=cur[k]});
+T.forEach(t=>{let di=i0;used.forEach(k=>{const a=SP[k];if(!a)return;while(ptr[k]<a.length&&a[ptr[k]].t<=t){cur[k]=a[ptr[k]].v;di=Math.max(di,a[ptr[k]].i);ptr[k]++}});PX.push(Object.assign({},cur));DI.push(Math.max(di,DI[DI.length-1]))});
+const dx=[d0].concat(T.map(bxl));
+const S=defs.map(f=>{const v=[];
+if(f.bm){const b0=PX[0][f.bm];PX.forEach(p=>v.push((p[f.bm]/b0-1)*100))}
+else if(f.val){PX.forEach((p,j)=>{const i=Math.max(i0,DI[j]-(j?1:0));let s=0;f.keys.forEach(k=>{s+=qAt(k,j?i:i0)*(isFinite(p[k])?p[k]:0)});v.push(s+f.val(j?i:i0))})}
+else{let acc=1;v.push(0);for(let j=1;j<PX.length;j++){const i=Math.max(i0,DI[j]-1);let a=0,b=0;f.keys.forEach(k=>{const q=qAt(k,i);if(!q||!isFinite(PX[j][k])||!isFinite(PX[j-1][k]))return;a+=q*(PX[j][k]-PX[j-1][k]);b+=q*PX[j-1][k]});if(b>0)acc*=1+a/b;v.push((acc-1)*100)}}
+return {name:f.name,a:0,v:v,bm:!!f.bm}});
+return {S:S,dx:dx}}
+function idKeys(r){const K=G.keys.filter(k=>!isOpt(k)&&P[k]);return r.name==="ETFs"?K.filter(k=>typOf(k)==="ETF"):r.name==="Stocks"?K.filter(k=>typOf(k)==="Stock"):K}
 function chart(){
+{const m=idMode(TF);if(m){const I=idSeries(m,rows.filter(r=>r.chart&&r.st>=0).map(r=>r.kind==="b"?{name:r.name,bm:r.name}:{name:r.name,keys:idKeys(r)}));if(I)return lineChart(I.S,0,I.dx.length-1,pctf,true,null,null,I.dx)}}
 const L=days.length-1,i0=Math.max(iStart(TF),0);
 const S=rows.filter(r=>r.chart&&r.st>=0).map(r=>{
 const a=Math.max(i0,r.st),bs=(TF==="Max"&&r.kind!=="b")?100:r.idx[a],v=[];
@@ -331,6 +364,12 @@ const L=days.length-1,st0=rows[0].st;
 if(st0<0||st0>=L)return "";
 let x0=PTF==="Max"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
 let S,f;
+{const m=idMode(PTF);if(m){const K=G.keys.filter(k=>!isOpt(k)&&P[k]),nk=new Set(K),optv=i=>{let s=valueAt(i);K.forEach(k=>{let q=0;tx.forEach(t=>{if(t.key===k&&t.di<=i)q+=isFinite(t.qa)?t.qa:t.q});s-=q*P[k][i]});return s},netAt=i=>{let c=0;tx.forEach(t=>{if(t.di<=i)c+=(t.q>0?1:-1)*(MODE&&isFinite(t.cs)?t.cs:t.g)});return c};
+const bm=actB(),I=VM==="v"?idSeries(m,[{name:"Value of holdings",keys:K,val:optv}]):idSeries(m,[{name:"Total portfolio",keys:K}].concat(bm?[{name:bmLab(bm.name),bm:bm.name}]:[]));
+if(I){if(VM==="v"){const i0=iStart(m==="d"?"1D":"1W"),n=I.dx.length,nv=[];for(let j=0;j<n;j++){const dd=I.dx[j].slice(0,10);nv.push(netAt(j?Math.max(i0,dayIdx(dd)):i0))}I.S.push({name:"Net invested",a:0,v:nv})}
+else{const b=I.S.find(z=>z.bm);if(b)b.name=bmLab(bm.name)}
+S=I.S;f=VM==="v"?eur:pctf;
+return '<div class="card"><h2>Portfolio over time</h2><button data-vm="v"'+(VM==="v"?' class="on"':"")+'>Value (€)</button><button data-vm="p"'+(VM==="p"?' class="on"':"")+'>Performance (%)</button> &nbsp; '+TFA().map(t=>'<button data-ptf="'+t+'"'+(t===PTF?' class="on"':"")+'>'+t+'</button>').join("")+lineChart(S,0,I.dx.length-1,f,VM==="p",null,null,I.dx)+'<p class="mu">'+(VM==="v"?"Holdings only, cash not included.":"Time-weighted return of your invested part, against the benchmark.")+"</p></div>"}}}
 if(VM==="v"){
 const val=[],net=[];let cum=0,k=0;
 for(let i=0;i<=L;i++){
@@ -1109,15 +1148,15 @@ return h+'</table></div>';
 }
 /* ---- Net worth (Planning): investments from the portfolio + items you enter yourself ---- */
 const NWC=[["cash","Cash","#1D9E75",1],["bond","Bonds","#EF9F27",1],["sav","Savings and pension","#7F77DD",1],["re","Real estate","#888780",1],["oth","Other assets","#D4537E",1],["mort","Mortgage","#E24B4A",-1],["loan","Loans","#A32D2D",-1]];
-let NW={m:"o",tf:"Max",items:[]};try{NW.items=JSON.parse(ls.get("nw")||"[]")||[]}catch(e){}
+let NW={m:"o",tf:"Max",items:[]},NWE=null;try{NW.items=JSON.parse(ls.get("nw")||"[]")||[]}catch(e){}
 const nwSave=()=>ls.set("nw",JSON.stringify(NW.items));
 const nwVal=(it,ds)=>{let v=it.h[0].v;for(const p of it.h){if(p.d<=ds)v=p.v;else break}return v};
 const nwSum=(ds,sg)=>NW.items.reduce((a,it)=>{const c=NWC.find(z=>z[0]===it.c);return c&&c[3]===sg?a+nwVal(it,ds):a},0);
 const nwCat=(k,ds)=>NW.items.filter(i=>i.c===k).reduce((a,i)=>a+nwVal(i,ds),0);
 function netWorth(){
 const L=days.length-1,tdy=days[L],inv=POSL.reduce((a,r)=>a+r.val,0),A=nwSum(tdy,1),Dt=nwSum(tdy,-1),assets=inv+A,net=assets-Dt;
-let h='<div class="card"><h2>Net worth</h2><button data-nwm="o"'+(NW.m==="o"?' class="on"':"")+'>Overview</button><button data-nwm="t"'+(NW.m==="t"?' class="on"':"")+'>Over time</button>';
-if(NW.m==="t"){
+let h='<div class="card"><h2>Net worth</h2>';
+if(false){
 const st0=tx[0].di;let x0=NW.tf==="Max"?st0:Math.max(st0,iStart(NW.tf));if(x0>=L)x0=st0;
 const a=[],b=[];for(let i=x0;i<=L;i++){const iv=valueAt(i);b.push(iv);a.push(iv+nwSum(days[i],1)-nwSum(days[i],-1))}
 h+=' &nbsp; '+TFA().map(t=>'<button data-nwtf="'+t+'"'+(t===NW.tf?' class="on"':"")+'>'+t+'</button>').join("")+lineChart([{name:"Net worth",a:x0,v:a},{name:"Investments",a:x0,v:b}],x0,L,eur,false)
@@ -1133,21 +1172,24 @@ h+=row("Investments","#378ADD",inv,'<span class="chip">from your portfolio</span
 NWC.forEach(c=>{const its=NW.items.filter(i=>i.c===c[0]);if(!its.length)return;
 const tot=nwCat(c[0],tdy);
 h+=c[3]<0?row(c[1],c[2],-tot,"",""):row(c[1],c[2],tot,"",pc(tot));
-its.forEach(i=>{h+='<div class="nwr sub"><span class="mu">'+esc(i.n)+'</span><span class="pc"></span><input class="nwin" type="'+(HIDE?"password":"number")+'" step="any" min="0" data-nwv="'+i.id+'" value="'+nwVal(i,tdy)+'"><button class="nwx" data-nwd="'+i.id+'" title="Remove" aria-label="Remove">\u2715</button></div>'});
+its.forEach(i=>{const ed=NWE===i.id;h+='<div class="nwr sub'+(ed?" ed":"")+'"><span class="mu">'+esc(i.n)+'</span><span class="pc"></span>'+(ed?'<input class="nwin" type="number" step="any" min="0" data-nwv="'+i.id+'" value="'+nwVal(i,tdy)+'"><button class="nwx nwok" data-nws="'+i.id+'" title="Save" aria-label="Save"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>':'<b class="nwv">'+eur(nwVal(i,tdy))+'</b><button class="nwx" data-nwe="'+i.id+'" title="Edit" aria-label="Edit"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>')+'<button class="nwx" data-nwd="'+i.id+'" title="Remove" aria-label="Remove">✕</button></div>'});
 });
 h+='<div class="nwr tot"><span>Total assets</span><span class="pc"></span><b>'+eur(assets)+'</b></div>'+(Dt?'<div class="nwr tot"><span>Total liabilities</span><span class="pc"></span><b class="neg">'+eur(-Dt)+'</b></div>':'');
-h+='<div class="nwf">'+sdd(NWC.map(c=>[c[0],c[1]]),NWC[0][0],"","nwc")+'<input id="nwn" placeholder="Name (for example ING savings)"><input id="nwa" type="number" step="any" min="0" placeholder="Amount (\u20ac)"><input id="nwd" type="date" title="Since (optional)"><button data-nwadd="1">Add</button></div>';
+h+='<div class="nwf">'+sdd(NWC.map(c=>[c[0],c[1]]),NWC[0][0],"","nwc")+'<input id="nwn" placeholder="Name (for example ING savings)"><input id="nwa" type="number" step="any" min="0" placeholder="Amount (\u20ac)"><button data-nwadd="1">Add</button></div>';
 return h+'</div>';
 }
 $("out").addEventListener("click",e=>{
-const t=e.target.closest&&e.target.closest("[data-nwm],[data-nwtf],[data-nwd],[data-nwadd]");if(!t)return;
+const t=e.target.closest&&e.target.closest("[data-nwm],[data-nwtf],[data-nwd],[data-nwadd],[data-nwe],[data-nws]");if(!t)return;
+if(t.hasAttribute("data-nwe")){NWE=t.getAttribute("data-nwe");render(G.syms,[],G.warn);const i=document.querySelector(".nwr.ed input");if(i){i.focus();i.select()}return}
+if(t.hasAttribute("data-nws")){const i=document.querySelector('.nwr.ed input'),it=NW.items.find(x=>x.id===t.getAttribute("data-nws")),v=i?parseFloat(i.value):NaN;if(it&&isFinite(v)&&v>=0){const d=new Date().toISOString().slice(0,10);it.h=it.h.filter(q=>q.d!==d);it.h.push({d:d,v:v});it.h.sort((a,b)=>a.d<b.d?-1:1);nwSave()}NWE=null;render(G.syms,[],G.warn);return}
 if(t.hasAttribute("data-nwm"))NW.m=t.getAttribute("data-nwm");
 else if(t.hasAttribute("data-nwtf"))NW.tf=t.getAttribute("data-nwtf");
-else if(t.hasAttribute("data-nwd")){NW.items=NW.items.filter(i=>i.id!==t.getAttribute("data-nwd"));nwSave()}
+else if(t.hasAttribute("data-nwd")){NW.items=NW.items.filter(i=>i.id!==t.getAttribute("data-nwd"));if(NWE===t.getAttribute("data-nwd"))NWE=null;nwSave()}
 else{const n=$("nwn").value.trim(),v=parseFloat($("nwa").value);if(!n||!isFinite(v)||v<0){$("nwn").focus();return}
-const d=$("nwd").value||new Date().toISOString().slice(0,10);NW.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:n,c:$("nwc").value,h:[{d:d,v:v}]});nwSave()}
+const d=new Date().toISOString().slice(0,10);NW.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),n:n,c:$("nwc").value,h:[{d:d,v:v}]});nwSave()}
 render(G.syms,[],G.warn)});
-$("out").addEventListener("change",e=>{const t=e.target,id=t.getAttribute&&t.getAttribute("data-nwv");if(!id)return;
+$("out").addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!=="Escape")return;const t=e.target;if(!(t.getAttribute&&t.getAttribute("data-nwv")))return;e.preventDefault();if(e.key==="Escape"){NWE=null;render(G.syms,[],G.warn);return}const b=document.querySelector("[data-nws]");if(b)b.click()});
+$("out").addEventListener("change",e=>{const t=e.target,id=t.getAttribute&&t.getAttribute("data-nwv");if(!id||NWE)return;
 const it=NW.items.find(i=>i.id===id),v=parseFloat(t.value);if(!it||!isFinite(v)||v<0)return;
 const d=new Date().toISOString().slice(0,10);it.h=it.h.filter(p=>p.d!==d);it.h.push({d:d,v:v});it.h.sort((a,b)=>a.d<b.d?-1:1);nwSave();render(G.syms,[],G.warn)});
 /* ---- Journal, Tax and Radar tabs ---- */
@@ -1195,14 +1237,24 @@ const e2=document.getElementById("jrs"),q2=document.getElementById("jrq");if(e2&
 document.addEventListener("input",e=>{if(e.target.id!=="jrq")return;clearTimeout(JQT);const q=e.target.value.trim();JQT=setTimeout(()=>jrSearch(q),300)});
 document.addEventListener("keydown",e=>{if(e.target.id==="jrq"&&e.key==="Enter"){e.preventDefault();const b=document.querySelector("#jrs [data-xa=jr-pk]");if(b)b.click()}});
 document.addEventListener("click",e=>{if(!e.target.closest(".jr-pop")&&!e.target.closest("[data-xa=jr-dd]"))document.querySelectorAll(".jr-pop").forEach(x=>x.hidden=true)});
+function jrSpark(e){let v=null;
+if(P[e.k]){const a=pxAt(e.k,e.d);if(a&&a.i>=0)v=P[e.k].slice(a.i)}else{const q=JPX[e.k];if(q&&q.d){const i=q.d.findIndex(d=>d>=e.d);if(i>=0)v=q.v.slice(i)}}
+if(!v||v.length<2)return "";if(v.length>120){const st=Math.ceil(v.length/120),w=[];for(let i=0;i<v.length;i+=st)w.push(v[i]);if(w[w.length-1]!==v[v.length-1])w.push(v[v.length-1]);v=w}
+const W=150,H=40,mn=Math.min(...v),mx=Math.max(...v),rg=mx-mn||1,x=i=>i/(v.length-1)*(W-8)+4,y=p=>H-4-(p-mn)/rg*(H-8),ch=v[v.length-1]/v[0]-1,c=(e.a==="s"?-ch:ch)>=0?"var(--pos)":"var(--neg)",y0=y(v[0]).toFixed(1);
+return '<div class="jr-sp"><svg class="xsv" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'"><line x1="4" x2="'+(W-4)+'" y1="'+y0+'" y2="'+y0+'" stroke="currentColor" opacity=".25" stroke-dasharray="3 3"/><polyline fill="none" stroke="'+c+'" stroke-width="1.6" stroke-linejoin="round" points="'+v.map((p,i)=>x(i).toFixed(1)+","+y(p).toFixed(1)).join(" ")+'"/><circle cx="4" cy="'+y0+'" r="3" fill="#5B8DEF"/></svg><b style="color:'+c+'">'+pc1(ch)+'</b></div>'}
 function jrList(){
-const nm=e=>{const r=POSL.find(r=>r.k===e.k);return r?r.n:(e.nm||e.k)},tl=jrAct(),tc={b:"b",s:"a",w:"n"};
+const nm=e=>{const r=POSL.find(r=>r.k===e.k);return shortN(r?r.n:(e.nm||e.k))},tl=jrAct(),tc={b:"b",s:"a",w:"n"};
 const F=[["all",X("All","Alles","Tout")],["b",tl.b],["s",tl.s],["w",tl.w]];
-let judged=0,right=0;JRN.forEach(e=>{jrPx(e);const v=jrVerdict(e);if(v.c==="g"||v.c==="a"||v.c==="r"){judged++;if(v.c==="g")right++}});
-const items=JRN.filter(e=>JRFIL==="all"||e.a===JRFIL).sort((a,b)=>a.d<b.d?1:-1).map(e=>{const v=jrVerdict(e);
-return '<div class="jr-e"><div class="jr-h"><span><b>'+esc(nm(e))+'</b> <span class="jp '+tc[e.a]+'">'+tl[e.a]+'</span> <span class="mu">'+e.d+'</span></span><span class="jp '+v.c+'">'+v.t+'</span></div><div class="jr-n">'+esc(e.n)+'</div><div class="mu">'+(e.lv>0?X("Level","Niveau","Niveau")+" €"+e.lv+" · ":"")+v.s+'<button class="jr-x" data-xa="jr-del" data-id="'+e.id+'" aria-label="Delete">\u2715</button><button class="jr-x" data-xa="jr-ed" data-id="'+e.id+'" aria-label="Edit" title="Edit"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div></div>'}).join("");
-return '<div class="seg">'+F.map(f=>'<button data-xa="jr-f" data-v="'+f[0]+'"'+(JRFIL===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+'</div>'
-+(judged?'<p class="mu"><b>'+right+'</b> '+X("of","van","sur")+' <b>'+judged+'</b> '+X("judged calls were right (costs not included).","beoordeelde keuzes waren juist (zonder kosten).","décisions jugées étaient justes (hors frais).")+'</p>':"")
+let R=0,Wr=0,Pn=0;JRN.forEach(e=>{jrPx(e);const v=jrVerdict(e);if(v.c==="g")R++;else if(v.c==="a"||v.c==="r")Wr++;else Pn++});
+const J=R+Wr,tile=(l,v,c,sm)=>'<div class="jr-t"><span>'+l+'</span><b'+(c?' class="'+c+'"':"")+'>'+v+(sm?' <small>'+sm+'</small>':"")+'</b></div>';
+const tiles='<div class="jr-ts">'+tile(X("Notes","Notities","Notes"),JRN.length)+tile(X("Pending","Nog te beoordelen","En attente"),Pn)+tile(X("Right vs index","Juist t.o.v. index","Juste vs indice"),R,R?"pos":"",J?Math.round(R/J*100)+"%":"")+tile(X("Wrong vs index","Fout t.o.v. index","Faux vs indice"),Wr,Wr?"neg":"",J?Math.round(Wr/J*100)+"%":"")+'</div>';
+const PEN='<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+let pm=null,items="";
+JRN.filter(e=>JRFIL==="all"||e.a===JRFIL).sort((a,b)=>a.d<b.d?1:-1).forEach(e=>{const v=jrVerdict(e),m=String(e.d).slice(0,7);
+if(m!==pm){items+=(pm?'</div>':"")+'<div class="jr-mh">'+MN[+m.slice(5)-1]+" "+m.slice(0,4)+'</div><div class="jr-tl">';pm=m}
+items+='<div class="jr-e"><span class="jr-dot '+tc[e.a]+'"></span><div class="jr-h"><span><b>'+esc(nm(e))+'</b> <span class="jp '+tc[e.a]+'">'+tl[e.a]+'</span> <span class="mu">'+e.d+'</span></span><span class="jr-r"><span class="jp '+v.c+'">'+v.t+'</span><span class="jr-acts"><button class="jr-x" data-xa="jr-ed" data-id="'+e.id+'" aria-label="Edit" title="Edit">'+PEN+'</button><button class="jr-x" data-xa="jr-del" data-id="'+e.id+'" aria-label="Delete" title="Delete">✕</button></span></span></div><div class="jr-bd"><div><div class="jr-n">'+esc(e.n)+'</div><div class="mu jr-s">'+(e.lv>0?X("Level","Niveau","Niveau")+" €"+e.lv+" · ":"")+v.s+'</div></div>'+jrSpark(e)+'</div></div>'});
+if(pm)items+='</div>';
+return tiles+'<div class="seg">'+F.map(f=>'<button data-xa="jr-f" data-v="'+f[0]+'"'+(JRFIL===f[0]?' class="on"':"")+'>'+f[1]+'</button>').join("")+'</div>'
 +(items||'<p class="mu">'+X("No notes yet.","Nog geen notities.","Pas encore de notes.")+'</p>')}
 function jrAskDel(id){let m=document.getElementById("jrdm");if(!m){m=document.createElement("div");m.id="jrdm";m.className="modal";document.body.appendChild(m)}
 m.innerHTML='<div class="card jr-cf"><p>'+X("Are you sure you want to delete this journal note?","Weet je zeker dat je deze dagboeknotitie wilt verwijderen?","Voulez-vous vraiment supprimer cette note du journal ?")+'</p><div class="jr-cfb"><button type="button" data-c="0">'+X("Cancel","Annuleren","Annuler")+'</button><button type="button" class="jr-dx" data-c="1">'+X("Delete","Verwijderen","Supprimer")+'</button></div></div>';
@@ -1243,10 +1295,10 @@ return h+'</div>';
 }
 function journal(){
 if(!JK.k){const f=jrHold()[0];if(f)JK={k:f.k,n:f.n}}
-return '<div class="card"><h2>'+X("Investment journal","Beleggingsdagboek","Journal d’investissement")+infoI(X("Write down why you buy, sell or want to act. After 30 days each note is judged: a buy is right if it gained and beat your index, a sell is right if the price fell afterwards, a watch level is right once reached. For a watch note you can search any stock by name.","Schrijf op waarom je koopt, verkoopt of wilt handelen. Na 30 dagen wordt elke notitie beoordeeld: een aankoop is juist als hij steeg en je index versloeg, een verkoop is juist als de koers nadien daalde, een kijkniveau is juist zodra het bereikt is. Bij een volgnotitie kun je elk aandeel op naam zoeken.","Notez pourquoi vous achetez, vendez ou voulez agir. Après 30 jours chaque note est jugée : un achat est juste s’il a gagné et battu votre indice, une vente est juste si le cours a baissé ensuite, un niveau est juste une fois atteint. Pour une note de suivi, vous pouvez chercher n’importe quelle action par nom."))+'</h2>'
+return '<div class="card"><h2>'+X("Investment journal","Beleggingsdagboek","Journal d’investissement")+infoI(X("Write down why you buy, sell or want to act. After 30 days each note is judged: a buy is right if it gained and beat your index, a sell is right if the price fell afterwards, a watch level is right once reached. For a watch note you can search any stock by name.","Schrijf op waarom je koopt, verkoopt of wilt handelen. Na 30 dagen wordt elke notitie beoordeeld: een aankoop is juist als hij steeg en je index versloeg, een verkoop is juist als de koers nadien daalde, een kijkniveau is juist zodra het bereikt is. Bij een volgnotitie kun je elk aandeel op naam zoeken.","Notez pourquoi vous achetez, vendez ou voulez agir. Après 30 jours chaque note est jugée : un achat est juste s’il a gagné et battu votre indice, une vente est juste si le cours a baissé ensuite, un niveau est juste une fois atteint. Pour une note de suivi, vous pouvez chercher n’importe quelle action par nom."))+'</h2><div class="jr-cols"><div class="jr-left">'
 +(()=>{const E=JED&&JRN.find(x=>String(x.id)===String(JED));return E?'<p class="jr-ed">'+X("Editing the note of ","Je bewerkt de notitie van ","Modification de la note du ")+E.d+' · <button type="button" class="jr-x" style="float:none" data-xa="jr-cn">'+X("Cancel","Annuleren","Annuler")+'</button></p>':""})()
 +'<div class="jr-f">'+jrDD("jri",X("Instrument","Instrument","Instrument"),JK.n||"\u2013",jrInstInner())+jrDD("jra",X("Action","Actie","Action"),jrAct()[JA],jrActInner())+'<input type="date" id="jrd" value="'+(jrE()?jrE().d:todayS())+'"><input type="number" step="any" id="jrl" value="'+(jrE()&&jrE().lv>0?jrE().lv:"")+'" placeholder="'+X("Buy below € (optional)","Kopen onder € (optioneel)","Acheter sous € (facultatif)")+'"><textarea id="jrn" rows="3" placeholder="'+X("Why did you buy or sell, or when do you want to?","Waarom kocht of verkocht je, of wanneer wil je dat doen?","Pourquoi avez-vous acheté ou vendu, ou quand voulez-vous le faire ?")+'">'+(jrE()?esc(jrE().n):"")+'</textarea><button class="go" data-xa="jr-add">'+(jrE()?X("Update note","Notitie bijwerken","Mettre à jour"):X("Save note","Notitie bewaren","Enregistrer"))+'</button></div>'
-+'<div id="jrlist">'+jrList()+'</div></div>'}
++'</div><div id="jrlist">'+jrList()+'</div></div></div>'}
 const todayS=()=>new Date().toISOString().slice(0,10),jrE=()=>JED?JRN.find(x=>String(x.id)===String(JED))||null:null;
 const eu2=x=>HIDE?"\u20ac\u2022\u2022\u2022":(x<0?"-":"")+"€"+Math.abs(x).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 const rawAt=(k,i)=>{const d=G&&G.DR&&G.DR[k]?G.DR[k][i]:1;return P[k][i]/(d>0?d:1)};
@@ -2335,7 +2387,7 @@ if(w.hasAttribute("data-uid")){usrSet(w.getAttribute("data-uid"),v);return}
 if(h)h.value=v;w.querySelector(".sdb span").textContent=o.textContent;w.querySelectorAll(".ixo").forEach(x=>x.classList.toggle("on",x===o));return}
 const b=e.target.closest(".sdb");if(!b)return;
 const open=p.hidden;document.querySelectorAll(".pop").forEach(x=>{x.hidden=true});
-if(open){p.hidden=false;const r=b.getBoundingClientRect();p.style.position="fixed";p.style.right="auto";p.style.left=r.left+"px";p.style.minWidth=Math.max(r.width,150)+"px";p.style.top=(r.bottom+4)+"px";if(r.bottom+4+p.offsetHeight>window.innerHeight)p.style.top=Math.max(8,r.top-4-p.offsetHeight)+"px"}});
+if(open){p.hidden=false;const r=b.getBoundingClientRect(),z=b.offsetHeight>0?r.height/b.offsetHeight:1,ph=p.offsetHeight*z;p.style.position="fixed";p.style.right="auto";p.style.left=(r.left/z)+"px";p.style.minWidth=Math.max(r.width/z,150)+"px";p.style.top=((r.bottom+4)/z)+"px";if(r.bottom+4+ph>window.innerHeight&&r.top-4-ph>0)p.style.top=((r.top-4-ph)/z)+"px"}});
 window.addEventListener("scroll",e=>{if(!(e.target&&e.target.closest&&e.target.closest(".sdp")))sddClose()},true);window.addEventListener("resize",sddClose);
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#sbt");if(!b)return;const R=document.documentElement,c=R.getAttribute("data-sb")==="c";if(c)R.removeAttribute("data-sb");else R.setAttribute("data-sb","c");ls.set("sb",c?"":"c");b.title=c?"Collapse sidebar":"Expand sidebar";b.setAttribute("aria-label",b.title);setTimeout(fit,0)});
 if(ls.get("sb")==="c")document.documentElement.setAttribute("data-sb","c");
@@ -2534,7 +2586,7 @@ const f=i=>s.v[Math.max(0,i-s.a)],v1=f(Math.max(a,s.a)),v2=f(b);
 const r=pctMode?((1+v2/100)/(1+v1/100)-1)*100:v2-v1;
 return {n:s.name,col:sCol(s,k),r:r,t:pctMode?pctf(r):(r>0?"+":"")+c.fmt(r)};
 }).filter(Boolean);
-let h='<div class="mu">'+fd((c.dx||days)[a])+' \u2192 '+fd((c.dx||days)[b])+' \u00b7 '+(b-a)+' days</div>';
+let h='<div class="mu">'+fd((c.dx||days)[a])+' → '+fd((c.dx||days)[b])+(c.dx&&c.dx[b]&&c.dx[b].length>10?"":' · '+(b-a)+' days')+'</div>';
 L2.forEach(l=>{h+='<div><b style="color:'+l.col+'">\u25CF</b> '+esc(l.n)+' <b class="'+(l.r>=0?"pos":"neg")+'">'+l.t+'</b></div>'});
 if(pctMode&&L2.length===2){const d=L2[0].r-L2[1].r;h+='<div class="mu">'+(d>0?"+":"")+d.toFixed(1)+' pts vs '+esc(L2[1].n)+'</div>'}
 let o=document.getElementById("rsr");

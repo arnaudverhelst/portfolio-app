@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 14:50";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 15:03";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}

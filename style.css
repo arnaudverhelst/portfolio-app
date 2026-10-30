@@ -559,3 +559,9 @@ html[data-sb=c] #side .sfoot{display:flex;align-items:center;justify-content:cen
 html[data-sb=c] #side .sfoot>span:not(.sf1){display:none}html[data-sb=c] #side .sf1{font-size:0}html[data-sb=c] #side .sf1 .ic{width:16px;height:16px}
 html[data-sb=c] #side .tabs button:hover::after,html[data-sb=c] #side .sfoot:hover::after{content:attr(data-t);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.3);z-index:50;pointer-events:none}
 @media(max-width:900px){#side .tabs .tbot{display:contents}#side .tabs button.on::before{display:none}}
+/* sidebar selection B: floating card (30 Oct) */
+html[data-mode=dark]{--sbsel:#2a2d33;--sbsh:0 0 0 1px rgba(255,255,255,.09),0 6px 16px rgba(0,0,0,.45)}
+html[data-mode=light]{--sbsel:#fff;--sbsh:0 0 0 1px #e1e4e9,0 3px 10px rgba(28,36,52,.10)}
+#side .tabs button.sbB.on,#side .tabs button.on{background:var(--sbsel);box-shadow:var(--sbsh);color:var(--fg);font-weight:600}
+#side .tabs button.sbB.on svg,#side .tabs button.on svg{color:var(--fg)}
+#side .tabs button.on::before{content:none;display:none}

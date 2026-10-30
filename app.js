@@ -13,10 +13,10 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 14:08";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 14:35";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
-const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+'<span class="mc ok"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+X("Up to date","Bijgewerkt","À jour")+'</span>'}
+const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
 /* small dropdown (same look as the top-bar dropdowns); optional hidden input id keeps the value for forms */
 const SCH='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const sdd=(o,v,a,hid)=>{const c=o.find(z=>z[0]===v)||o[0];return '<div class="pw sdd"'+(a||"")+'><button type="button" class="ixb sdb"><span>'+esc(c[1])+'</span>'+SCH+'</button><div class="pop sdp" hidden>'+o.map(z=>'<button type="button" class="ixo'+(z[0]===c[0]?" on":"")+'" data-sv="'+esc(z[0])+'"><span>'+esc(z[1])+'</span></button>').join("")+'</div>'+(hid?'<input type="hidden" id="'+hid+'" value="'+esc(c[0])+'">':"")+'</div>'};
@@ -260,13 +260,14 @@ if(r.held&&!hasHeld(r.held,i0,L))return null;
 return r.idx[L]/r.idx[i0]-1;
 }
 const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>";
-let CH=[];
+let CH=[],LGOFF={};
 const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
 const CD={ch:{W:700,H:336},dv:{W:700,H:300},tx:{W:700,H:290}};
 function lineChart(S,x0,L,fmt,zero,marks,rid,dx,evs){
 const id=rid==null?CH.length:rid,W=CD.ch.W,H=CD.ch.H,pl=58,pr=10,pt=12,pb=26;
 let mn=zero?0:1e18,mx=zero?0:-1e18;
-S.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
+const VIS=S.length>1&&S.some(s=>!LGOFF[s.name])?S.filter(s=>!LGOFF[s.name]):S;
+VIS.forEach(s=>s.v.forEach(v=>{if(v<mn)mn=v;if(v>mx)mx=v}));
 (marks||[]).forEach(m=>{if(m.v<mn)mn=m.v;if(m.v>mx)mx=m.v});
 if(mx===mn){mx+=1;mn-=1}
 let raw=(mx-mn)/4,pw=Math.pow(10,Math.floor(Math.log10(raw))),fr=raw/pw,step=(fr<=1?1:fr<=2?2:fr<=2.5?2.5:fr<=5?5:10)*pw;
@@ -290,19 +291,20 @@ let sel=tk.filter((t,k)=>k===0||stp===1||t.m%stp===0);
 if(sel.length<2){const e=D[L],t={i:L,y:+e.slice(0,4),m:+e.slice(5,7)-1};if(!sel.length||lab(t)!==lab(sel[0]))sel.push(t)}
 const kp=[];sel.forEach(t=>{const p=kp[kp.length-1];if(!p||xs(t.i)-xs(p.i)>=46)kp.push(t)});
 kp.forEach(t=>{const X=xs(t.i),nl=X-pl<22,nr=W-pr-X<22;if(X-pl>2)g+='<line x1="'+X.toFixed(1)+'" x2="'+X.toFixed(1)+'" y1="'+pt+'" y2="'+(H-pb)+'" class="gl" stroke="currentColor" opacity=".09"/>';g+='<text x="'+X.toFixed(1)+'" y="'+(H-7)+'" font-size="12" text-anchor="'+(nl?"start":nr?"end":"middle")+'" fill="currentColor">'+lab(t)+'</text>'})}
-if(S[0].v.length>1){
+if(S[0].v.length>1&&VIS.indexOf(S[0])>=0){
 const s0=S[0],by=ys(zero?0:mn).toFixed(1);let d="M"+xs(s0.a).toFixed(1)+","+by;
 s0.v.forEach((v,j)=>{d+="L"+xs(s0.a+j).toFixed(1)+","+ys(v).toFixed(1)});
 d+="L"+xs(s0.a+s0.v.length-1).toFixed(1)+","+by+"Z";
 g+='<defs><linearGradient id="ag'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+sCol(S[0],0)+'" style="stop-opacity:var(--ao)"/><stop offset="1" stop-color="'+sCol(S[0],0)+'" stop-opacity="0"/></linearGradient></defs><path d="'+d+'" fill="url(#ag'+id+')"/>';
 }
-S.forEach((s,k)=>{g+='<polyline class="ln'+(S.length>1?(k?" o":" m"):"")+(s.bm?" bm":"")+'" stroke="'+sCol(s,k)+'" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/><circle cx="'+xs(s.a+s.v.length-1).toFixed(1)+'" cy="'+ys(s.v[s.v.length-1]).toFixed(1)+'" r="3.5" fill="'+sCol(s,k)+'" style="stroke:var(--card)" stroke-width="1.5"/>'});
+S.forEach((s,k)=>{if(VIS.indexOf(s)<0)return;g+='<polyline class="ln'+(S.length>1?(k?" o":" m"):"")+(s.bm?" bm":"")+'" stroke="'+sCol(s,k)+'" stroke-linejoin="round" stroke-linecap="round" points="'+s.v.map((v,j)=>xs(s.a+j).toFixed(1)+","+ys(v).toFixed(1)).join(" ")+'"/><circle cx="'+xs(s.a+s.v.length-1).toFixed(1)+'" cy="'+ys(s.v[s.v.length-1]).toFixed(1)+'" r="3.5" fill="'+sCol(s,k)+'" style="stroke:var(--card)" stroke-width="1.5"/>'});
 (marks||[]).forEach(m=>{g+='<circle cx="'+xs(m.i).toFixed(1)+'" cy="'+ys(m.v).toFixed(1)+'" r="5" fill="'+m.c+'" style="stroke:var(--card)" stroke-width="2"/>'});
 (evs||[]).forEach(e=>{const X=xs(e.i).toFixed(1),rt=xs(e.i)<W*0.72;g+='<line x1="'+X+'" x2="'+X+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".4" stroke-dasharray="4 4"/><text x="'+(+X+(rt?6:-6))+'" y="'+(pt+12)+'" font-size="11.5" font-weight="600" text-anchor="'+(rt?"start":"end")+'" fill="currentColor" opacity=".85">'+esc(e.label)+'</text>'});
 g+='<line id="cur'+id+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="currentColor" opacity=".55" visibility="hidden"/><g id="tg'+id+'" visibility="hidden" pointer-events="none"></g>';
 CH[id]={S:S,x0:x0,L:L,dx:dx,fmt:fmt,zero:zero,marks:marks,pl:pl,pr:pr,W:W,H:H,pt:pt,pb:pb,mn:mn,mx:mx};
-const lg=S.map((s,k)=>'<span><b style="color:'+sCol(s,k)+'">'+(s.bm?"┄":"●")+'</b> '+esc(s.name)+'</span>').join("");
-return '<svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg><div class="lg">'+lg+'</div>'+(TAB==="r"?'':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
+CH[id].vis=VIS;
+const lg=S.map((s,k)=>{const off=VIS.indexOf(s)<0,lv=s.v[s.v.length-1];return '<button type="button" class="lgc'+(off?" off":"")+'" data-xa="lg" data-k="'+esc(s.name)+'"'+(S.length>1?"":" disabled")+'><i style="background:'+sCol(s,k)+'"'+(s.bm?' class="bm"':"")+'></i>'+esc(s.name)+' <b>'+(lv==null?"–":fmt(lv))+'</b></button>'}).join("");
+return '<div class="lg lgA">'+lg+'</div><svg class="ch" data-c="'+id+'" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>'+(TAB==="r"?'':'<div class="mu">Hover over the chart, or touch and drag on a phone, to see the values. Drag across the chart (hold and drag on a phone) to measure a period.</div>');
 }
 function chart(){
 const L=days.length-1,i0=Math.max(iStart(TF),0);
@@ -1505,6 +1507,7 @@ else if(a==="rd-cal"){const n=new Date();RCAL=new Date(n.getFullYear(),n.getMont
 else if(a==="rd-s"){RSEL=k;radPaint()}
 else if(a==="rd-go"){RSEL=k;if(POSL.some(r=>r.k===k)){DET=k;render(G.syms,[],G.warn);window.scrollTo(0,0)}else radPaint()}
 else if(a==="rd-tab"){RTAB=v;radPaint()}
+else if(a==="lg"){if(LGOFF[k])delete LGOFF[k];else LGOFF[k]=1;render(G.syms,[],G.warn)}
 else if(a==="rd-agf"){RAGF=v;radPaint()}
 else if(a==="rd-gx"){RGX=v;radPaint()}
 else if(a==="rd-add"){const s=(prompt(X("Yahoo Finance symbol (for example ASML.AS)","Yahoo Finance-symbool (bv. ASML.AS)","Symbole Yahoo Finance (ex. ASML.AS)"))||"").trim();if(s){const L=rwList().slice();if(!L.includes(s))L.push(s);RWATCH=L;ls.set("rw",JSON.stringify(L));RSEL=s;radFetch(s);radPaint()}}
@@ -2012,17 +2015,20 @@ const i=Math.max(c.x0,Math.min(c.L,Math.round(c.x0+(x-c.pl)*(c.L-c.x0)/(c.W-c.pl
 const px=c.pl+(i-c.x0)*(c.W-c.pl-c.pr)/(c.L-c.x0),ln=$("cur"+n),tg=$("tg"+n);
 ln.setAttribute("x1",px);ln.setAttribute("x2",px);ln.setAttribute("visibility","visible");
 const ys=v=>c.H-c.pb-(v-c.mn)*(c.H-c.pt-c.pb)/(c.mx-c.mn);
-const L2=c.S.map((s,k)=>({n:s.name.length>30?s.name.slice(0,29)+"…":s.name,t:i>=s.a?c.fmt(s.v[i-s.a]):"–",col:sCol(s,k),v:i>=s.a?s.v[i-s.a]:null}));
+const L2=c.S.map((s,k)=>({s:s,k:k,n:s.name.length>30?s.name.slice(0,29)+"…":s.name,t:i>=s.a?c.fmt(s.v[i-s.a]):"–",col:sCol(s,k),v:i>=s.a?s.v[i-s.a]:null})).filter(l=>!c.vis||c.vis.indexOf(l.s)>=0).sort((a,b)=>(a.s.bm?1:0)-(b.s.bm?1:0)||(b.v==null?-1e18:b.v)-(a.v==null?-1e18:a.v));
+const gB=L2.find(l=>l.s.bm),gP=L2.find(l=>l.k===0&&!l.s.bm),gap=c.fmt===pctf&&gB&&gP&&gB.v!=null&&gP.v!=null?((1+gP.v/100)/(1+gB.v/100)-1)*100:null;
 const title=fd((c.dx||days)[i]),mc=Math.max(title.length,...L2.map(l=>l.n.length+l.t.length+3));
-const w=Math.min(c.W-20,mc*6.6+32),h=17*(L2.length+1)+8;
+const gl=gap==null?"":X("Portfolio vs index","Portefeuille vs index","Portefeuille vs indice"),w=Math.min(c.W-20,Math.max(mc,gl.length+9)*6.6+32),h=17*(L2.length+1+(gap==null?0:1))+8+(gap==null?0:4);
 let bx=px+12;if(bx+w>c.W-c.pr)bx=px-w-12;if(bx<c.pl)bx=c.pl;
 let g='<rect x="'+bx.toFixed(1)+'" y="'+(c.pt+4)+'" width="'+w.toFixed(0)+'" height="'+h+'" rx="5" style="fill:var(--card);stroke:var(--bd)" stroke-width=".8"/>';
 g+='<text x="'+(bx+8).toFixed(1)+'" y="'+(c.pt+4+15)+'" font-size="12" font-weight="600" style="fill:var(--fg)">'+title+'</text>';
 L2.forEach((l,k)=>{
 const y=c.pt+4+15+17*(k+1);
+if(l.s.bm&&k>0)g+='<line x1="'+(bx+6).toFixed(1)+'" x2="'+(bx+w-6).toFixed(1)+'" y1="'+(y-13)+'" y2="'+(y-13)+'" style="stroke:var(--bd)"/>';
 g+='<circle cx="'+(bx+11).toFixed(1)+'" cy="'+(y-4)+'" r="3.5" fill="'+l.col+'"/><text x="'+(bx+20).toFixed(1)+'" y="'+y+'" font-size="12" style="fill:var(--fg)">'+esc(l.n)+'  <tspan font-weight="700">'+esc(l.t)+'</tspan></text>';
 if(l.v!=null)g+='<circle cx="'+px.toFixed(1)+'" cy="'+ys(l.v).toFixed(1)+'" r="5" fill="'+l.col+'" style="stroke:var(--card)" stroke-width="2"/>';
 });
+if(gap!=null){const y=c.pt+4+15+17*(L2.length+1)+4;g+='<text x="'+(bx+8).toFixed(1)+'" y="'+y+'" font-size="12" style="fill:var(--mu)">'+gl+'  <tspan font-weight="700" style="fill:var(--'+(gap>=0?"pos":"neg")+')">'+(gap>0?"+":gap<0?"−":"")+Math.abs(gap).toFixed(1)+' pts</tspan></text>'}
 tg.innerHTML=g;tg.setAttribute("visibility","visible");
 };
 $("out").addEventListener("pointermove",hov);$("out").addEventListener("pointerdown",hov);
@@ -2083,11 +2089,6 @@ pfHead(true);
 let WT="cmp",WMENU=false;
 const WK={"Net worth":"nw","Time-weighted return (TWRR)":"twrr","Comparison":"cmp","Portfolio over time":"val","Positions":"pos","Transactions":"tx","Dividends":"chart","Detail per month":"detail","Detail per year":"detail","Per instrument":"inst","Allocation":"alloc","Contribution to your return":"contrib","Users":"users","Wealth builder":"inputs","Projection":"result"};
 const WKD={"Price and your trades":"dchart","Trades":"trades","Dividends":"ddiv"};
-function notesBtn(W){const tools=document.querySelector("header.top .tools");let w=$("ntw");if(!tools)return;
-if(!W.length){if(w)w.remove();return}
-if(!w){w=document.createElement("div");w.id="ntw";w.className="pw";const u=$("upl");tools.insertBefore(w,u||null)}
-w.innerHTML='<button type="button" class="ib" id="ntb" title="Notes" aria-label="Notes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg><b class="nbd">'+W.length+'</b></button><div class="pop ntp" hidden><div class="ps">Notes ('+W.length+')</div>'+W.map(x=>'<div class="nti">'+x+'</div>').join("")+'</div>'}
-document.addEventListener("click",e=>{const w=$("ntw");if(!w)return;const p=w.querySelector(".pop");if(e.target.closest&&e.target.closest("#ntb")){p.hidden=!p.hidden;return}if(!w.contains(e.target))p.hidden=true});
 /* ---- Show / Type: dropdowns in the top bar (same look as the index picker) ---- */
 function pfHead(on){
 const tools=document.querySelector("header.top .tools"),old=$("pfw");
@@ -2130,7 +2131,6 @@ const warn=[];
 kids.forEach(e=>{if(e===kp||e===tabs||e===pfc)return;if(e.classList.contains("card"))view.appendChild(e);else if(e.textContent.trim())warn.push(e.innerHTML)});
 const foot=document.createElement("div");foot.className="sfoot";
 foot.innerHTML='<span class="sf1"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Data stays in this browser</span><span>Updated '+BUILD+'</span>';
-notesBtn(warn);
 side.appendChild(foot);
 while(out.firstChild)out.removeChild(out.firstChild);
 out.appendChild(side);if(kp)out.appendChild(kp);out.appendChild(view);
@@ -2153,6 +2153,8 @@ const ns=ks.filter((k,i)=>k.tagName==="P"&&k.classList.contains("mu")&&k.textCon
 if(ns.length){const d=document.createElement("details");d.className="note";d.innerHTML="<summary>Notes</summary>";ns.forEach(n=>d.appendChild(n));c.appendChild(d)}
 }
 segify(view);
+{const cw=view.querySelector("[data-w=charts]"),tb=cw&&cw.querySelector(":scope>.wtabs");if(tb){const hd=document.createElement("div");hd.className="whd";cw.insertBefore(hd,tb);hd.appendChild(tb);const sp=document.createElement("span");sp.className="whsp";hd.appendChild(sp);
+cw.querySelectorAll(":scope>.wpane").forEach(p=>{const ctl=document.createElement("span");ctl.className="wpane wctl"+(p.classList.contains("on")?" on":"");ctl.setAttribute("data-p",p.getAttribute("data-p"));[...p.children].filter(x=>x.classList.contains("seg")).forEach(x=>ctl.appendChild(x));hd.appendChild(ctl)})}}
 view.querySelectorAll(".wpane").forEach(p=>noteify(p,1));
 const tw=view.querySelector("[data-w=twrr]");
 if(tw){const h=tw.querySelector("h2"),ks=[...tw.children],si=ks.findIndex(k=>k.classList.contains("sc")),ctl=ks.slice(ks.indexOf(h)+1,si);
@@ -2608,6 +2610,7 @@ out.innerHTML=html;
 if(typeof bkRender==="function")bkRender();
 }
 async function loadFiles(files){
+if(files&&files.length)ls.set("impd",new Date().toISOString());
 for(const f of files){
 try{
 const cands=await readFile(f);let best=null;

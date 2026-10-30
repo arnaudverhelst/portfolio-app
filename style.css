@@ -518,3 +518,14 @@ html[data-mode=dark] .pfw>.pw>.ixb.act{background:rgba(91,141,239,.18)}
 /* notes badge (10) */
 #ntb{position:relative}.nbd{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#E8A04A;color:#1a1300;font-size:10px;line-height:16px;font-weight:700}
 .ntp{min-width:320px;max-width:420px;max-height:60vh;overflow:auto;font-size:.85em}.nti{padding:8px 0;border-top:1px solid var(--bd);line-height:1.45}.nti:first-of-type{border-top:0}
+/* round 2 (30 Oct): one-row chart controls (B), legend chips (A) */
+.whd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 6px}.whd .wtabs.seg{margin:0}.whsp{flex:1}
+.whd .wctl{display:inline-flex;gap:8px;align-items:center}.whd .wctl:not(.on){display:none}.whd .wctl .seg{margin:0}
+.lg.lgA{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:2px 0 4px}
+.lgc{display:inline-flex;align-items:center;gap:6px;margin:0;padding:3px 10px;font-size:12px;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:999px;white-space:nowrap}
+.lgc i{width:8px;height:8px;border-radius:50%;flex:none}.lgc i.bm{width:12px;height:0;border-radius:0;border-top:2px dashed currentColor;background:none!important;color:var(--mu)}
+.lgc b{font-weight:600;font-variant-numeric:tabular-nums}.lgc.off{opacity:.45}.lgc.off b{display:none}.lgc:disabled{cursor:default;opacity:1}
+/* G1: no tiny uppercase labels */
+td.grp,.ps,.ixb .ixk,.cs span,.dkh,.fq-g,.tx-fs,.tx-calc h4,.rd2-h,.rd2-wk,.gh{text-transform:none!important;letter-spacing:0!important;font-size:12px!important;font-weight:500}
+/* G3: quieter tables */
+td{border-bottom:0}tr:hover>td{background:var(--hv)}

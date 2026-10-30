@@ -65,7 +65,7 @@ button[data-pf],button[data-pt],button[data-wm],button[data-pb]{padding:4px 12px
 #wbo .kpis{margin:6px 0}
 .ti{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 table.tx th,table.tx td{padding:5px 8px}
-html[data-hide] #setup,html[data-hide] button[data-vm="v"]{display:none}
+html[data-hide] button[data-vm="v"]{display:none}
 table.tx{table-layout:fixed;min-width:760px}
 table.tx td,table.tx th{overflow:hidden;text-overflow:ellipsis}
 table.tx td:first-child{max-width:none}
@@ -110,7 +110,7 @@ details.note{font-size:.85em}details.note summary{cursor:pointer;color:var(--mu)
 #view.v-a{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"alloc contrib"}
 #view.v-w{grid-template-columns:minmax(420px,480px) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"inputs result"}
 #view.v-det{grid-template-columns:minmax(310px,1.1fr) minmax(0,1.8fr);grid-template-rows:minmax(0,1.2fr) minmax(0,1fr) auto;grid-template-areas:"head dchart" "head trades" "head ddiv"}
-html[data-hide] #upl{display:none}.kpis:empty{display:none}
+.kpis:empty{display:none}
 html[data-kpi=a] .kpis{display:grid;grid-template-columns:repeat(var(--kc,4),minmax(0,1fr));gap:0;background:var(--card);border:1px solid var(--bd);border-radius:var(--rad);padding:10px 0}
 html[data-kpi=a] .kpi{background:none;border:0;border-left:1px solid var(--bd);border-radius:0;box-shadow:none;padding:2px 20px}
 html[data-kpi=a] .kpi:first-child{border-left:0}

@@ -817,3 +817,5 @@ html[data-mode=light] .txp-hl .txa{color:#1F4AA6}
 .txp-f dd{margin:0}
 table.tl2{width:100%}
 table.tls th:nth-child(2),table.tls td:nth-child(2){text-align:left}
+td .tk{font-size:11px;color:var(--mu);font-weight:400;margin-left:4px;white-space:nowrap}
+table.one.cap td:first-child{overflow:hidden!important;text-overflow:ellipsis!important}

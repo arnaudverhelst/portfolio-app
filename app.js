@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="31 Oct 2026, 00:00";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="31 Oct 2026, 00:16";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -265,8 +265,17 @@ const ND='<td class="nd">·</td>';
 const cellP=v=>{if(v==null)return ND;const c=v>=0?"pos":"neg";return '<td class="'+c+'" data-s="'+(v*100).toFixed(3)+'"'+(HEAT?' style="background:color-mix(in srgb,var(--'+c+') '+Math.min(32,4+Math.abs(v)*60).toFixed(0)+'%,transparent)"':"")+'>'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>"};
 const CHEV='<svg class="chv xsv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 const tyCol=ty=>{const P=LPAL[MODEV]||LPAL.light;return ty==="ETF"?P[1]:ty==="Stock"?P[2]:P[3]};
-const shortN=n=>{let t=String(n||"").replace(/\((USD|EUR|GBP|CHF|JPY)\)/gi," ").replace(/\b(UCITS|ETF|ETC|Accumulating|Accumulation|Distributing|Distribution|Acc|Dist|Un-?hedged|EUR Hedged|Hedged|Inc\.?|Corp\.?|Corporation|N\.?V\.?|S\.?A\.?|plc|Ltd\.?|Limited|AG|SE|Class [A-Z]|Shares|\d[CD])(?=\s|$|[,.()])/gi," ").replace(/\b(USD|EUR|GBP|CHF)(?=\s*$|\s+\d?[CD]\b)/g," ").replace(/\(\s*\)/g," ").replace(/\s(USD|EUR|GBP|Hedged)\s*$/i," ").replace(/\s+/g," ").replace(/[\s,.\-–]+$/,"").trim();return t.length>=3?t:String(n||"")};
-const clsN=n=>{const N=String(n||""),m=N.match(/\b(Acc|Accumulating|Accumulation|Dist|Distributing|Distribution|\dC|\dD)\b/i),h=/\bhedged\b/i.test(N)&&!/\bun-?hedged\b/i.test(N);return [m?(/^acc|^\dC$/i.test(m[1])?"Acc":"Dist"):"",h?"Hedged":""].filter(Boolean).join(" \u00b7 ")};
+const shortN0=n=>{let t=String(n||"").replace(/\((USD|EUR|GBP|CHF|JPY)\)/gi," ").replace(/\b(UCITS|ETF|ETC|ETN|DIS|Accumulating|Accumulation|Distributing|Distribution|Acc|Dist|Un-?hedged|EUR Hedged|Hedged|Inc\.?|Corp\.?|Corporation|N\.?V\.?|S\.?A\.?|plc|Ltd\.?|Limited|AG|SE|Class [A-Z]|Shares|\d[CD])(?=\s|$|[,.()])/gi," ").replace(/\b(USD|EUR|GBP|CHF)(?=\s*$|\s+\d?[CD]\b)/g," ").replace(/\(\s*\)/g," ").replace(/\s(USD|EUR|GBP|Hedged)\s*$/i," ").replace(/\s+/g," ").replace(/[\s,.\-–]+$/,"").trim();return t.length>=3?t:String(n||"")};
+const tcase=t=>/[a-z]/.test(t)?t:t.split(" ").map(w=>w.length<=4||/\d|&/.test(w)?w:w.split("-").map(p=>p.charAt(0)+p.slice(1).toLowerCase()).join("-")).join(" ");
+const shortN=n=>{let t=String(n||"").trim();
+const dv=t.match(/\b(TURBO|WARRANT|SPRINTER|SPEEDER|MINI)\b[^]*?\b(CALL|PUT|LONG|SHORT)\b/i)||t.match(/\b(TURBO|WARRANT|SPRINTER|SPEEDER|MINI)\b/i);
+if(dv){const k=dv[0].match(/\b(CALL|PUT|LONG|SHORT)\b/i),pre=t.slice(0,dv.index).replace(/^(SG|BNP|ING|UBS|VONT|VONTOBEL|CITI|GS|HSBC|BNPP|COMMERZ|COBA|DB|MS|UNICREDIT)\s+/i,"").trim(),lv=(t.slice(dv.index).match(/\d+(\.\d+)?/)||[])[0];
+t=tcase(pre||t)+" "+dv[1].toLowerCase()+(k?" "+k[1].toLowerCase():"")+(lv?" "+(+(+lv).toFixed(2)):"")}
+else t=shortN0(t.replace(/\b\d+x\s+(Daily\s+)?(Leveraged|Short)\b/i,m=>m.split(/\s+/)[0]).replace(/\b(Daily|Leveraged)\b/gi," "));
+t=tcase(t).replace(/\s+/g," ").trim();
+if(!dv&&t.length>32){const c=t.slice(0,32),sp=c.lastIndexOf(" ");t=(sp>16?c.slice(0,sp):c).replace(/[\s,.\-·]+$/,"")+"…"}
+return t};
+const clsN=n=>{const N=String(n||""),m=N.match(/\b(Acc|Accumulating|Accumulation|Dist|DIS|Distributing|Distribution|\dC|\dD)\b/i),h=/\bhedged\b/i.test(N)&&!/\bun-?hedged\b/i.test(N);return [m?(/^acc|^\dC$/i.test(m[1])?"Acc":"Dist"):"",h?"Hedged":""].filter(Boolean).join(" \u00b7 ")};
 const tkTag=(k,n)=>{if(!k||isOpt(k))return "";const c=clsN(n);return ' <span class="tk">'+esc(k)+(c?" · "+c:"")+'</span>'};
 const nmCell=(k,n,ty,extra)=>'<td><span class="nm"><a href="#" data-det="'+esc(k)+'" title="'+esc(n)+'">'+esc(shortN(n))+'</a>'+tkTag(k,n)+(extra||"")+'</span></td>';
 const grh=(key,lab,n,NC,rest)=>{const c=!!GCOL[key];return '<tr class="grh'+(c?" cl":"")+'"><td'+(rest?"":' colspan="'+NC+'"')+'><button type="button" class="gch" data-xa="gcol" data-k="'+key+'" aria-expanded="'+!c+'">'+CHEV+'<span>'+lab+'</span><span class="gcn">'+n+'</span></button></td>'+(rest||"")+'</tr>'};
@@ -514,10 +523,11 @@ if(tb.classList.contains("tx")||tb.classList.contains("ut"))return;
 const n=[...hr.cells].reduce((s,c)=>s+(c.colSpan||1),0);if(n<3)return;
 const old=tb.querySelector("colgroup");if(old)old.remove();
 const one=tb.classList.contains("pft")||tb.classList.contains("ptb")||tb.classList.contains("nmt");let fw=0;
-if(one){tb.classList.add("one");[...tb.rows].forEach(r=>{const c=r.cells[0];if(c&&c.tagName==="TD"&&c.colSpan===1){const w=c.scrollWidth;if(w>fw)fw=w}})}
+if(one){tb.classList.add("one");const rg=document.createRange();[...tb.rows].forEach(r=>{const c=r.cells[0];if(c&&c.tagName==="TD"&&c.colSpan===1){rg.selectNodeContents(c);const cs=getComputedStyle(c),w=rg.getBoundingClientRect().width+parseFloat(cs.paddingLeft||0)+parseFloat(cs.paddingRight||0);if(w>fw)fw=w}})}
+if(fw>380){fw=380;tb.classList.add("cap")}
 const f=n<=4?32:n<=7?24:n<=10?18:14,o=((100-f)/(n-1)).toFixed(3)+"%",cg=document.createElement("colgroup");
-for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?(fw?"auto":o):(fw?Math.ceil(fw+6)+"px":f+"%");cg.appendChild(c)}
-tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=((fw?fw+6:150)+(n-1)*(fw?84:96))+"px";tb.style.maxWidth=tb.classList.contains("ptb")||tb.classList.contains("pft")||tb.classList.contains("tl2")?"none":(240+(n-1)*120)+"px";
+for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?(fw?"calc((100% - "+Math.ceil(fw+6)+"px) / "+(n-1)+")":o):(fw?Math.ceil(fw+6)+"px":f+"%");cg.appendChild(c)}
+tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=((fw?fw+6:150)+(n-1)*(fw?84:96))+"px";tb.style.maxWidth=tb.classList.contains("ptb")||tb.classList.contains("pft")||tb.classList.contains("tl2")||fw?"none":(240+(n-1)*120)+"px";
 }
 function enhanceTables(){
 if(!document.querySelectorAll)return;
@@ -1493,10 +1503,9 @@ return txPan("—","",Math.abs(E.v.self)<0.005?X("No capital gains to declare yo
 function taxMirror(D,C){const am=v=>Math.abs(v)<0.005?"":HIDE?"•••":v.toFixed(2).replace(".",","),r=(id,c,t,v,mu)=>'<button type="button" data-xa="tx-ln" data-v="'+id+'" class="txm-r'+(id===TAXLN?" sel":"")+(mu?" dim":"")+'"><span class="txm-c">'+c+'</span><span class="txm-t">'+t+'</span><span class="txm-a">'+v+'</span></button>';
 let h='<div class="txm">';
 if(D)h+='<div class="txm-h">'+X("Part 1 · Frame VII · Income from capital and movable property","Deel 1 · Vak VII · Inkomsten van kapitalen en roerende goederen","Partie 1 · Cadre VII · Revenus des capitaux et biens mobiliers")+'</div>'+r("1437","1437",X("Belgian withholding tax on the exempt part","Roerende voorheffing op het vrijgestelde deel","Précompte mobilier sur la part exonérée"),am(D.c1437))+r("1444","1444",X("Dividends without Belgian withholding tax","Dividenden zonder Belgische roerende voorheffing","Dividendes sans précompte mobilier belge"),am(D.c1444));
-if(C){const E=cgEst(C);h+='<div class="txm-h">'+X("Capital gains on financial assets · box not published yet","Meerwaarden op financiële activa · vak nog niet gepubliceerd","Plus-values sur actifs financiers · case pas encore publiée")+'</div>'+r("cgs","—",X("Net capital gain to declare yourself","Netto meerwaarde zelf aan te geven","Plus-value nette à déclarer"),am(E.v.self),1);if(E.v.SXO==="in"&&E.v.nsx)h+=r("cgw","—",X("Gains at Saxo, 10% withheld (optional)","Meerwaarden bij Saxo, 10% ingehouden (optioneel)","Plus-values Saxo, 10 % retenus (facultatif)"),am(E.v.wh),1)}
 return h+'</div><div class="mu txm-n">'+X("Click a box for the explanation.","Klik op een vak voor uitleg.","Cliquez sur une case pour l’explication.")+'</div>'}
 function taxForm(D,C){const E=C?cgEst(C):null,S1=D?["1444","1437"]:[],S2=C?["cgs"].concat(E.v.SXO==="in"&&E.v.nsx?["cgw"]:[]):[],steps=[];
-if(S1.length)steps.push([1,X("Dividends","Dividenden","Dividendes"),S1]);if(S2.length)steps.push([2,X("Capital gains","Meerwaarden","Plus-values"),S2]);steps.push([3,X("Summary","Overzicht","Résumé"),S1.concat(S2)]);
+if(S1.length)steps.push([1,X("Dividends","Dividenden","Dividendes"),S1]);if(S2.length)steps.push([2,X("Capital gains","Meerwaarden","Plus-values"),S2]);steps.push([3,X("Summary","Overzicht","Résumé"),S1.length?S1:S2]);
 if(!steps.some(z=>z[0]===TAXST))TAXST=steps[0][0];const cur=steps.find(z=>z[0]===TAXST),ix=steps.indexOf(cur);if(cur[2].indexOf(TAXLN)<0)TAXLN=cur[2][0];
 const am=v=>Math.abs(v)<0.005?X("Leave empty","Leeg laten","Laisser vide"):eu2(v),card=(id,code,t,v,chip,cl)=>'<button type="button" class="txcd'+(id===TAXLN?" sel":"")+'" data-xa="tx-ln" data-v="'+id+'"><span class="txcd-h"><span class="cdc">'+code+'</span><span class="chip '+cl+'">'+chip+'</span></span><span class="txcd-t">'+t+'</span><b class="txcd-a">'+v+'</b></button>';
 let L='<div class="txst">'+steps.map((z,i)=>(i?'<span class="txst-l"></span>':"")+'<button type="button" data-xa="tx-st" data-v="'+z[0]+'" class="txst-b'+(z[0]===TAXST?" on":"")+'"><span class="txst-n">'+(i+1)+'</span>'+z[1]+'</button>').join("")+'</div>';

@@ -742,3 +742,13 @@ table.one td:first-child,table.one td:first-child .nm{white-space:nowrap!importa
 .jr-sp{display:flex;align-items:center;gap:8px;flex:none}
 .jr-sp b{font-size:13px;font-weight:600;min-width:52px;text-align:right}
 @media(max-width:900px){.jr-cols{grid-template-columns:1fr}.jr-ts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* round 6 */
+.jr-e .jp.b{background:rgba(91,141,239,.18);color:#9DBBF7}
+.jr-e .jp.a{background:rgba(232,160,74,.18);color:#F0BC7E}
+html[data-mode=light] .jr-e .jp.b{background:#DCE6FB;color:#1F4AA6}
+html[data-mode=light] .jr-e .jp.a{background:#FBE9D2;color:#9A5A0E}
+.jr-e .tk{font-size:11px;color:var(--mu);margin-left:2px}
+.jr-acts{opacity:1}
+.nwr.sub .nwx[data-nwe],.nwr.sub .nwx[data-nwd]{opacity:0;transition:opacity .15s}
+.nwr.sub:hover .nwx,.nwr.sub:focus-within .nwx,.nwr.ed .nwx{opacity:1}
+@media(hover:none){.nwr.sub .nwx{opacity:1}}

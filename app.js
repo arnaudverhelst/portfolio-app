@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 19:52";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 22:28";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -260,12 +260,15 @@ if(r.held&&!hasHeld(r.held,i0,L))return null;
 return r.idx[L]/r.idx[i0]-1;
 }
 const cell=v=>v==null?'<td class="mu">–</td>':'<td class="'+(v>=0?"pos":"neg")+'">'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>";
-let HEAT=ls.get("heat")==="1",GCOL={},FOLD={},TXSQ="",TXX=null;
+let PACT=null,HEAT=ls.get("heat")==="1",GCOL={},FOLD={},TXSQ="",TXX=null;
 const ND='<td class="nd">·</td>';
 const cellP=v=>{if(v==null)return ND;const c=v>=0?"pos":"neg";return '<td class="'+c+'" data-s="'+(v*100).toFixed(3)+'"'+(HEAT?' style="background:color-mix(in srgb,var(--'+c+') '+Math.min(32,4+Math.abs(v)*60).toFixed(0)+'%,transparent)"':"")+'>'+(v>0?"+":"")+(v*100).toFixed(1)+"%</td>"};
 const CHEV='<svg class="chv xsv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 const tyCol=ty=>{const P=LPAL[MODEV]||LPAL.light;return ty==="ETF"?P[1]:ty==="Stock"?P[2]:P[3]};
-const nmCell=(k,n,ty,extra)=>'<td><span class="nm"><i class="dt" style="background:'+tyCol(ty)+'"></i><a href="#" data-det="'+esc(k)+'">'+esc(n)+'</a>'+(k&&!isOpt(k)&&k!==n?' <span class="tk">'+esc(k)+'</span>':"")+(extra||"")+'</span></td>';
+const shortN=n=>{let t=String(n||"").replace(/\((USD|EUR|GBP|CHF|JPY)\)/gi," ").replace(/\b(UCITS|ETF|ETC|Accumulating|Distributing|Acc|Dist|Inc\.?|Corp\.?|Corporation|N\.?V\.?|S\.?A\.?|plc|Ltd\.?|Limited|AG|SE)(?=\s|$|[,.()])/gi," ").replace(/\(\s*\)/g," ").replace(/\s(USD|EUR|GBP|Hedged)\s*$/i," ").replace(/\s+/g," ").replace(/[\s,.\-–]+$/,"").trim();return t.length>=3?t:String(n||"")};
+const clsN=n=>{const m=String(n||"").match(/\b(Acc|Accumulating|Dist|Distributing)\b/i);return m?(/^acc/i.test(m[1])?"Acc":"Dist"):""};
+const tkTag=(k,n)=>{if(!k||isOpt(k))return "";const c=clsN(n);return ' <span class="tk">'+esc(k)+(c?" · "+c:"")+'</span>'};
+const nmCell=(k,n,ty,extra)=>'<td><span class="nm"><a href="#" data-det="'+esc(k)+'" title="'+esc(n)+'">'+esc(shortN(n))+'</a>'+tkTag(k,n)+(extra||"")+'</span></td>';
 const grh=(key,lab,n,NC,rest)=>{const c=!!GCOL[key];return '<tr class="grh'+(c?" cl":"")+'"><td'+(rest?"":' colspan="'+NC+'"')+'><button type="button" class="gch" data-xa="gcol" data-k="'+key+'" aria-expanded="'+!c+'">'+CHEV+'<span>'+lab+'</span><span class="gcn">'+n+'</span></button></td>'+(rest||"")+'</tr>'};
 let CH=[],LGOFF={};
 const pctf=v=>(v>0?"+":"")+v.toFixed(1)+"%";
@@ -388,7 +391,7 @@ out.push({k:s,n:(o?by[s][0].n:ser[k].name),q:q,avg:q>0?cost/q:(qb>0?bg/qb:0),qb:
 }
 POSL=out;OPS=new Set(out.filter(r=>r.q>0).map(r=>r.k));const vis=out.filter(r=>pf(r.k));
 const tv=vis.reduce((a,r)=>a+r.val,0);
-const pc2=(v,b,c)=>{if(Math.abs(v)<0.005)return '<td class="nd" data-s="0" data-p="">·</td>';const k=v>=0?"pos":"neg",p=b>0.005?v/b*100:null;return '<td class="'+k+' vp" data-s="'+v.toFixed(2)+'" data-p="'+(p==null?"":p.toFixed(2))+'">'+(c?lcsg(v,c):(v>0?"+":"")+eur(v))+'<small>'+(p==null?"–":pctf(p))+'</small></td>'};
+const pc2=(v,b,c,se)=>{if(Math.abs(v)<0.005)return '<td class="nd" data-s="0" data-p="">·</td>';const k=v>=0?"pos":"neg",p=b>0.005?v/b*100:null;return '<td class="'+k+' vp" data-s="'+(se!=null?se:v).toFixed(2)+'" data-p="'+(p==null?"":p.toFixed(2))+'">'+(c?lcsg(v,c):(v>0?"+":"")+eur(v))+'<small>'+(p==null?"–":pctf(p))+'</small></td>'};
 const hk=(l,t)=>'<th>'+l+'<span class="pk" title="'+X("Sort by %","Sorteer op %","Trier par %")+'">%</span>'+infoI(t)+'</th>';
 const wt=v=>tv>0?'<td class="wt" data-s="'+(v/tv*100).toFixed(3)+'"><div class="wtl"><div class="wb"><i style="width:'+Math.min(100,v/tv*300).toFixed(0)+'%"></i></div><span class="wtv">'+(v/tv*100).toFixed(1)+'%</span></div></td>':ND;
 let h='<div class="card"><div class="ph"><h2>Positions</h2></div><div class="sc"><table class="ptb"><tr class="cgh"><th></th><th colspan="5">'+X("Holding","Positie","Position")+'</th><th colspan="4" class="gs">'+X("Result","Resultaat","Résultat")+'</th></tr><tr><th>Instrument</th><th>Shares</th><th>Avg buy</th><th>Price now</th><th>Value</th><th>Weight</th>'
@@ -405,8 +408,8 @@ h+=grh(gk,TYPN[ty],g.length,10,'<td></td><td></td><td></td><td data-s="'+gv.toFi
 if(GCOL[gk])return;
 g.forEach(r=>{
 const Lc=LOC&&r.loc,c=Lc?Lc.cur:null;
-h+='<tr>'+nmCell(r.k,r.n,r.typ)+'<td>'+sh(+r.q.toFixed(4))+'</td>'+(r.o||!(r.q>0||r.qb>0)?ND:'<td>'+(Lc?lc2(Lc.avg,Lc.cur):"€"+f2(r.avg))+'</td>')+(r.o?ND:'<td>'+(Lc?lc2(Lc.px,Lc.cur):"€"+f2(r.px))+'</td>')+'<td data-s="'+r.val.toFixed(2)+'">'+(Lc?lc0(Lc.val,Lc.cur):eur(r.val))+'</td>'+wt(r.val)
-+(Lc?pc2(Lc.un,Lc.cu,c).replace('<td class="','<td class="gs ')+pc2(Lc.real,Lc.sc,c)+pc2(Lc.dv,Lc.bg,c)+pc2(Lc.un+Lc.real+Lc.dv,Lc.bg,c):pc2(r.un,cuOf(r)).replace('<td class="','<td class="gs ')+pc2(r.real,r.sc)+pc2(r.dv,r.bg)+pc2(r.un+r.real+r.dv,r.bg))+"</tr>";
+h+='<tr>'+nmCell(r.k,r.n,r.typ)+'<td>'+sh(+r.q.toFixed(4))+'</td>'+(r.o||!(r.q>0||r.qb>0)?ND:'<td data-s="'+r.avg.toFixed(4)+'">'+(Lc?lc2(Lc.avg,Lc.cur):"€"+f2(r.avg))+'</td>')+(r.o?ND:'<td data-s="'+r.px.toFixed(4)+'">'+(Lc?lc2(Lc.px,Lc.cur):"€"+f2(r.px))+'</td>')+'<td data-s="'+r.val.toFixed(2)+'">'+(Lc?lc0(Lc.val,Lc.cur):eur(r.val))+'</td>'+wt(r.val)
++(Lc?pc2(Lc.un,Lc.cu,c,r.un).replace('<td class="','<td class="gs ')+pc2(Lc.real,Lc.sc,c,r.real)+pc2(Lc.dv,Lc.bg,c,r.dv)+pc2(Lc.un+Lc.real+Lc.dv,Lc.bg,c,r.un+r.real+r.dv):pc2(r.un,cuOf(r)).replace('<td class="','<td class="gs ')+pc2(r.real,r.sc)+pc2(r.dv,r.bg)+pc2(r.un+r.real+r.dv,r.bg))+"</tr>";
 });
 });
 const U=vis.reduce((a,r)=>a+r.un,0),R=vis.reduce((a,r)=>a+r.real,0),Dv=vis.reduce((a,r)=>a+r.dv,0),Cu=vis.reduce((a,r)=>a+cuOf(r),0),Sc=vis.reduce((a,r)=>a+r.sc,0),Bg=vis.reduce((a,r)=>a+r.bg,0);
@@ -464,7 +467,7 @@ const hdrRow=tb=>[...tb.rows].find(r=>r.querySelector("th")&&!r.classList.contai
 function markSort(tb,s){
 const hr=hdrRow(tb);
 [...hr.cells].forEach((th,i)=>{if(!th.classList.contains("srt"))return;const on=s&&i===s.c,pk=th.querySelector(".pk"),ar=s?(s.d>0?" ▲":" ▼"):"";th.firstChild.nodeValue=th.getAttribute("data-l")+(on&&!s.p?ar:"");if(pk){pk.textContent="%"+(on&&s.p?ar:"");pk.classList.toggle("on",!!(on&&s.p))}});
-if(tb.classList.contains("pft")){const ci=s&&s.c>0?s.c:[...hr.cells].findIndex(th=>th.getAttribute("data-l")==="Max"),n=hr.cells.length;
+if(tb.classList.contains("pft")){const L0=[...hr.cells].map(th=>th.getAttribute("data-l")),ci=PACT&&L0.indexOf(PACT)>0?L0.indexOf(PACT):L0.indexOf("Max"),n=hr.cells.length;
 [...tb.rows].forEach(r=>{[...r.cells].forEach((c,j)=>c.classList.toggle("hc",j===ci&&ci>0&&r.cells.length===n))})}
 }
 function fitCols(tb,hr){
@@ -473,10 +476,11 @@ const n=[...hr.cells].reduce((s,c)=>s+(c.colSpan||1),0);if(n<3)return;
 const old=tb.querySelector("colgroup");if(old)old.remove();
 const f=n<=4?32:n<=7?24:n<=10?18:14,o=((100-f)/(n-1)).toFixed(3)+"%",cg=document.createElement("colgroup");
 for(let i=0;i<n;i++){const c=document.createElement("col");c.style.width=i?o:f+"%";cg.appendChild(c)}
-tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=(150+(n-1)*96)+"px";tb.style.maxWidth=(240+(n-1)*120)+"px";
+tb.insertBefore(cg,tb.firstChild);tb.classList.add("fx");tb.style.minWidth=(150+(n-1)*96)+"px";tb.style.maxWidth=tb.classList.contains("ptb")?"none":(240+(n-1)*120)+"px";
 }
 function enhanceTables(){
 if(!document.querySelectorAll)return;
+document.querySelectorAll("#out table td:first-child a[data-det]").forEach(a=>{if(a.closest(".nm")||a.dataset.nm)return;const k=a.getAttribute("data-det"),n=a.textContent;a.dataset.nm="1";a.title=n;a.textContent=shortN(n);a.insertAdjacentHTML("afterend",tkTag(k,n));a.closest("table").classList.add("nmt")});
 document.querySelectorAll("#out table").forEach(tb=>{
 const hr=hdrRow(tb);if(!hr)return;
 fitCols(tb,hr);
@@ -485,6 +489,8 @@ const sec=tb.closest(".card"),h=sec&&sec.querySelector("h2"),key=(h?h.textConten
 tb.setAttribute("data-sk",key);
 [...hr.cells].forEach(th=>{const t=th.querySelector(".pk")?th.firstChild.nodeValue.trim():th.textContent.trim();if(t){th.classList.add("srt");th.setAttribute("data-l",t)}});
 const st=SORTS[key];if(st){applySort(tb,st.c,st.d,st.p);markSort(tb,st)}else if(tb.classList.contains("pft"))markSort(tb,null);
+{const cg=tb.querySelector("tr.cgh");if(cg){const h=cg.getBoundingClientRect().height;[...hr.cells].forEach(th=>th.style.top=(h-0.5)+"px")}
+const xm=tb.querySelectorAll("tr.xm>td");if(xm.length){const h=hr.getBoundingClientRect().height;xm.forEach(td=>td.style.top=(h-0.5)+"px")}}
 });
 }
 function sortClick(th,ev){
@@ -683,7 +689,7 @@ function mwBm(ty,bm){if(!bm||!bm.idx)return null;const L=days.length-1,ia=d=>{le
 mwFl(ty).filter(f=>f.t==="x").forEach(f=>{let i=ia(f.d);if(i<0)i=0;const p=bm.idx[i];if(!isFinite(p)||p<=0)return;u=Math.max(0,u-f.a/p);F.push({d:f.d,a:f.a})});
 if(!F.length)return null;F.push({d:days[L],a:u*bm.idx[L]});return xirr(F)}
 let PFA="t",PM=ls.get("pm")||"t";
-const pChips=()=>'<div class="tfc pft-tf">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div>';
+const pChips=()=>'<div class="tfc pft-tf">'+TFA().map(t=>'<button data-vt="'+t+'"'+(VTs().includes(t)?' class="on'+(t===(PACT&&VTs().includes(PACT)?PACT:"Max")?" act":"")+'"':"")+'>'+t+'</button>').join("")+'<label class="cpl"><input type="checkbox" id="cu" style="width:auto"'+(CU?" checked":"")+'> Custom period</label>'+(CU?'<input type="date" id="d0" style="width:auto" value="'+CF+'"> <span class="mu">to</span> <input type="date" id="d1" style="width:auto" value="'+CT+'">':"")+'</div>';
 function perSpan(t,r){const L=days.length-1;if(t==="C")return(new Date(CT)-new Date(CF))/864e5;const i0=t==="Max"?(r&&r.st>=0?r.st:0):iStart(t);if(i0<0)return 0;return(new Date(days[L])-new Date(days[i0]))/864e5}
 const annV=(v,t,r)=>{if(v==null||PFA!=="a")return v;const d=perSpan(t,r);return d>=365?Math.pow(1+v,365/d)-1:v};
 function twrrTbl(){let h="";
@@ -991,7 +997,7 @@ const W=1000,H=40,bw=W/L.length,mx=Math.max(...ks.map(k=>M[k]));let g="";
 L.forEach((k,i)=>{const v=M[k]||0,hh=v>0?Math.max(2,v/mx*(H-4)):0;g+='<g data-xa="xt-jump" data-k="'+k+'" class="xt-sb"><rect x="'+(i*bw).toFixed(1)+'" y="0" width="'+bw.toFixed(1)+'" height="'+H+'" fill="transparent"/>'+(hh?'<rect x="'+(i*bw+bw*.15).toFixed(1)+'" y="'+(H-hh).toFixed(1)+'" width="'+(bw*.7).toFixed(1)+'" height="'+hh.toFixed(1)+'" rx="1.5"/>':"")+'<title>'+MN[+k.slice(5)-1]+" "+k.slice(0,4)+(v?" · "+eur(v):"")+'</title></g>'});
 h+='<div class="xt-st"><svg class="xsv" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+g+'</svg><div class="xt-sl"><span>'+MN[+m0.slice(5)-1].slice(0,3)+" '"+m0.slice(2,4)+'</span><span>'+MN[+m1.slice(5)-1].slice(0,3)+" '"+m1.slice(2,4)+'</span></div></div>'}}
 const fds=d=>{const p=d.split("-");return (+p[2])+" "+MN[+p[1]-1].slice(0,3)+" '"+p[0].slice(2)};
-const IC={Buy:'<path d="M12 5v14M5 12h14"/>',Sell:'<path d="M5 12h14"/>',Dividend:'<circle cx="12" cy="12" r="8"/><path d="M15 9.2a3.6 3.6 0 1 0 0 5.6M8 11h5M8 13.2h5"/>',Tax:'<path d="M18 6L6 18"/><circle cx="7.5" cy="7.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/>',Fee:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',Interest:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'};
+const IC={Buy:'<path d="M12 4v16M5 13l7 7 7-7"/>',Sell:'<path d="M12 20V4M5 11l7-7 7 7"/>',Dividend:'<path d="M18 6.6A7 7 0 1 0 18 17.4"/><path d="M4 10.5h9M4 13.5h9"/>',Tax:'<path d="M18 6L6 18"/><circle cx="7.5" cy="7.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/>',Fee:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',Interest:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'};
 const TYL={Buy:X("Buy","Aankoop","Achat"),Sell:X("Sell","Verkoop","Vente"),Dividend:X("Dividend","Dividend","Dividende"),Tax:X("Tax","Belasting","Impôt"),Fee:X("Fee","Kosten","Frais"),Interest:X("Interest","Rente","Intérêts")};
 const xic=ty=>'<span class="xi xi-'+ty+'"><svg class="xsv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+(IC[ty]||IC.Fee)+'</svg></span>';
 h+='<div class="sc"><table class="tx xt"><colgroup><col style="width:11%"><col style="width:12%"><col style="width:33%"><col style="width:15%"><col style="width:16%"><col style="width:13%"></colgroup><tr><th>Date</th><th>Type</th><th>Instrument</th><th>'+X("Trade","Transactie","Opération")+'</th><th>Amount</th><th>'+X("Result","Resultaat","Résultat")+infoI(X("For a sell: the profit or loss on the shares sold, against their average buy price.","Bij een verkoop: de winst of het verlies op de verkochte aandelen, tegenover hun gemiddelde aankoopprijs.","Pour une vente : le gain ou la perte sur les titres vendus, par rapport à leur prix d’achat moyen."))+'</th></tr>';
@@ -1005,7 +1011,7 @@ const id=r.ty+"|"+r.o,op=TXX===id,tr=r.ty==="Buy"||r.ty==="Sell";
 const trade=tr&&r.q!=null&&isFinite(r.pxv)?sh(r.q)+" × "+lcs(r.cur||"EUR")+f2(r.pxv):r.ty==="Dividend"&&r.q!=null&&r.dps!=null?sh(r.q)+" × €"+f2(r.dps):null;
 const sub=tr&&isFinite(r.f)&&r.f>=0.005?X("incl. ","incl. ","dont ")+e2(r.f)+X(" costs"," kosten"," de frais"):r.ty==="Dividend"&&isFinite(r.f)&&r.f>=0.005?e2(r.f)+X(" tax withheld"," ingehouden belasting"," d’impôt retenu"):"";
 const res=r.ty==="Sell"&&r.rr!=null?'<td data-s="'+r.rr.toFixed(2)+'"><span class="chip '+(r.rr>=0?"cp":"cn")+'">'+(r.rr>=0?"+":"−")+e2(Math.abs(r.rr))+(r.rb>0.005?" · "+pctf(r.rr/r.rb*100):"")+'</span></td>':ND;
-h+='<tr class="xr'+(op?" xo":"")+'" data-xa="xt-row" data-k="'+id+'"><td data-s="'+r.d.replace(/-/g,"")+'">'+fds(r.d)+'</td><td>'+xic(r.ty)+(TYL[r.ty]||r.ty)+'</td><td><span class="nm">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'">'+esc(r.n)+'</a>':esc(r.n))+(r.k&&!isOpt(r.k)&&r.k!==r.n?' <span class="tk">'+esc(r.k)+'</span>':"")+(MB?' <span class="bk">'+esc(r.b)+'</span>':"")+'</span></td>'+(trade?'<td data-s="'+(r.q||0)+'">'+trade+'</td>':ND)+'<td data-s="'+(isFinite(r.a)?r.a.toFixed(2):"")+'">'+(isFinite(r.a)?e2(r.a):"–")+(sub?'<small>'+sub+'</small>':"")+'</td>'+res+'</tr>';
+h+='<tr class="xr'+(op?" xo":"")+'" data-xa="xt-row" data-k="'+id+'"><td data-s="'+r.d.replace(/-/g,"")+'">'+fds(r.d)+'</td><td>'+xic(r.ty)+(TYL[r.ty]||r.ty)+'</td><td><span class="nm">'+(r.k?'<a href="#" data-det="'+esc(r.k)+'" title="'+esc(r.n)+'">'+esc(shortN(r.n))+'</a>'+tkTag(r.k,r.n):esc(r.n))+(MB?' <span class="bk">'+esc(r.b)+'</span>':"")+'</span></td>'+(trade?'<td data-s="'+(r.q||0)+'">'+trade+'</td>':ND)+'<td data-s="'+(isFinite(r.a)?r.a.toFixed(2):"")+'">'+(isFinite(r.a)?e2(r.a):"–")+(sub?'<small>'+sub+'</small>':"")+'</td>'+res+'</tr>';
 if(op){const kv=(l,v)=>'<span>'+l+' <b>'+v+'</b></span>',D=[kv(X("Broker","Broker","Courtier"),esc(r.b))];
 if(tr){if(isFinite(r.pxv))D.push(kv(X("Price","Koers","Cours"),lcs(r.cur||"EUR")+f2(r.pxv)));if(isFinite(r.g))D.push(kv(X("Value before costs","Waarde vóór kosten","Valeur avant frais"),e2(r.g)));if(isFinite(r.f))D.push(kv(X("Costs","Kosten","Frais"),e2(r.f)));if(r.hq!=null)D.push(kv(X("Shares held after","Aandelen daarna","Titres après"),sh(+r.hq.toFixed(4))));if(r.ha!=null)D.push(kv(X("Avg buy after","Gem. aankoop daarna","Achat moyen après"),"€"+f2(r.ha)));if(r.ty==="Sell"&&r.rr!=null)D.push(kv(X("Realised","Gerealiseerd","Réalisé"),(r.rr>=0?"+":"−")+e2(Math.abs(r.rr))))}
 else if(r.ty==="Dividend"){if(r.gg!=null)D.push(kv(X("Gross","Bruto","Brut"),e2(r.gg)));if(isFinite(r.f))D.push(kv(X("Tax withheld","Ingehouden belasting","Impôt retenu"),e2(r.f)));D.push(kv(X("Net","Netto","Net"),e2(r.a)));if(r.dps!=null)D.push(kv(X("Per share","Per aandeel","Par action"),"€"+f2(r.dps)))}
@@ -1532,16 +1538,17 @@ const T=[["c",X("Calendar","Kalender","Calendrier")],["a",X("Agenda","Agenda","A
 return '<div class="tx-bar" style="margin-top:0"><h2 style="margin:0">Radar</h2>'+tSeg(T,RTAB,"rd-tab")+'<span class="tx-sp"></span><button type="button" class="jr-x" style="float:none" data-xa="rd-add">+ '+X("Add company","Bedrijf toevoegen","Ajouter")+'</button></div>'
 +(RTAB==="a"?rdAgenda():RTAB==="m"?rdMap():rdCal())
 +'<p class="mu rd2-cap">'+X("Your watchlist starts with the stocks you hold. Data from Yahoo Finance, so it can be incomplete.","Je kijklijst start met de aandelen die je bezit. Data van Yahoo Finance, dus mogelijk onvolledig.","Votre liste commence par les actions détenues. Données Yahoo Finance, possiblement incomplètes.")+'</p>'}
+function rrK(){const q=()=>[...document.querySelectorAll("#out .sc,#out .wbody,#view,#out")],S=q().map(e=>[e.scrollTop,e.scrollLeft]),W=window.scrollY;render(G.syms,[],G.warn);q().forEach((e,i)=>{if(S[i]){e.scrollTop=S[i][0];e.scrollLeft=S[i][1]}});window.scrollTo(0,W)}
 function xaClick(e){
 const t=e.target.closest&&e.target.closest("[data-xa]");if(!t)return false;
 const a=t.getAttribute("data-xa"),v=t.getAttribute("data-v"),k=t.getAttribute("data-k");
 if(a==="xt-row"&&e.target.closest("a"))return false;
 if(a==="jr-f"){JRFIL=v;jrPaint()}
 else if(a==="pf-a"){PFA=v;rr()}
-else if(a==="pf-heat"){HEAT=!HEAT;ls.set("heat",HEAT?"1":"0");rr()}
-else if(a==="gcol"){if(GCOL[k])delete GCOL[k];else GCOL[k]=1;rr()}
-else if(a==="fold"){if(FOLD[k])delete FOLD[k];else FOLD[k]=1;rr()}
-else if(a==="xt-row"){TXX=TXX===k?null:k;rr()}
+else if(a==="pf-heat"){HEAT=!HEAT;ls.set("heat",HEAT?"1":"0");rrK()}
+else if(a==="gcol"){if(GCOL[k])delete GCOL[k];else GCOL[k]=1;rrK()}
+else if(a==="fold"){if(FOLD[k])delete FOLD[k];else FOLD[k]=1;rrK()}
+else if(a==="xt-row"){TXX=TXX===k?null:k;rrK()}
 else if(a==="xt-jump"){const r=document.querySelector('tr.xm[data-m="'+k+'"]'),sc=r&&r.closest(".sc");if(sc){const th=sc.querySelector("th");sc.scrollTo({top:r.offsetTop-(th?th.offsetHeight:0),behavior:"smooth"})}}
 else if(a==="pf-m"){PM=v;ls.set("pm",PM);rr()}
 else if(a==="rd-mp"||a==="rd-mn"){RCAL=new Date(RCAL.getFullYear(),RCAL.getMonth()+(a==="rd-mn"?1:-1),1);radPaint()}
@@ -2120,7 +2127,7 @@ if(s){ov[s]=e.target.value.trim();ls.set("ov",JSON.stringify(ov));run().catch(x=
 $("out").addEventListener("click",e=>{
 const a=n=>e.target.getAttribute&&e.target.getAttribute(n);
 const vt=a("data-vt"),dvt2=a("data-dvt"),dvp=a("data-dvp"),txv=a("data-txv"),txp=a("data-txp"),dm=a("data-dvm"),tf=a("data-txf"),to=a("data-txo"),pfv=a("data-pf"),wm=a("data-wm"),wl=a("data-wl"),pbv=a("data-pb"),ptv=a("data-pt");
-if(vt){VT=VT.includes(vt)?VT.filter(x=>x!==vt):[...VT,vt];ls.set("vt",JSON.stringify(VT));render(G.syms,[],G.warn)}
+if(vt){if(VT.includes(vt)){VT=VT.filter(x=>x!==vt);if(PACT===vt)PACT=null}else{VT=[...VT,vt];PACT=vt}ls.set("vt",JSON.stringify(VT));render(G.syms,[],G.warn)}
 if(dm){DVM=dm;render(G.syms,[],G.warn)}
 if(dvt2){DVT=dvt2;render(G.syms,[],G.warn)}
 if(dvp){DVS=dvp;render(G.syms,[],G.warn)}

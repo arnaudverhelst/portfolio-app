@@ -565,3 +565,13 @@ html[data-mode=light]{--sbsel:#fff;--sbsh:0 0 0 1px #e1e4e9,0 3px 10px rgba(28,3
 #side .tabs button.sbB.on,#side .tabs button.on{background:var(--sbsel);box-shadow:var(--sbsh);color:var(--fg);font-weight:600}
 #side .tabs button.sbB.on svg,#side .tabs button.on svg{color:var(--fg)}
 #side .tabs button.on::before{content:none;display:none}
+/* selection style 2: floating card, app-wide (30 Oct) */
+html[data-mode=dark]{--sel:#2f3238;--selsh:0 0 0 1px rgba(255,255,255,.12),0 3px 8px rgba(0,0,0,.45);--selcb:#3a3e45}
+html[data-mode=light]{--sel:#fff;--selsh:0 0 0 1px #dfe2e7,0 2px 6px rgba(28,36,52,.12);--selcb:#1c2434}
+button.on,.seg button.on,#gtabs button.on,.themes button.on,.wmenu[open] summary{background:var(--sel);color:var(--fg);border-color:transparent;box-shadow:var(--selsh);font-weight:600}
+.seg button.on{position:relative;z-index:1}
+input[type=checkbox]{accent-color:var(--selcb)}
+.pop .ixo.on,.pop .bko.on,.rd-i.on{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.pop .ixo.on span::before{color:var(--fg)}.pop .ixo.on::before{border-color:var(--fg)}
+.pop .bko.on .cb{border-color:var(--fg)}
+.pfw>.pw>.ixb.act,html[data-mode=dark] .pfw>.pw>.ixb.act{background:var(--sel);box-shadow:var(--selsh);position:relative;z-index:1}

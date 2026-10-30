@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 15:03";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 15:06";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -2452,7 +2452,7 @@ if(!sv||!c){RS=null;return}
 const a=Math.min(RS.i1,RS.i2),b=Math.max(RS.i1,RS.i2),xs=i=>c.pl+(i-c.x0)*(c.W-c.pl-c.pr)/(c.L-c.x0);
 let g=document.getElementById("rsg");if(g)g.remove();
 g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("id","rsg");g.setAttribute("pointer-events","none");
-g.innerHTML='<rect x="'+xs(a).toFixed(1)+'" y="'+c.pt+'" width="'+Math.max(1,xs(b)-xs(a)).toFixed(1)+'" height="'+(c.H-c.pt-c.pb)+'" style="fill:var(--ac)" opacity=".16"/><line x1="'+xs(a).toFixed(1)+'" x2="'+xs(a).toFixed(1)+'" y1="'+c.pt+'" y2="'+(c.H-c.pb)+'" style="stroke:var(--ac)" stroke-width="1.5"/><line x1="'+xs(b).toFixed(1)+'" x2="'+xs(b).toFixed(1)+'" y1="'+c.pt+'" y2="'+(c.H-c.pb)+'" style="stroke:var(--ac)" stroke-width="1.5"/>';
+g.innerHTML='<rect x="'+xs(a).toFixed(1)+'" y="'+c.pt+'" width="'+Math.max(1,xs(b)-xs(a)).toFixed(1)+'" height="'+(c.H-c.pt-c.pb)+'" style="fill:var(--fg)" opacity=".08"/><line x1="'+xs(a).toFixed(1)+'" x2="'+xs(a).toFixed(1)+'" y1="'+c.pt+'" y2="'+(c.H-c.pb)+'" style="stroke:var(--fg)" opacity=".7" stroke-width="1.2"/><line x1="'+xs(b).toFixed(1)+'" x2="'+xs(b).toFixed(1)+'" y1="'+c.pt+'" y2="'+(c.H-c.pb)+'" style="stroke:var(--fg)" opacity=".7" stroke-width="1.2"/>';
 sv.appendChild(g);rsHideHover(RS.n);
 const pctMode=c.fmt===pctf,L2=c.S.map((s,k)=>{
 if(b<s.a)return null;

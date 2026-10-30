@@ -488,4 +488,8 @@ html[data-mode=dark] .rd2-st div{background:#1b1d22}
 .rd2-tg+.rd2-tk{display:flex;justify-content:space-between;background:none;height:auto;padding:0;font-weight:400;font-size:.74rem;letter-spacing:0;min-width:0}
 .rd2-nt{margin:0 0 4px;white-space:pre-wrap;line-height:1.5}
 @media(max-width:1100px){.rd2-cg,.rd2-ag2,.rd2-mg,.rd2-fc,.rd2-fg{grid-template-columns:1fr}.rd2-st{grid-template-columns:repeat(2,minmax(0,1fr))}.rd2-ls{max-height:none}}
-.rd2-map{max-height:520px}.rd2-fg .rd2-eps{max-height:230px}.rd2-cg .rd2-eps{max-height:160px}
+.rd2-mg.rd2-m1{grid-template-columns:minmax(0,1fr)}
+.rd2-map .rb,.rd2-map .rl{transition:opacity .15s}
+.rd2-map.hv [data-k]:not(.on){opacity:.15}
+.rd2-map.hv .rb.on circle{fill-opacity:.7}.rd2-fg .rd2-eps{max-height:230px}.rd2-cg .rd2-eps{max-height:160px}
+

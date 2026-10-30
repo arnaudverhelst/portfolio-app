@@ -13,7 +13,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let ov={},IS={},SC={},BV="all";try{ov=JSON.parse(ls.get("ov")||"{}")}catch(e){}try{IS=JSON.parse(ls.get("isin")||"{}")}catch(e){}
-const BUILD="30 Oct 2026, 15:06";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
+const BUILD="30 Oct 2026, 16:48";let USAPI=false,UADM=false,USRV=[];let AC=[],DV=[],AO=[],SXD=[],POSL=[],TAB="r",DET=null,ALV="h",CTF="Max",PTF="Max",CU=false,DBG=false,DTF="Max",tx=[],days=[],P={},rows=[],ser={},TF="Max",SK=[],IG={},OP=[],MODE=1,VM="v",CF="2026-01-01",CT="2026-04-30",FX={},G={};
 const msg=t=>{$("msg").classList.remove("chips");$("msg").textContent=t};
 function msgDone(n,a,b,nd){const loc=LANG==="nl"?"nl-BE":LANG==="fr"?"fr-BE":"en-GB",m=d=>new Date(d+"T00:00:00").toLocaleDateString(loc,{month:"short",year:"numeric"}),c=t=>'<span class="mc">'+t+'</span>';
 const e=$("msg");e.classList.add("chips");e.innerHTML=c(n+" "+X("trades","transacties","opérations"))+c(m(a)+" – "+m(b))+(nd!=null?c(nd+" "+X("dividends","dividenden","dividendes")):"")+(ls.get("impd")?'<span class="mc ok">'+X("Imported ","Geïmporteerd ","Importé ")+new Date(ls.get("impd")).toLocaleDateString(loc,{day:"numeric",month:"short",year:"numeric"})+'</span>':"")}
@@ -281,7 +281,7 @@ let g="";
 const n=Math.round((mx-mn)/step);
 for(let k=0;k<=n;k++){
 const v=mn+k*step,z=Math.abs(v)<step/1000,y=ys(v).toFixed(1);
-g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl'+(z?" z0":"")+'" stroke="currentColor" opacity="'+(z?".55":".09")+'"'+(z?' stroke-width=".85"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+(pcA?(z?0:Math.round(v))+"%":fmt(z?0:v))+'</text>';
+g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" class="gl'+(z?" z0":"")+'" stroke="currentColor" opacity="'+(z?".55":".09")+'"'+(z?' stroke-width=".85"':"")+'/><text x="'+(pl-7)+'" y="'+(+y+4)+'" font-size="12" text-anchor="end" fill="currentColor">'+(pcA?(z?0:Math.round(v))+"%":HIDE&&fmt===eur?"":fmt(z?0:v))+'</text>';
 }
 {const D=dx||days,tk=[];let pm=null;
 for(let i=x0;i<=L;i++){const m=D[i].slice(0,7);if(m!==pm){tk.push({i:i,y:+m.slice(0,4),m:+m.slice(5,7)-1});pm=m}}
@@ -316,7 +316,7 @@ return {name:r.name,a:a,v:v,bm:r.kind==="b"};
 if(!S.length)return '<p class="mu">Not enough data for this period.</p>';
 return lineChart(S,Math.min(...S.map(s=>s.a)),L,pctf,true);
 }
-function valueCard(){if(HIDE)VM="p";
+function valueCard(){
 const L=days.length-1,st0=rows[0].st;
 if(st0<0||st0>=L)return "";
 let x0=PTF==="Max"?st0:Math.max(st0,iStart(PTF));if(x0>=L)x0=st0;
@@ -2079,7 +2079,7 @@ ls.set("wb",JSON.stringify(WB));wbUpdate();
 document.documentElement.setAttribute("data-design","nebula");
 const EYE='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',EYE_OFF='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.9 10.9 0 0112 19C5 19 1 12 1 12a18.5 18.5 0 015.1-5.9M9.9 5.1A10.4 10.4 0 0112 5c7 0 11 7 11 7a18.6 18.6 0 01-2.2 3.2M14.1 14.1a3 3 0 11-4.2-4.2"/><path d="M1 1l22 22"/></svg>';
 function setHide(v){
-HIDE=v;ls.set("hide",v?"1":"0");if(v&&VM==="v")VM="p";
+HIDE=v;ls.set("hide",v?"1":"0");
 if(v)document.documentElement.setAttribute("data-hide","1");else document.documentElement.removeAttribute("data-hide");
 $("hid").classList.toggle("on",v);$("hid").innerHTML=v?EYE_OFF:EYE;$("hid").title=v?"Show amounts":"Hide amounts";
 if(rows.length)render(G.syms,[],G.warn);
